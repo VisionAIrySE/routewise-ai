@@ -139,7 +139,7 @@ function transformToAirtableFormat(records: Record<string, string>[], company: s
     };
     
     if (city) fields['City'] = city;
-    if (zip) fields['Zip'] = String(zip);
+    if (zip) fields['Zip'] = parseInt(zip) || undefined;
     if (insuredName) fields['Insured Name'] = insuredName;
     if (dueDate) fields['Due Date'] = dueDate;
     if (fixedAppointment) fields['Fixed Appointment'] = fixedAppointment;
