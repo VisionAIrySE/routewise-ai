@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import { RouteOptimizerResponse, isRouteOptimizerResponse } from '@/lib/routeUtils';
 
 export interface Message {
   id: string;
@@ -7,6 +8,7 @@ export interface Message {
   content: string;
   timestamp: Date;
   hasRouteAction?: boolean;
+  routeResponse?: RouteOptimizerResponse;
 }
 
 const INITIAL_MESSAGE: Message = {
@@ -68,20 +70,30 @@ export function useChat() {
 
       const data = await response.json();
       
-      // Extract response text from various possible formats
-      const responseText = data.response || data.message || data.output || data.text || 
-        (typeof data === 'string' ? data : JSON.stringify(data));
+      // Check if this is a route optimizer response with route_plan
+      let routeResponse: RouteOptimizerResponse | undefined;
+      let displayContent: string;
       
-      // Check if response contains route data
-      const hasRoute = responseText.toLowerCase().includes('route') && 
-        (responseText.includes('1.') || responseText.includes('stops'));
+      if (isRouteOptimizerResponse(data)) {
+        routeResponse = data;
+        displayContent = data.route_plan; // Will be rendered as markdown
+      } else {
+        // Extract response text from various possible formats
+        displayContent = data.response || data.message || data.output || data.text || 
+          (typeof data === 'string' ? data : JSON.stringify(data));
+      }
+      
+      // Check if response contains route data (for legacy responses)
+      const hasRoute = !routeResponse && displayContent.toLowerCase().includes('route') && 
+        (displayContent.includes('1.') || displayContent.includes('stops'));
 
       const aiMessage: Message = {
         id: uuidv4(),
         role: 'assistant',
-        content: responseText,
+        content: displayContent,
         timestamp: new Date(),
         hasRouteAction: hasRoute,
+        routeResponse,
       };
       setMessages(prev => [...prev, aiMessage]);
     } catch (err) {

@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Sparkles, RotateCcw } from 'lucide-react';
+import { useState, useRef, useEffect, useMemo } from 'react';
+import { Send, Bot, User, Sparkles, RotateCcw, Minimize2 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { useChat } from '@/hooks/useChat';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import { RouteResponse } from '@/components/RouteResponse';
 
 interface AIChatPanelProps {
   open: boolean;
@@ -17,9 +18,23 @@ interface AIChatPanelProps {
 export function AIChatPanel({ open, onOpenChange }: AIChatPanelProps) {
   const { messages, isLoading, sendMessage, clearSession } = useChat();
   const [input, setInput] = useState('');
+  const [isExpanded, setIsExpanded] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  // Check if any message has a route response to auto-expand
+  const hasRouteResponse = useMemo(() => 
+    messages.some(m => m.routeResponse), 
+    [messages]
+  );
+
+  // Auto-expand when a route response is received
+  useEffect(() => {
+    if (hasRouteResponse && !isExpanded) {
+      setIsExpanded(true);
+    }
+  }, [hasRouteResponse]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -60,7 +75,12 @@ export function AIChatPanel({ open, onOpenChange }: AIChatPanelProps) {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="flex w-full flex-col p-0 sm:max-w-md">
+      <SheetContent 
+        className={cn(
+          "flex flex-col p-0 transition-all duration-300",
+          isExpanded ? "w-full sm:max-w-4xl" : "w-full sm:max-w-md"
+        )}
+      >
         <SheetHeader className="border-b border-border px-4 py-4">
           <div className="flex items-center justify-between">
             <SheetTitle className="flex items-center gap-2">
@@ -69,9 +89,21 @@ export function AIChatPanel({ open, onOpenChange }: AIChatPanelProps) {
               </div>
               Route Optimizer AI
             </SheetTitle>
-            <Button variant="ghost" size="icon" onClick={handleNewSession} title="New Session">
-              <RotateCcw className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-1">
+              {isExpanded && (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => setIsExpanded(false)} 
+                  title="Collapse"
+                >
+                  <Minimize2 className="h-4 w-4" />
+                </Button>
+              )}
+              <Button variant="ghost" size="icon" onClick={handleNewSession} title="New Session">
+                <RotateCcw className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </SheetHeader>
 
@@ -82,43 +114,51 @@ export function AIChatPanel({ open, onOpenChange }: AIChatPanelProps) {
                 key={message.id}
                 className={cn(
                   'flex gap-3',
-                  message.role === 'user' ? 'flex-row-reverse' : 'flex-row'
+                  message.role === 'user' ? 'flex-row-reverse' : 'flex-row',
+                  message.routeResponse && 'flex-col items-start'
                 )}
               >
-                <div
-                  className={cn(
-                    'flex h-8 w-8 shrink-0 items-center justify-center rounded-full',
-                    message.role === 'user'
-                      ? 'bg-primary'
-                      : 'bg-muted'
-                  )}
-                >
-                  {message.role === 'user' ? (
-                    <User className="h-4 w-4 text-primary-foreground" />
-                  ) : (
-                    <Bot className="h-4 w-4 text-muted-foreground" />
-                  )}
-                </div>
-                <div
-                  className={cn(
-                    'max-w-[85%] rounded-lg px-4 py-3 text-sm',
-                    message.role === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-foreground'
-                  )}
-                >
-                  <div className="whitespace-pre-wrap">{message.content}</div>
-                  {message.hasRouteAction && (
-                    <div className="mt-3 flex gap-2">
-                      <Button size="sm" variant="secondary" onClick={handleSaveRoute}>
-                        Save Route
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => setInput('Modify this route')}>
-                        Modify
-                      </Button>
-                    </div>
-                  )}
-                </div>
+                {/* Avatar - hide for route responses */}
+                {!message.routeResponse && (
+                  <div
+                    className={cn(
+                      'flex h-8 w-8 shrink-0 items-center justify-center rounded-full',
+                      message.role === 'user' ? 'bg-primary' : 'bg-muted'
+                    )}
+                  >
+                    {message.role === 'user' ? (
+                      <User className="h-4 w-4 text-primary-foreground" />
+                    ) : (
+                      <Bot className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </div>
+                )}
+
+                {/* Message Content */}
+                {message.routeResponse ? (
+                  <RouteResponse response={message.routeResponse} />
+                ) : (
+                  <div
+                    className={cn(
+                      'max-w-[85%] rounded-lg px-4 py-3 text-sm',
+                      message.role === 'user'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-foreground'
+                    )}
+                  >
+                    <div className="whitespace-pre-wrap">{message.content}</div>
+                    {message.hasRouteAction && (
+                      <div className="mt-3 flex gap-2">
+                        <Button size="sm" variant="secondary" onClick={handleSaveRoute}>
+                          Save Route
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => setInput('Modify this route')}>
+                          Modify
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
             {isLoading && (
