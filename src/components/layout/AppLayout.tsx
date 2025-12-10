@@ -40,7 +40,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
             <MapPin className="h-5 w-5 text-primary-foreground" />
           </div>
-          <span className="text-lg font-semibold text-foreground">RouteOptimizer</span>
+          <span className="text-lg font-semibold text-foreground">RouteWise-AI</span>
         </div>
         <nav className="flex flex-col gap-1 p-4">
           {navigation.map((item) => {
@@ -88,7 +88,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
               <MapPin className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="font-semibold">RouteOptimizer</span>
+            <span className="font-semibold">RouteWise-AI</span>
           </div>
         </div>
         <Button
@@ -107,7 +107,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
               <MapPin className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="text-lg font-semibold">RouteOptimizer</span>
+            <span className="text-lg font-semibold">RouteWise-AI</span>
           </div>
           <nav className="flex flex-col gap-1 p-4">
             {navigation.map((item) => {
