@@ -1,11 +1,21 @@
+import { useState } from 'react';
 import { AlertTriangle, AlertCircle, Clock, ClipboardList, Loader2 } from 'lucide-react';
 import { StatCard } from '@/components/StatCard';
 import { TodayRouteCard } from '@/components/TodayRouteCard';
 import { WeeklyProgress } from '@/components/WeeklyProgress';
+import { ExamplePrompts } from '@/components/ExamplePrompts';
+import { AIChatPanel } from '@/components/AIChatPanel';
 import { useInspectionStats } from '@/hooks/useInspections';
 
 const Dashboard = () => {
   const { stats, isLoading, error } = useInspectionStats();
+  const [chatOpen, setChatOpen] = useState(false);
+  const [initialPrompt, setInitialPrompt] = useState<string | undefined>();
+
+  const handlePromptClick = (prompt: string) => {
+    setInitialPrompt(prompt);
+    setChatOpen(true);
+  };
 
   return (
     <div className="px-4 py-6 lg:px-8 lg:py-8">
@@ -69,7 +79,7 @@ const Dashboard = () => {
       </div>
 
       {/* Main Content */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-3 mb-8">
         <div className="lg:col-span-2">
           <TodayRouteCard />
         </div>
@@ -77,6 +87,15 @@ const Dashboard = () => {
           <WeeklyProgress />
         </div>
       </div>
+
+      {/* Example Prompts */}
+      <ExamplePrompts onPromptClick={handlePromptClick} />
+
+      {/* AI Chat Panel - triggered from prompts */}
+      <AIChatPanel
+        open={chatOpen}
+        onOpenChange={setChatOpen}
+      />
     </div>
   );
 };
