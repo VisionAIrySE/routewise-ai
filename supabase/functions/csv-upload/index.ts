@@ -32,7 +32,7 @@ serve(async (req) => {
 
     // Create new FormData to forward to n8n
     const forwardFormData = new FormData();
-    forwardFormData.append('file', file, file.name);
+    forwardFormData.append('data', file, file.name);
     if (company) {
       forwardFormData.append('company', company);
     }
