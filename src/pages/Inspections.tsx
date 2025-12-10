@@ -1,7 +1,6 @@
 import { useState, useMemo } from 'react';
-import { Search, Filter, SlidersHorizontal } from 'lucide-react';
+import { Search, Filter, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -10,7 +9,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { InspectionCard } from '@/components/InspectionCard';
-import { mockInspections, Company, UrgencyTier, InspectionStatus } from '@/lib/mockData';
+import { useInspections } from '@/hooks/useInspections';
+import type { Company, UrgencyTier, InspectionStatus } from '@/lib/mockData';
 
 const Inspections = () => {
   const [search, setSearch] = useState('');
@@ -18,25 +18,23 @@ const Inspections = () => {
   const [urgencyFilter, setUrgencyFilter] = useState<UrgencyTier | 'ALL'>('ALL');
   const [statusFilter, setStatusFilter] = useState<InspectionStatus | 'ALL'>('ALL');
 
+  const { data: inspections, isLoading, error } = useInspections({
+    company: companyFilter,
+    urgency: urgencyFilter,
+    status: statusFilter,
+  });
+
   const filteredInspections = useMemo(() => {
-    return mockInspections.filter((inspection) => {
-      const matchesSearch =
-        search === '' ||
+    if (!inspections) return [];
+    
+    return inspections.filter((inspection) => {
+      if (search === '') return true;
+      return (
         inspection.fullAddress.toLowerCase().includes(search.toLowerCase()) ||
-        inspection.claimNumber.toLowerCase().includes(search.toLowerCase());
-
-      const matchesCompany =
-        companyFilter === 'ALL' || inspection.company === companyFilter;
-
-      const matchesUrgency =
-        urgencyFilter === 'ALL' || inspection.urgencyTier === urgencyFilter;
-
-      const matchesStatus =
-        statusFilter === 'ALL' || inspection.status === statusFilter;
-
-      return matchesSearch && matchesCompany && matchesUrgency && matchesStatus;
+        inspection.claimNumber.toLowerCase().includes(search.toLowerCase())
+      );
     });
-  }, [search, companyFilter, urgencyFilter, statusFilter]);
+  }, [inspections, search]);
 
   const sortedInspections = useMemo(() => {
     return [...filteredInspections].sort((a, b) => a.daysRemaining - b.daysRemaining);
@@ -107,20 +105,43 @@ const Inspections = () => {
       {/* Results */}
       <div className="mb-4">
         <p className="text-sm text-muted-foreground">
-          Showing {sortedInspections.length} of {mockInspections.length} inspections
+          {isLoading ? 'Loading...' : `Showing ${sortedInspections.length} inspections`}
         </p>
       </div>
 
-      {/* Inspection List */}
-      <div className="space-y-3">
-        {sortedInspections.map((inspection, index) => (
-          <div key={inspection.id} style={{ animationDelay: `${index * 50}ms` }}>
-            <InspectionCard inspection={inspection} />
-          </div>
-        ))}
-      </div>
+      {/* Loading State */}
+      {isLoading && (
+        <div className="flex flex-col items-center justify-center py-16">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+          <p className="text-muted-foreground">Loading inspections...</p>
+        </div>
+      )}
 
-      {sortedInspections.length === 0 && (
+      {/* Error State */}
+      {error && !isLoading && (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 mb-4">
+            <Filter className="h-8 w-8 text-destructive" />
+          </div>
+          <h3 className="text-lg font-medium text-foreground">Failed to load inspections</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Please check your Airtable connection and try again
+          </p>
+        </div>
+      )}
+
+      {/* Inspection List */}
+      {!isLoading && !error && (
+        <div className="space-y-3">
+          {sortedInspections.map((inspection, index) => (
+            <div key={inspection.id} style={{ animationDelay: `${index * 50}ms` }}>
+              <InspectionCard inspection={inspection} />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!isLoading && !error && sortedInspections.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted mb-4">
             <Filter className="h-8 w-8 text-muted-foreground" />

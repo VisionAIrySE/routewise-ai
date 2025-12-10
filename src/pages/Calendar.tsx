@@ -1,15 +1,14 @@
-import { useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, MapPin, Clock, Timer } from 'lucide-react';
+import { useState } from 'react';
+import { ChevronLeft, ChevronRight, MapPin, Timer, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { mockRoutes, mockInspections } from '@/lib/mockData';
+import { useMonthRoutes, useFixedAppointments } from '@/hooks/useRoutes';
 import { cn } from '@/lib/utils';
 import {
   format,
   startOfMonth,
   endOfMonth,
   eachDayOfInterval,
-  isSameMonth,
   isSameDay,
   addMonths,
   subMonths,
@@ -28,16 +27,11 @@ const Calendar = () => {
   const startPadding = getDay(monthStart);
   const paddedDays = Array(startPadding).fill(null).concat(monthDays);
 
-  // Get routes for this month
-  const monthRoutes = mockRoutes.filter((route) => {
-    const routeDate = new Date(route.routeDate);
-    return isSameMonth(routeDate, currentDate);
-  });
+  // Fetch routes and appointments
+  const { data: monthRoutes = [], isLoading: routesLoading } = useMonthRoutes(currentDate);
+  const { data: fixedAppointments = [], isLoading: appointmentsLoading } = useFixedAppointments();
 
-  // Get fixed appointments (SIG)
-  const fixedAppointments = mockInspections.filter(
-    (i) => i.fixedAppointment && i.company === 'SIG'
-  );
+  const isLoading = routesLoading || appointmentsLoading;
 
   const getRouteForDay = (day: Date | null) => {
     if (!day) return null;
@@ -47,7 +41,7 @@ const Calendar = () => {
   const getAppointmentsForDay = (day: Date | null) => {
     if (!day) return [];
     return fixedAppointments.filter((apt) =>
-      isSameDay(new Date(apt.fixedAppointment!), day)
+      apt.fixedAppointment && isSameDay(new Date(apt.fixedAppointment), day)
     );
   };
 
@@ -106,66 +100,72 @@ const Calendar = () => {
         </div>
 
         {/* Calendar Days */}
-        <div className="grid grid-cols-7">
-          {paddedDays.map((day, index) => {
-            const route = getRouteForDay(day);
-            const appointments = getAppointmentsForDay(day);
-            const isCurrentDay = day && isToday(day);
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-7">
+            {paddedDays.map((day, index) => {
+              const route = getRouteForDay(day);
+              const appointments = getAppointmentsForDay(day);
+              const isCurrentDay = day && isToday(day);
 
-            return (
-              <div
-                key={index}
-                className={cn(
-                  'min-h-[100px] border-b border-r border-border p-2 transition-colors',
-                  !day && 'bg-muted/30',
-                  isCurrentDay && 'bg-primary/5',
-                  index % 7 === 6 && 'border-r-0'
-                )}
-              >
-                {day && (
-                  <>
-                    <div
-                      className={cn(
-                        'mb-2 flex h-7 w-7 items-center justify-center rounded-full text-sm',
-                        isCurrentDay
-                          ? 'bg-primary text-primary-foreground font-semibold'
-                          : 'text-foreground'
-                      )}
-                    >
-                      {format(day, 'd')}
-                    </div>
-
-                    {route && (
-                      <div className="mb-1 rounded-md bg-primary/10 px-2 py-1 text-xs">
-                        <div className="flex items-center gap-1 text-primary font-medium">
-                          <MapPin className="h-3 w-3" />
-                          {route.plannedCount} stops
-                        </div>
-                        {route.completedCount > 0 && (
-                          <div className="text-muted-foreground mt-0.5">
-                            {route.completedCount}/{route.plannedCount} done
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {appointments.map((apt) => (
+              return (
+                <div
+                  key={index}
+                  className={cn(
+                    'min-h-[100px] border-b border-r border-border p-2 transition-colors',
+                    !day && 'bg-muted/30',
+                    isCurrentDay && 'bg-primary/5',
+                    index % 7 === 6 && 'border-r-0'
+                  )}
+                >
+                  {day && (
+                    <>
                       <div
-                        key={apt.id}
-                        className="rounded-md bg-fixed/10 px-2 py-1 text-xs mb-1"
+                        className={cn(
+                          'mb-2 flex h-7 w-7 items-center justify-center rounded-full text-sm',
+                          isCurrentDay
+                            ? 'bg-primary text-primary-foreground font-semibold'
+                            : 'text-foreground'
+                        )}
                       >
-                        <div className="flex items-center gap-1 text-fixed font-medium">
-                          <Timer className="h-3 w-3" />
-                          {format(new Date(apt.fixedAppointment!), 'h:mm a')}
-                        </div>
+                        {format(day, 'd')}
                       </div>
-                    ))}
-                  </>
-                )}
-              </div>
-            );
-          })}
-        </div>
+
+                      {route && (
+                        <div className="mb-1 rounded-md bg-primary/10 px-2 py-1 text-xs">
+                          <div className="flex items-center gap-1 text-primary font-medium">
+                            <MapPin className="h-3 w-3" />
+                            {route.plannedCount} stops
+                          </div>
+                          {route.completedCount > 0 && (
+                            <div className="text-muted-foreground mt-0.5">
+                              {route.completedCount}/{route.plannedCount} done
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {appointments.map((apt) => (
+                        <div
+                          key={apt.id}
+                          className="rounded-md bg-fixed/10 px-2 py-1 text-xs mb-1"
+                        >
+                          <div className="flex items-center gap-1 text-fixed font-medium">
+                            <Timer className="h-3 w-3" />
+                            {format(new Date(apt.fixedAppointment!), 'h:mm a')}
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Fixed Appointments Section */}
@@ -174,32 +174,39 @@ const Calendar = () => {
           <Timer className="h-5 w-5 text-fixed" />
           Fixed Appointments (SIG)
         </h3>
-        <div className="space-y-3">
-          {fixedAppointments.length > 0 ? (
-            fixedAppointments.map((apt) => (
-              <div
-                key={apt.id}
-                className="flex items-center justify-between rounded-lg bg-muted/50 px-4 py-3"
-              >
-                <div>
-                  <p className="font-medium text-foreground">{apt.street}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {apt.city}, {apt.state}
-                  </p>
+        {appointmentsLoading ? (
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Loading appointments...
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {fixedAppointments.length > 0 ? (
+              fixedAppointments.map((apt) => (
+                <div
+                  key={apt.id}
+                  className="flex items-center justify-between rounded-lg bg-muted/50 px-4 py-3"
+                >
+                  <div>
+                    <p className="font-medium text-foreground">{apt.street}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {apt.city}, {apt.state}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <Badge variant="fixed">
+                      {format(new Date(apt.fixedAppointment!), 'MMM d, h:mm a')}
+                    </Badge>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <Badge variant="fixed">
-                    {format(new Date(apt.fixedAppointment!), 'MMM d, h:mm a')}
-                  </Badge>
-                </div>
-              </div>
-            ))
-          ) : (
-            <p className="text-muted-foreground text-sm">
-              No fixed appointments scheduled
-            </p>
-          )}
-        </div>
+              ))
+            ) : (
+              <p className="text-muted-foreground text-sm">
+                No fixed appointments scheduled
+              </p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
