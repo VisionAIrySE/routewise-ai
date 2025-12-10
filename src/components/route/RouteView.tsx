@@ -1,56 +1,36 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { RouteMap } from './RouteMap';
 import { RouteSummaryCard } from './RouteSummaryCard';
 import { RouteStopList } from './RouteStopList';
+import { PrintableRoute } from './PrintableRoute';
 import { Button } from '@/components/ui/button';
-import { Copy, Navigation, Printer, Map, List } from 'lucide-react';
+import { Copy, Navigation, Printer, Map, List, Save, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-interface RouteDay {
-  day: string;
-  date: string;
-  summary: {
-    stops: number;
-    total_route_hours: number;
-    total_drive_hours: number;
-    inspection_hours: number;
-    total_distance_miles: number;
-    estimated_fuel: number;
-    zones: string[];
-  };
-  stops: Array<{
-    id: string;
-    order: number;
-    lat: number;
-    lng: number;
-    name: string;
-    address: string;
-    company: string;
-    urgency: string;
-    duration_minutes: number;
-    drive_minutes_to_next: number | null;
-    needs_call_ahead: boolean;
-    scheduled_time?: string;
-  }>;
-}
+import { RouteDay } from '@/lib/routeUtils';
 
 interface RouteViewProps {
   routes: RouteDay[];
   homeBase: { lat: number; lng: number; address: string };
+  onSaveRoute?: (route: RouteDay) => Promise<void>;
 }
 
-export function RouteView({ routes, homeBase }: RouteViewProps) {
+export function RouteView({ routes, homeBase, onSaveRoute }: RouteViewProps) {
   const [selectedDay, setSelectedDay] = useState(0);
   const [selectedStopId, setSelectedStopId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
+  const [isSaving, setIsSaving] = useState(false);
+  const printRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   const currentRoute = routes[selectedDay];
+  const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
   const copyAddresses = () => {
-    const addresses = currentRoute.stops
-      .map(stop => stop.address)
-      .join('\n');
+    const addresses = [
+      `Start: ${homeBase.address}`,
+      ...currentRoute.stops.map((stop, i) => `${i + 1}. ${stop.address}`),
+      `Return: ${homeBase.address}`
+    ].join('\n');
     navigator.clipboard.writeText(addresses);
     toast({
       title: 'Copied!',
@@ -76,97 +56,154 @@ export function RouteView({ routes, homeBase }: RouteViewProps) {
     window.print();
   };
 
+  const handleSaveRoute = async () => {
+    if (!onSaveRoute) {
+      toast({
+        title: 'Save Not Configured',
+        description: 'Route saving is not set up yet.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await onSaveRoute(currentRoute);
+      toast({
+        title: 'Route Saved!',
+        description: `${currentRoute.day} route has been saved successfully.`
+      });
+    } catch (error) {
+      toast({
+        title: 'Save Failed',
+        description: 'Could not save the route. Please try again.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
-      {/* Day Selector (if multiple days) */}
-      {routes.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-2">
-          {routes.map((route, index) => (
-            <Button
-              key={index}
-              variant={selectedDay === index ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSelectedDay(index)}
-            >
-              {route.day}
-            </Button>
-          ))}
-        </div>
-      )}
-
-      {/* Summary Card */}
-      <RouteSummaryCard
-        day={currentRoute.day}
-        date={currentRoute.date}
-        stops={currentRoute.summary.stops}
-        totalHours={currentRoute.summary.total_route_hours}
-        driveHours={currentRoute.summary.total_drive_hours}
-        inspectionHours={currentRoute.summary.inspection_hours}
-        totalMiles={currentRoute.summary.total_distance_miles}
-        estimatedFuel={currentRoute.summary.estimated_fuel}
-        zones={currentRoute.summary.zones}
-      />
-
-      {/* Action Buttons */}
-      <div className="flex flex-wrap gap-2">
-        <Button variant="outline" size="sm" onClick={copyAddresses}>
-          <Copy className="h-4 w-4 mr-2" />
-          Copy Addresses
-        </Button>
-        <Button variant="outline" size="sm" onClick={openInGoogleMaps}>
-          <Navigation className="h-4 w-4 mr-2" />
-          Open in Maps
-        </Button>
-        <Button variant="outline" size="sm" onClick={printRoute}>
-          <Printer className="h-4 w-4 mr-2" />
-          Print
-        </Button>
-        <div className="flex-1" />
-        <div className="flex border border-border rounded-lg overflow-hidden">
-          <Button
-            variant={viewMode === 'map' ? 'default' : 'ghost'}
-            size="sm"
-            className="rounded-none"
-            onClick={() => setViewMode('map')}
-          >
-            <Map className="h-4 w-4" />
-          </Button>
-          <Button
-            variant={viewMode === 'list' ? 'default' : 'ghost'}
-            size="sm"
-            className="rounded-none"
-            onClick={() => setViewMode('list')}
-          >
-            <List className="h-4 w-4" />
-          </Button>
-        </div>
+      {/* Printable Version (hidden on screen) */}
+      <div ref={printRef}>
+        <PrintableRoute 
+          route={currentRoute} 
+          homeBase={homeBase}
+          googleMapsApiKey={googleMapsApiKey}
+        />
       </div>
 
-      {/* Map or List View */}
-      {viewMode === 'map' ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className="rounded-lg overflow-hidden border border-border">
-            <RouteMap
-              stops={currentRoute.stops}
-              homeBase={homeBase}
-              onStopClick={(stop) => setSelectedStopId(stop.id)}
-            />
+      {/* Screen Version */}
+      <div className="no-print">
+        {/* Day Selector (if multiple days) */}
+        {routes.length > 1 && (
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {routes.map((route, index) => (
+              <Button
+                key={index}
+                variant={selectedDay === index ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSelectedDay(index)}
+              >
+                {route.day}
+              </Button>
+            ))}
           </div>
-          <div className="max-h-[400px] overflow-y-auto">
+        )}
+
+        {/* Summary Card */}
+        <RouteSummaryCard
+          day={currentRoute.day}
+          date={currentRoute.date}
+          stops={currentRoute.summary.stops}
+          totalHours={currentRoute.summary.total_route_hours}
+          driveHours={currentRoute.summary.total_drive_hours}
+          inspectionHours={currentRoute.summary.inspection_hours}
+          totalMiles={currentRoute.summary.total_distance_miles}
+          estimatedFuel={currentRoute.summary.estimated_fuel}
+          zones={currentRoute.summary.zones}
+        />
+
+        {/* Action Buttons */}
+        <div className="flex flex-wrap gap-2 mt-4">
+          <Button variant="outline" size="sm" onClick={copyAddresses}>
+            <Copy className="h-4 w-4 mr-2" />
+            Copy Addresses
+          </Button>
+          <Button variant="outline" size="sm" onClick={openInGoogleMaps}>
+            <Navigation className="h-4 w-4 mr-2" />
+            Open in Maps
+          </Button>
+          <Button variant="outline" size="sm" onClick={printRoute}>
+            <Printer className="h-4 w-4 mr-2" />
+            Print Route
+          </Button>
+          {onSaveRoute && (
+            <Button 
+              variant="default" 
+              size="sm" 
+              onClick={handleSaveRoute}
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4 mr-2" />
+              )}
+              Save Route
+            </Button>
+          )}
+          <div className="flex-1" />
+          <div className="flex border border-border rounded-lg overflow-hidden">
+            <Button
+              variant={viewMode === 'map' ? 'default' : 'ghost'}
+              size="sm"
+              className="rounded-none"
+              onClick={() => setViewMode('map')}
+            >
+              <Map className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              size="sm"
+              className="rounded-none"
+              onClick={() => setViewMode('list')}
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Map or List View */}
+        <div className="mt-4">
+          {viewMode === 'map' ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="rounded-lg overflow-hidden border border-border">
+                <RouteMap
+                  stops={currentRoute.stops}
+                  homeBase={homeBase}
+                  onStopClick={(stop) => setSelectedStopId(stop.id)}
+                />
+              </div>
+              <div className="max-h-[400px] overflow-y-auto">
+                <RouteStopList
+                  stops={currentRoute.stops}
+                  selectedStopId={selectedStopId || undefined}
+                  onStopClick={(stop) => setSelectedStopId(stop.id)}
+                />
+              </div>
+            </div>
+          ) : (
             <RouteStopList
               stops={currentRoute.stops}
               selectedStopId={selectedStopId || undefined}
               onStopClick={(stop) => setSelectedStopId(stop.id)}
             />
-          </div>
+          )}
         </div>
-      ) : (
-        <RouteStopList
-          stops={currentRoute.stops}
-          selectedStopId={selectedStopId || undefined}
-          onStopClick={(stop) => setSelectedStopId(stop.id)}
-        />
-      )}
+      </div>
     </div>
   );
 }
