@@ -1,13 +1,13 @@
 import { useState, useCallback } from 'react';
-import { Upload, FileSpreadsheet, CheckCircle, X } from 'lucide-react';
+import { Upload, FileSpreadsheet, CheckCircle, Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface CSVUploadModalProps {
   open: boolean;
@@ -24,13 +24,13 @@ export function CSVUploadModal({ open, onOpenChange }: CSVUploadModalProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  // Mock recent uploads
-  const recentUploads: RecentUpload[] = [
-    { name: 'MIL_export_2024-11-05.csv', records: 34, date: '2024-11-05' },
-    { name: 'IPI_batch_2024-11-04.xlsx', records: 12, date: '2024-11-04' },
-    { name: 'SIG_schedule_2024-11-03.csv', records: 8, date: '2024-11-03' },
-  ];
+  // Load recent uploads from localStorage
+  const [recentUploads, setRecentUploads] = useState<RecentUpload[]>(() => {
+    const stored = localStorage.getItem('recent-csv-uploads');
+    return stored ? JSON.parse(stored) : [];
+  });
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -61,24 +61,66 @@ export function CSVUploadModal({ open, onOpenChange }: CSVUploadModalProps) {
   const handleFileUpload = async (file: File) => {
     setUploading(true);
     
-    // Simulate upload delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    const webhookUrl = import.meta.env.VITE_N8N_CSV_WEBHOOK_URL;
     
-    // In real app, this would POST to n8n webhook:
-    // const formData = new FormData();
-    // formData.append('file', file);
-    // await fetch(import.meta.env.VITE_N8N_CSV_WEBHOOK_URL, {
-    //   method: 'POST',
-    //   body: formData
-    // });
+    if (!webhookUrl) {
+      toast({
+        title: 'Configuration Error',
+        description: 'CSV webhook URL is not configured',
+        variant: 'destructive',
+      });
+      setUploading(false);
+      return;
+    }
 
-    toast({
-      title: 'Upload Successful',
-      description: `Processed ${Math.floor(Math.random() * 20 + 10)} inspections from ${file.name}`,
-    });
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
 
-    setUploading(false);
-    onOpenChange(false);
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Upload failed: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      // Extract records count from response
+      const recordsCount = result.records_processed || result.count || result.records || 0;
+      const companyDetected = result.company_detected || result.company || 'Unknown';
+
+      // Update recent uploads
+      const newUpload: RecentUpload = {
+        name: file.name,
+        records: recordsCount,
+        date: new Date().toISOString().split('T')[0],
+      };
+      const updatedUploads = [newUpload, ...recentUploads.slice(0, 4)];
+      setRecentUploads(updatedUploads);
+      localStorage.setItem('recent-csv-uploads', JSON.stringify(updatedUploads));
+
+      toast({
+        title: 'Upload Successful',
+        description: `Processed ${recordsCount} ${companyDetected} inspections`,
+      });
+
+      // Refresh inspections data
+      queryClient.invalidateQueries({ queryKey: ['inspections'] });
+
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({
+        title: 'Upload Failed',
+        description: error instanceof Error ? error.message : 'Failed to upload file',
+        variant: 'destructive',
+      });
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -110,7 +152,11 @@ export function CSVUploadModal({ open, onOpenChange }: CSVUploadModalProps) {
               className="absolute inset-0 cursor-pointer opacity-0"
               disabled={uploading}
             />
-            <FileSpreadsheet className="mb-3 h-10 w-10 text-muted-foreground" />
+            {uploading ? (
+              <Loader2 className="mb-3 h-10 w-10 animate-spin text-primary" />
+            ) : (
+              <FileSpreadsheet className="mb-3 h-10 w-10 text-muted-foreground" />
+            )}
             <p className="text-sm font-medium text-foreground">
               {uploading ? 'Uploading...' : 'Drag & drop CSV or XLSX file here'}
             </p>
@@ -123,25 +169,27 @@ export function CSVUploadModal({ open, onOpenChange }: CSVUploadModalProps) {
           </div>
 
           {/* Recent Uploads */}
-          <div>
-            <h4 className="mb-2 text-sm font-medium text-foreground">Recent Uploads</h4>
-            <div className="space-y-2">
-              {recentUploads.map((upload, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-sm"
-                >
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-normal" />
-                    <span className="font-medium">{upload.name}</span>
+          {recentUploads.length > 0 && (
+            <div>
+              <h4 className="mb-2 text-sm font-medium text-foreground">Recent Uploads</h4>
+              <div className="space-y-2">
+                {recentUploads.map((upload, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-sm"
+                  >
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-normal" />
+                      <span className="font-medium truncate max-w-[200px]">{upload.name}</span>
+                    </div>
+                    <span className="text-muted-foreground">
+                      {upload.records} records
+                    </span>
                   </div>
-                  <span className="text-muted-foreground">
-                    {upload.records} records
-                  </span>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
