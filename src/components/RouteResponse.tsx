@@ -1,13 +1,16 @@
 import ReactMarkdown from 'react-markdown';
-import { Copy, MapPin, Printer } from 'lucide-react';
+import { Copy, MapPin, Printer, Save, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react';
 import {
   RouteOptimizerResponse,
+  RouteDay,
   copyAddressesToClipboard,
   openInGoogleMaps,
   formatGeneratedTime,
   hasOptimizedRoutes,
+  saveRouteToN8n,
   DEFAULT_HOME_BASE,
 } from '@/lib/routeUtils';
 import { RouteView } from '@/components/route/RouteView';
@@ -18,6 +21,7 @@ interface RouteResponseProps {
 
 export function RouteResponse({ response }: RouteResponseProps) {
   const { toast } = useToast();
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleCopyAddresses = () => {
     if (response.route_plan) {
@@ -44,6 +48,29 @@ export function RouteResponse({ response }: RouteResponseProps) {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleSaveRoute = async (route: RouteDay) => {
+    setIsSaving(true);
+    try {
+      const result = await saveRouteToN8n(route, response);
+      if (result.success) {
+        toast({
+          title: 'Route Saved!',
+          description: result.message || `${route.day} route saved to Airtable`,
+        });
+      } else {
+        throw new Error(result.message);
+      }
+    } catch (error) {
+      toast({
+        title: 'Save Failed',
+        description: error instanceof Error ? error.message : 'Could not save route',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // If we have optimized routes with coordinates, show the map view
@@ -97,6 +124,7 @@ export function RouteResponse({ response }: RouteResponseProps) {
         <RouteView
           routes={response.optimized_routes!}
           homeBase={response.home_base || DEFAULT_HOME_BASE}
+          onSaveRoute={handleSaveRoute}
         />
       </div>
     );

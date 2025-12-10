@@ -128,3 +128,38 @@ export const DEFAULT_HOME_BASE: HomeBase = {
   lng: -121.4386,
   address: 'Sunriver, OR 97707'
 };
+
+const N8N_ROUTE_WEBHOOK_URL = 'https://visionairy.app.n8n.cloud/webhook/route-query';
+
+export async function saveRouteToN8n(route: RouteDay, fullResponse?: RouteOptimizerResponse): Promise<{ success: boolean; message?: string }> {
+  try {
+    const response = await fetch(N8N_ROUTE_WEBHOOK_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        action: 'save_route',
+        route_data: {
+          day: route.day,
+          date: route.date,
+          summary: route.summary,
+          stops: route.stops,
+          query_date: fullResponse?.query_date,
+          generated_at: fullResponse?.generated_at,
+          urgency_counts: fullResponse?.urgency_counts,
+        }
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return { success: true, message: result.message || 'Route saved successfully' };
+  } catch (error) {
+    console.error('Failed to save route:', error);
+    return { success: false, message: error instanceof Error ? error.message : 'Failed to save route' };
+  }
+}
