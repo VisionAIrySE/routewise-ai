@@ -137,7 +137,7 @@ function transformToAirtableFormat(records: Record<string, string>[], company: s
       'Date Added': today,
     };
     
-    if (city) fields['City'] = city;
+    // Note: City is a select field in Airtable, skip it to avoid permission errors
     if (zip) fields['Zip'] = parseInt(zip) || undefined;
     if (insuredName) fields['Insured Name'] = insuredName;
     if (dueDate) fields['Due Date'] = dueDate;
