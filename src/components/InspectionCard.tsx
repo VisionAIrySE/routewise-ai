@@ -15,7 +15,10 @@ export function InspectionCard({ inspection, onClick }: InspectionCardProps) {
   const formatDueDate = () => {
     if (inspection.daysRemaining === 0) return 'Due TODAY';
     if (inspection.daysRemaining < 0) return `${Math.abs(inspection.daysRemaining)} days overdue`;
-    return `Due ${format(new Date(inspection.dueDate), 'MMM d')}`;
+    if (!inspection.dueDate) return 'No due date';
+    const date = new Date(inspection.dueDate);
+    if (isNaN(date.getTime())) return 'No due date';
+    return `Due ${format(date, 'MMM d')}`;
   };
 
   return (
@@ -55,7 +58,7 @@ export function InspectionCard({ inspection, onClick }: InspectionCardProps) {
             <Badge variant={urgencyColor as any}>
               {inspection.urgencyTier}
             </Badge>
-            {inspection.fixedAppointment && (
+            {inspection.fixedAppointment && !isNaN(new Date(inspection.fixedAppointment).getTime()) && (
               <Badge variant="outline" className="gap-1">
                 <Clock className="h-3 w-3" />
                 {format(new Date(inspection.fixedAppointment), 'h:mm a')}
