@@ -1,3 +1,39 @@
+export interface RouteStop {
+  id: string;
+  order: number;
+  lat: number;
+  lng: number;
+  name: string;
+  address: string;
+  company: string;
+  urgency: string;
+  duration_minutes: number;
+  drive_minutes_to_next: number | null;
+  needs_call_ahead: boolean;
+  scheduled_time?: string;
+}
+
+export interface RouteDay {
+  day: string;
+  date: string;
+  summary: {
+    stops: number;
+    total_route_hours: number;
+    total_drive_hours: number;
+    inspection_hours: number;
+    total_distance_miles: number;
+    estimated_fuel: number;
+    zones: string[];
+  };
+  stops: RouteStop[];
+}
+
+export interface HomeBase {
+  lat: number;
+  lng: number;
+  address: string;
+}
+
 export interface RouteOptimizerResponse {
   success: boolean;
   query: string;
@@ -11,7 +47,9 @@ export interface RouteOptimizerResponse {
     NORMAL: number;
     UNKNOWN: number;
   };
-  route_plan: string;
+  route_plan?: string;
+  optimized_routes?: RouteDay[];
+  home_base?: HomeBase;
   generated_at: string;
 }
 
@@ -20,9 +58,13 @@ export function isRouteOptimizerResponse(data: unknown): data is RouteOptimizerR
   const obj = data as Record<string, unknown>;
   return (
     obj.success === true &&
-    typeof obj.route_plan === 'string' &&
+    (typeof obj.route_plan === 'string' || Array.isArray(obj.optimized_routes)) &&
     obj.urgency_counts !== undefined
   );
+}
+
+export function hasOptimizedRoutes(response: RouteOptimizerResponse): boolean {
+  return Array.isArray(response.optimized_routes) && response.optimized_routes.length > 0;
 }
 
 export function parseRouteResponse(content: string): RouteOptimizerResponse | null {
@@ -80,3 +122,9 @@ export function formatGeneratedTime(isoString: string): string {
   const date = new Date(isoString);
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
+
+export const DEFAULT_HOME_BASE: HomeBase = {
+  lat: 43.8879,
+  lng: -121.4386,
+  address: 'Sunriver, OR 97707'
+};
