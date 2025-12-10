@@ -66,8 +66,22 @@ export function usePendingInspections() {
   return useQuery({
     queryKey: ['inspections', 'pending'],
     queryFn: async () => {
+      // Fetch all inspections that are not completed
       const records = await fetchTable<InspectionFields>('Inspections', {
-        filterByFormula: "{Status} = 'PENDING'",
+        filterByFormula: "{Status} != 'COMPLETED'",
+        sort: [{ field: 'Days Remaining', direction: 'asc' }],
+      });
+      return records.map(transformRecord);
+    },
+    refetchInterval: 60000,
+  });
+}
+
+export function useAllInspections() {
+  return useQuery({
+    queryKey: ['inspections', 'all'],
+    queryFn: async () => {
+      const records = await fetchTable<InspectionFields>('Inspections', {
         sort: [{ field: 'Days Remaining', direction: 'asc' }],
       });
       return records.map(transformRecord);
@@ -77,14 +91,27 @@ export function usePendingInspections() {
 }
 
 export function useInspectionStats() {
-  const { data: inspections, isLoading, error } = usePendingInspections();
+  // Use all inspections for stats since Status field may not be set
+  const { data: inspections, isLoading, error } = useAllInspections();
+  
+  // Filter to non-completed for pending counts
+  const pending = inspections?.filter(i => i.status !== 'COMPLETED') ?? [];
   
   const stats = {
-    critical: inspections?.filter(i => i.urgencyTier === 'CRITICAL').length ?? 0,
-    urgent: inspections?.filter(i => i.urgencyTier === 'URGENT').length ?? 0,
-    soon: inspections?.filter(i => i.urgencyTier === 'SOON').length ?? 0,
-    total: inspections?.length ?? 0,
+    critical: pending.filter(i => i.urgencyTier === 'CRITICAL').length,
+    urgent: pending.filter(i => i.urgencyTier === 'URGENT').length,
+    soon: pending.filter(i => i.urgencyTier === 'SOON').length,
+    total: pending.length,
   };
   
-  return { stats, isLoading, error };
+  return { stats, isLoading, error, allInspections: inspections };
+}
+
+export function useWeeklyStats() {
+  const { data: inspections, isLoading } = useAllInspections();
+  
+  const completed = inspections?.filter(i => i.status === 'COMPLETED').length ?? 0;
+  const total = inspections?.length ?? 0;
+  
+  return { completed, total, isLoading };
 }
