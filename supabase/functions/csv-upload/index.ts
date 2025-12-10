@@ -142,7 +142,10 @@ function transformToAirtableFormat(records: Record<string, string>[], company: s
     if (zip) fields['Zip'] = parseInt(zip) || undefined;
     if (insuredName) fields['Insured Name'] = insuredName;
     if (dueDate) fields['Due Date'] = dueDate;
-    if (fixedAppointment) fields['Fixed Appointment'] = fixedAppointment;
+    // Only add fixedAppointment if it's a valid date-like value (not a boolean)
+    if (fixedAppointment && fixedAppointment !== 'true' && fixedAppointment !== 'false' && fixedAppointment.length > 5) {
+      fields['Fixed Appointment'] = fixedAppointment;
+    }
     if (notes) fields['Notes'] = notes;
     if (claimNumber) fields['Claim Number'] = claimNumber;
     
