@@ -1,6 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import * as XLSX from "https://esm.sh/xlsx@0.18.5";
 
 const AIRTABLE_API = 'https://api.airtable.com/v0';
 const BASE_ID = Deno.env.get('VITE_AIRTABLE_BASE_ID');
@@ -31,8 +31,49 @@ function parseCSV(content: string): Record<string, string>[] {
   return records;
 }
 
-// Detect company from CSV content
-function detectCompany(records: Record<string, string>[]): string {
+// Parse XLSX content
+function parseXLSX(arrayBuffer: ArrayBuffer): Record<string, string>[] {
+  try {
+    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+    const firstSheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[firstSheetName];
+    
+    // Convert to JSON with header row
+    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as string[][];
+    
+    if (jsonData.length < 2) return [];
+    
+    const headers = jsonData[0].map(h => String(h || '').trim());
+    const records: Record<string, string>[] = [];
+    
+    for (let i = 1; i < jsonData.length; i++) {
+      const row = jsonData[i];
+      if (!row || row.length === 0) continue;
+      
+      const record: Record<string, string> = {};
+      headers.forEach((header, index) => {
+        record[header] = String(row[index] ?? '').trim();
+      });
+      records.push(record);
+    }
+    
+    console.log('XLSX Headers found:', headers);
+    console.log('First record sample:', records[0]);
+    
+    return records;
+  } catch (error) {
+    console.error('XLSX parsing error:', error);
+    return [];
+  }
+}
+
+// Detect company from filename and content
+function detectCompany(records: Record<string, string>[], filename: string): string {
+  const lowerFilename = filename.toLowerCase();
+  if (lowerFilename.includes('sig')) return 'SIG';
+  if (lowerFilename.includes('ipi')) return 'IPI';
+  if (lowerFilename.includes('mil')) return 'MIL';
+  
   if (records.length === 0) return 'Unknown';
   
   const firstRecord = records[0];
@@ -43,55 +84,73 @@ function detectCompany(records: Record<string, string>[]): string {
   if (allKeys.includes('ipi') || allValues.includes('ipi')) return 'IPI';
   if (allKeys.includes('mil') || allValues.includes('mil')) return 'MIL';
   
-  // Check for fixed appointment field (SIG specific)
   if (Object.keys(firstRecord).some(k => k.toLowerCase().includes('appointment'))) {
     return 'SIG';
   }
   
-  return 'MIL'; // Default
+  return 'MIL';
 }
 
-// Transform CSV records to Airtable format
-function transformToAirtableFormat(records: Record<string, string>[], company: string): any[] {
+// Transform records to Airtable format
+function transformToAirtableFormat(records: Record<string, string>[], company: string): { fields: Record<string, unknown> }[] {
   const today = new Date().toISOString().split('T')[0];
   const batchId = `${company}-${today.replace(/-/g, '')}`;
   
+  console.log('Transforming records. Sample keys:', Object.keys(records[0] || {}));
+  
   return records.map((record, index) => {
-    // Map common field names to our Airtable schema
-    const street = record['Street'] || record['Address'] || record['Property Address'] || '';
-    const city = record['City'] || '';
-    const state = record['State'] || 'OR';
-    const zip = record['Zip'] || record['Zip Code'] || record['ZIP'] || '';
-    const insuredName = record['Insured Name'] || record['Policyholder'] || record['Name'] || '';
-    const dueDate = record['Due Date'] || record['Deadline'] || '';
-    const fixedAppointment = record['Fixed Appointment'] || record['Appointment'] || '';
-    const notes = record['Notes'] || record['Comments'] || '';
-    
-    return {
-      fields: {
-        'Inspection ID': `${company}-${today.replace(/-/g, '')}-${String(index + 1).padStart(3, '0')}`,
-        'Company': company,
-        'Street': street,
-        'City': city,
-        'State': state,
-        'Zip': parseInt(zip) || zip,
-        'Insured Name': insuredName,
-        'Due Date': dueDate,
-        'Duration Minutes': company === 'SIG' ? 90 : 15,
-        'Fixed Appointment': fixedAppointment || undefined,
-        'Status': 'Pending',
-        'Date Added': today,
-        'Upload Batch ID': batchId,
-        'Notes': notes || (fixedAppointment ? 'Scheduled appointment' : undefined),
-        'Full Address': `${street}, ${city}, ${state} ${zip}`.trim(),
-        'Needs Call Ahead': record['Call Ahead'] === 'true' || record['Needs Call Ahead'] === 'true',
+    const findField = (possibleNames: string[]): string => {
+      for (const name of possibleNames) {
+        const key = Object.keys(record).find(k => 
+          k.toLowerCase().includes(name.toLowerCase()) ||
+          name.toLowerCase().includes(k.toLowerCase())
+        );
+        if (key && record[key]) return record[key];
       }
+      return '';
     };
-  }).filter(r => r.fields.Street); // Filter out empty records
+    
+    const street = findField(['Street', 'Address', 'Property Address', 'Property', 'Location']);
+    const city = findField(['City', 'Town']);
+    const state = findField(['State', 'ST']) || 'OR';
+    const zip = findField(['Zip', 'Zip Code', 'ZIP', 'Postal']);
+    const insuredName = findField(['Insured Name', 'Insured', 'Policyholder', 'Name', 'Customer', 'Owner']);
+    const dueDate = findField(['Due Date', 'Due', 'Deadline', 'Date Due']);
+    const fixedAppointment = findField(['Fixed Appointment', 'Appointment', 'Appt']);
+    const notes = findField(['Notes', 'Comments', 'Remarks']);
+    const claimNumber = findField(['Claim', 'Claim Number', 'Claim #', 'Policy', 'Policy Number']);
+    
+    if (!street) {
+      console.log(`Skipping record ${index}: no street address found`);
+      return null;
+    }
+    
+    // Build fields object, only including non-empty values
+    const fields: Record<string, unknown> = {
+      'Inspection ID': `${company}-${today.replace(/-/g, '')}-${String(index + 1).padStart(3, '0')}`,
+      'Company': company,
+      'Street': street,
+      'State': state,
+      'Duration Minutes': company === 'SIG' ? 90 : 15,
+      'Status': 'Pending',
+      'Date Added': today,
+      'Upload Batch ID': batchId,
+      'Full Address': `${street}, ${city}, ${state} ${zip}`.trim().replace(/,\s*,/g, ','),
+    };
+    
+    if (city) fields['City'] = city;
+    if (zip) fields['Zip'] = String(zip);
+    if (insuredName) fields['Insured Name'] = insuredName;
+    if (dueDate) fields['Due Date'] = dueDate;
+    if (fixedAppointment) fields['Fixed Appointment'] = fixedAppointment;
+    if (notes) fields['Notes'] = notes;
+    if (claimNumber) fields['Claim Number'] = claimNumber;
+    
+    return { fields };
+  }).filter((r): r is { fields: Record<string, unknown> } => r !== null);
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -109,22 +168,35 @@ serve(async (req) => {
       throw new Error('No file provided');
     }
 
+    const filename = file.name.toLowerCase();
     console.log(`Processing file: ${file.name}, size: ${file.size} bytes`);
     
-    const content = await file.text();
-    const records = parseCSV(content);
+    let records: Record<string, string>[];
+    
+    if (filename.endsWith('.xlsx') || filename.endsWith('.xls')) {
+      const arrayBuffer = await file.arrayBuffer();
+      records = parseXLSX(arrayBuffer);
+      console.log(`Parsed ${records.length} records from Excel file`);
+    } else {
+      const content = await file.text();
+      records = parseCSV(content);
+      console.log(`Parsed ${records.length} records from CSV file`);
+    }
     
     if (records.length === 0) {
-      throw new Error('No valid records found in CSV');
+      throw new Error('No valid records found in file');
     }
 
-    const company = detectCompany(records);
+    const company = detectCompany(records, file.name);
     console.log(`Detected company: ${company}, records: ${records.length}`);
     
     const airtableRecords = transformToAirtableFormat(records, company);
     console.log(`Transformed ${airtableRecords.length} records for Airtable`);
 
-    // Upload to Airtable in batches of 10 (Airtable limit)
+    if (airtableRecords.length === 0) {
+      throw new Error('No records could be mapped to Airtable format. Check that your file has address columns.');
+    }
+
     const batchSize = 10;
     let totalCreated = 0;
     
@@ -143,7 +215,7 @@ serve(async (req) => {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Airtable create error:', response.status, errorText);
-        throw new Error(`Failed to create records: ${response.status}`);
+        throw new Error(`Failed to create records: ${response.status} - ${errorText}`);
       }
 
       const result = await response.json();
