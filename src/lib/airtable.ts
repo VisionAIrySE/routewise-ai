@@ -1,15 +1,5 @@
-// Airtable API helper
-const AIRTABLE_API = 'https://api.airtable.com/v0';
-const BASE_ID = import.meta.env.VITE_AIRTABLE_BASE_ID;
-const API_KEY = import.meta.env.VITE_AIRTABLE_API_KEY;
-
-// Debug: Log configuration status (remove in production)
-if (!BASE_ID) {
-  console.error('VITE_AIRTABLE_BASE_ID is not configured. Please set it in your environment variables.');
-}
-if (!API_KEY) {
-  console.error('VITE_AIRTABLE_API_KEY is not configured. Please set it in your environment variables.');
-}
+// Airtable API helper via Edge Function proxy
+import { supabase } from '@/integrations/supabase/client';
 
 export interface AirtableRecord<T> {
   id: string;
@@ -28,44 +18,26 @@ export async function fetchTable<T>(
   tableName: string,
   options?: FetchOptions
 ): Promise<AirtableRecord<T>[]> {
-  const params = new URLSearchParams();
-  
-  if (options?.filterByFormula) {
-    params.set('filterByFormula', options.filterByFormula);
-  }
-  if (options?.sort) {
-    options.sort.forEach((s, i) => {
-      params.set(`sort[${i}][field]`, s.field);
-      params.set(`sort[${i}][direction]`, s.direction);
-    });
-  }
-  if (options?.maxRecords) {
-    params.set('maxRecords', String(options.maxRecords));
-  }
-  if (options?.view) {
-    params.set('view', options.view);
-  }
-
-  if (!BASE_ID || !API_KEY) {
-    throw new Error('Airtable configuration missing. Please set VITE_AIRTABLE_BASE_ID and VITE_AIRTABLE_API_KEY in environment variables.');
-  }
-
-  const url = `${AIRTABLE_API}/${BASE_ID}/${encodeURIComponent(tableName)}?${params}`;
-
-  const response = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${API_KEY}`,
-      'Content-Type': 'application/json',
+  const { data, error } = await supabase.functions.invoke('airtable-proxy', {
+    body: {
+      tableName,
+      filterByFormula: options?.filterByFormula,
+      sort: options?.sort,
+      maxRecords: options?.maxRecords,
+      view: options?.view,
     },
   });
 
-  if (!response.ok) {
-    const error = await response.text();
-    console.error('Airtable API error:', error);
-    throw new Error(`Airtable API error: ${response.status}`);
+  if (error) {
+    console.error('Airtable proxy error:', error);
+    throw new Error(`Airtable API error: ${error.message}`);
   }
 
-  const data = await response.json();
+  if (data.error) {
+    console.error('Airtable API error:', data.error);
+    throw new Error(data.error);
+  }
+
   return data.records;
 }
 
