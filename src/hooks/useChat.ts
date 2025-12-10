@@ -51,11 +51,7 @@ export function useChat() {
     setIsLoading(true);
 
     try {
-      const webhookUrl = import.meta.env.VITE_N8N_ROUTE_WEBHOOK_URL;
-      
-      if (!webhookUrl) {
-        throw new Error('Route webhook URL not configured');
-      }
+      const webhookUrl = 'https://visionairy.app.n8n.cloud/webhook/route-query';
 
       const response = await fetch(webhookUrl, {
         method: 'POST',
