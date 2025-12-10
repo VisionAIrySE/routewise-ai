@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CSVUploadModalProps {
   open: boolean;
@@ -60,33 +61,28 @@ export function CSVUploadModal({ open, onOpenChange }: CSVUploadModalProps) {
 
   const handleFileUpload = async (file: File) => {
     setUploading(true);
-    
-    const webhookUrl = import.meta.env.VITE_N8N_CSV_WEBHOOK_URL;
-    
-    if (!webhookUrl) {
-      toast({
-        title: 'Configuration Error',
-        description: 'CSV webhook URL is not configured',
-        variant: 'destructive',
-      });
-      setUploading(false);
-      return;
-    }
 
     try {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch(webhookUrl, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error(`Upload failed: ${response.status}`);
-      }
+      // Use the Edge Function for CSV upload
+      const response = await fetch(
+        'https://ftlprmktjrhkxwrgwtig.supabase.co/functions/v1/csv-upload',
+        {
+          method: 'POST',
+          headers: {
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0bHBybWt0anJoa3h3cmd3dGlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzOTU0MjIsImV4cCI6MjA3OTk3MTQyMn0.jjXzhQcLcBINGLssVkC3fs6AW8MkspXbiPGkRpu80rk',
+          },
+          body: formData,
+        }
+      );
 
       const result = await response.json();
+
+      if (!response.ok || result.error) {
+        throw new Error(result.error || `Upload failed: ${response.status}`);
+      }
       
       // Extract records count from response
       const recordsCount = result.records_processed || result.count || result.records || 0;
