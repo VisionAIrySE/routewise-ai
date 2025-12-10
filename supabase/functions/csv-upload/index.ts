@@ -116,7 +116,7 @@ function transformToAirtableFormat(records: Record<string, string>[], company: s
     const zip = findField(['Zip', 'Zip Code', 'ZIP', 'Postal']);
     const insuredName = findField(['Insured Name', 'Insured', 'Policyholder', 'Name', 'Customer', 'Owner']);
     const dueDate = findField(['Due Date', 'Due', 'Deadline', 'Date Due']);
-    const fixedAppointment = findField(['Fixed Appointment', 'Appointment', 'Appt']);
+    const fixedAppointment = findField(['Fixed Appointment', 'Appointment Date', 'Appt Date']);
     const notes = findField(['Notes', 'Comments', 'Remarks']);
     const claimNumber = findField(['Claim', 'Claim Number', 'Claim #', 'Policy', 'Policy Number']);
     
