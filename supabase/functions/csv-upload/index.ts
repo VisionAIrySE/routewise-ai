@@ -126,6 +126,7 @@ function transformToAirtableFormat(records: Record<string, string>[], company: s
     }
     
     // Build fields object, only including non-empty values
+    // Note: 'Full Address' is a computed field in Airtable, don't include it
     const fields: Record<string, unknown> = {
       'Inspection ID': `${company}-${today.replace(/-/g, '')}-${String(index + 1).padStart(3, '0')}`,
       'Company': company,
@@ -135,7 +136,6 @@ function transformToAirtableFormat(records: Record<string, string>[], company: s
       'Status': 'Pending',
       'Date Added': today,
       'Upload Batch ID': batchId,
-      'Full Address': `${street}, ${city}, ${state} ${zip}`.trim().replace(/,\s*,/g, ','),
     };
     
     if (city) fields['City'] = city;
