@@ -3,6 +3,14 @@ const AIRTABLE_API = 'https://api.airtable.com/v0';
 const BASE_ID = import.meta.env.VITE_AIRTABLE_BASE_ID;
 const API_KEY = import.meta.env.VITE_AIRTABLE_API_KEY;
 
+// Debug: Log configuration status (remove in production)
+if (!BASE_ID) {
+  console.error('VITE_AIRTABLE_BASE_ID is not configured. Please set it in your environment variables.');
+}
+if (!API_KEY) {
+  console.error('VITE_AIRTABLE_API_KEY is not configured. Please set it in your environment variables.');
+}
+
 export interface AirtableRecord<T> {
   id: string;
   fields: T;
@@ -38,8 +46,12 @@ export async function fetchTable<T>(
     params.set('view', options.view);
   }
 
+  if (!BASE_ID || !API_KEY) {
+    throw new Error('Airtable configuration missing. Please set VITE_AIRTABLE_BASE_ID and VITE_AIRTABLE_API_KEY in environment variables.');
+  }
+
   const url = `${AIRTABLE_API}/${BASE_ID}/${encodeURIComponent(tableName)}?${params}`;
-  
+
   const response = await fetch(url, {
     headers: {
       Authorization: `Bearer ${API_KEY}`,
