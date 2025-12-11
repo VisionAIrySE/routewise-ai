@@ -72,7 +72,7 @@ export function ExamplePrompts({ onPromptClick }: ExamplePromptsProps) {
             </div>
             <div className="space-y-2">
               <h2 className="text-xl font-bold text-foreground lg:text-2xl">
-                AI RouteWise Assistant
+                RouteWise AI Assistant
               </h2>
               <p className="text-muted-foreground max-w-xl">
                 Plan, review, prioritize, and adjust your inspection schedule based on your needs. 
