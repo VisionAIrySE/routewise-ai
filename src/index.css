@@ -166,8 +166,36 @@
     print-color-adjust: exact !important;
   }
 
-  /* Hide everything except printable content */
-  body > *:not(#print-route-container) {
+  /* When printing from route response in chat dialog */
+  body.printing-route {
+    overflow: visible !important;
+  }
+
+  body.printing-route *:not(.route-response):not(.route-response *):not(.route-plan-content):not(.route-plan-content *) {
+    display: none !important;
+  }
+
+  body.printing-route .route-response,
+  body.printing-route .route-plan-content,
+  body.printing-route .route-plan-content * {
+    display: block !important;
+    visibility: visible !important;
+    position: static !important;
+    overflow: visible !important;
+  }
+
+  body.printing-route .route-response {
+    max-width: 100% !important;
+    padding: 20px !important;
+    margin: 0 !important;
+  }
+
+  body.printing-route .print\\:hidden {
+    display: none !important;
+  }
+
+  /* Hide everything except printable content by default */
+  body:not(.printing-route) > *:not(#print-route-container) {
     display: none !important;
   }
 
@@ -179,10 +207,7 @@
   .sidebar,
   button:not(.print-include),
   [role="navigation"],
-  [role="dialog"],
-  [data-radix-dialog-overlay],
-  [data-radix-dialog-content],
-  .chat-panel-dialog {
+  [data-radix-dialog-overlay] {
     display: none !important;
   }
 
@@ -197,11 +222,6 @@
     position: static !important;
   }
 
-  .route-response {
-    max-width: 100% !important;
-    padding: 0 !important;
-  }
-
   @page {
     margin: 0.5in;
     size: letter portrait;
@@ -209,10 +229,16 @@
 
   table {
     page-break-inside: auto;
+    border-collapse: collapse !important;
   }
 
   tr {
     page-break-inside: avoid;
     page-break-after: auto;
+  }
+
+  td, th {
+    border: 1px solid #333 !important;
+    padding: 8px !important;
   }
 }

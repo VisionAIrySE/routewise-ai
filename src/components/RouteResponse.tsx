@@ -246,7 +246,7 @@ export function RouteResponse({ response }: RouteResponseProps) {
       {(() => {
         const addresses = extractAddresses(response);
         return (response.route_plan || addresses.length > 0) && (
-          <div className="flex gap-2 mt-4 pt-4 border-t border-border flex-wrap">
+          <div className="flex gap-2 mt-4 pt-4 border-t border-border flex-wrap print:hidden">
             <Button 
               variant="outline" 
               size="sm" 
@@ -274,6 +274,11 @@ export function RouteResponse({ response }: RouteResponseProps) {
                     description: 'Could not extract addresses from the route plan',
                     variant: 'destructive',
                   });
+                } else {
+                  toast({
+                    title: 'Opening Google Maps',
+                    description: 'If blocked by popup blocker, please allow popups for this site',
+                  });
                 }
               }}
             >
@@ -283,7 +288,14 @@ export function RouteResponse({ response }: RouteResponseProps) {
             <Button 
               variant="outline" 
               size="sm" 
-              onClick={() => window.print()}
+              onClick={() => {
+                // Add print class to body to show only route content
+                document.body.classList.add('printing-route');
+                setTimeout(() => {
+                  window.print();
+                  document.body.classList.remove('printing-route');
+                }, 100);
+              }}
             >
               <Printer className="w-4 h-4 mr-2" />
               Print Route

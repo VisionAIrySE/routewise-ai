@@ -114,6 +114,27 @@ export function extractAddresses(response: RouteOptimizerResponse): string[] {
       }
     }
 
+    // Try to extract addresses from GFM table rows
+    // Look for table cells containing addresses (with zip codes)
+    const tableRowMatches = text.match(/\|[^|]*\d{5}[^|]*\|/g);
+    if (tableRowMatches) {
+      const addresses: string[] = [];
+      for (const match of tableRowMatches) {
+        // Extract the cell content that has a zip code
+        const cells = match.split('|').filter(cell => cell.trim());
+        for (const cell of cells) {
+          const trimmed = cell.trim();
+          // Must have a 5-digit zip and look like an address (has comma or street indicators)
+          if (/\d{5}/.test(trimmed) && (trimmed.includes(',') || /\d+\s+\w+/.test(trimmed))) {
+            addresses.push(trimmed);
+          }
+        }
+      }
+      if (addresses.length > 0) {
+        return addresses;
+      }
+    }
+
     // Fall back to 📍 emoji lines
     const emojiMatches = text.match(/📍\s*([^\n]+)/g);
     if (emojiMatches) {
