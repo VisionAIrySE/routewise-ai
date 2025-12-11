@@ -6,39 +6,253 @@ interface PrintableRouteProps {
   googleMapsApiKey?: string;
 }
 
-export function PrintableRoute({ route, homeBase, googleMapsApiKey }: PrintableRouteProps) {
-  // Generate static map URL for printing
-  const generateStaticMapUrl = () => {
-    if (!googleMapsApiKey) return null;
-    
-    const markers = route.stops.map((stop, index) => 
-      `markers=color:red%7Clabel:${index + 1}%7C${stop.lat},${stop.lng}`
-    ).join('&');
-    
-    const homeMarker = `markers=color:blue%7Clabel:H%7C${homeBase.lat},${homeBase.lng}`;
-    
-    // Create path
-    const pathPoints = [
-      `${homeBase.lat},${homeBase.lng}`,
-      ...route.stops.map(s => `${s.lat},${s.lng}`),
-      `${homeBase.lat},${homeBase.lng}`
-    ].join('|');
-    
-    const path = `path=color:0x3b82f6ff%7Cweight:3%7C${pathPoints}`;
-    
-    return `https://maps.googleapis.com/maps/api/staticmap?size=800x400&maptype=roadmap&${homeMarker}&${markers}&${path}&key=${googleMapsApiKey}`;
-  };
+const getUrgencyColor = (urgency: string) => {
+  switch (urgency) {
+    case 'CRITICAL': return '#dc2626';
+    case 'URGENT': return '#f97316';
+    case 'SOON': return '#eab308';
+    case 'FIXED': return '#8b5cf6';
+    default: return '#22c55e';
+  }
+};
 
-  const staticMapUrl = generateStaticMapUrl();
+// Generate static map URL for printing
+const generateStaticMapUrl = (route: RouteDay, homeBase: { lat: number; lng: number }, googleMapsApiKey?: string) => {
+  if (!googleMapsApiKey) return null;
+  
+  const markers = route.stops.map((stop, index) => 
+    `markers=color:red%7Clabel:${index + 1}%7C${stop.lat},${stop.lng}`
+  ).join('&');
+  
+  const homeMarker = `markers=color:blue%7Clabel:H%7C${homeBase.lat},${homeBase.lng}`;
+  
+  // Create path
+  const pathPoints = [
+    `${homeBase.lat},${homeBase.lng}`,
+    ...route.stops.map(s => `${s.lat},${s.lng}`),
+    `${homeBase.lat},${homeBase.lng}`
+  ].join('|');
+  
+  const path = `path=color:0x3b82f6ff%7Cweight:3%7C${pathPoints}`;
+  
+  return `https://maps.googleapis.com/maps/api/staticmap?size=800x400&maptype=roadmap&${homeMarker}&${markers}&${path}&key=${googleMapsApiKey}`;
+};
 
-  const getUrgencyColor = (urgency: string) => {
-    switch (urgency) {
-      case 'CRITICAL': return '#dc2626';
-      case 'URGENT': return '#f97316';
-      case 'SOON': return '#eab308';
-      default: return '#22c55e';
+export function generatePrintWindowHTML(
+  route: RouteDay, 
+  homeBase: { lat: number; lng: number; address: string },
+  googleMapsApiKey?: string
+): string {
+  const staticMapUrl = generateStaticMapUrl(route, homeBase, googleMapsApiKey);
+  
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <title>RouteWise AI - ${route.day} Route</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { 
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      color: #1a1a2e;
+      line-height: 1.5;
+      padding: 40px;
+      max-width: 850px;
+      margin: 0 auto;
+      background: #fff;
     }
-  };
+    .header {
+      border-bottom: 3px solid #3b82f6;
+      padding-bottom: 20px;
+      margin-bottom: 30px;
+    }
+    .header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1e3a5f;
+      margin-bottom: 4px;
+    }
+    .header .brand {
+      color: #3b82f6;
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .header .date {
+      color: #64748b;
+      font-size: 16px;
+      margin-top: 8px;
+    }
+    .summary {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .summary-item {
+      font-size: 14px;
+    }
+    .summary-item strong {
+      color: #1e3a5f;
+    }
+    .map-container {
+      margin-bottom: 24px;
+    }
+    .map-container img {
+      width: 100%;
+      max-width: 800px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-bottom: 24px;
+    }
+    th {
+      background: #f8fafc;
+      padding: 12px 8px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #475569;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    td {
+      padding: 10px 8px;
+      border-bottom: 1px solid #e2e8f0;
+      vertical-align: top;
+    }
+    .stop-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      color: white;
+      font-weight: 700;
+      font-size: 12px;
+    }
+    .urgency-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    .nav-section {
+      margin-top: 32px;
+      padding: 20px;
+      background: #f8fafc;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+    .nav-section h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #1e3a5f;
+    }
+    .nav-address {
+      padding: 6px 0;
+      font-size: 13px;
+      border-bottom: 1px dashed #cbd5e1;
+    }
+    .nav-address:last-child {
+      border-bottom: none;
+    }
+    .footer {
+      margin-top: 32px;
+      padding-top: 16px;
+      border-top: 1px solid #e2e8f0;
+      text-align: center;
+      color: #94a3b8;
+      font-size: 11px;
+    }
+    @media print {
+      body { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="brand">RouteWise AI</div>
+    <h1>Route Plan: ${route.day}</h1>
+    <div class="date">${route.date}</div>
+  </div>
+  
+  <div class="summary">
+    <div class="summary-item"><strong>${route.summary.stops}</strong> stops</div>
+    <div class="summary-item"><strong>${route.summary.total_route_hours}</strong> total hours</div>
+    <div class="summary-item"><strong>${route.summary.total_drive_hours}</strong> drive hours</div>
+    <div class="summary-item"><strong>${route.summary.total_distance_miles}</strong> miles</div>
+    <div class="summary-item">Est. fuel: <strong>$${route.summary.estimated_fuel}</strong></div>
+  </div>
+  
+  ${staticMapUrl ? `
+  <div class="map-container">
+    <img src="${staticMapUrl}" alt="Route Map" />
+  </div>
+  ` : ''}
+  
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 40px;">#</th>
+        <th>Property</th>
+        <th>Address</th>
+        <th style="width: 70px;">Company</th>
+        <th style="width: 70px;">Urgency</th>
+        <th style="width: 50px;">Time</th>
+        <th style="width: 50px;">Drive</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${route.stops.map(stop => {
+        const color = getUrgencyColor(stop.urgency);
+        return `
+          <tr>
+            <td>
+              <span class="stop-number" style="background-color: ${color};">${stop.order}</span>
+            </td>
+            <td><strong>${stop.name}</strong></td>
+            <td>${stop.address}</td>
+            <td>${stop.company}</td>
+            <td>
+              <span class="urgency-badge" style="background-color: ${color}20; color: ${color};">
+                ${stop.urgency}
+              </span>
+            </td>
+            <td>${stop.duration_minutes}m</td>
+            <td>${stop.drive_minutes_to_next ? `${stop.drive_minutes_to_next}m` : '-'}</td>
+          </tr>
+        `;
+      }).join('')}
+    </tbody>
+  </table>
+  
+  <div class="nav-section">
+    <h3>📍 Addresses for Navigation</h3>
+    <div class="nav-address"><strong>Start:</strong> ${homeBase.address}</div>
+    ${route.stops.map(stop => `
+      <div class="nav-address"><strong>${stop.order}.</strong> ${stop.address}</div>
+    `).join('')}
+    <div class="nav-address"><strong>Return:</strong> ${homeBase.address}</div>
+  </div>
+  
+  <div class="footer">
+    Generated on ${new Date().toLocaleString()} • RouteWise AI - Inspector Route Optimizer
+  </div>
+</body>
+</html>`;
+}
+
+export function PrintableRoute({ route, homeBase, googleMapsApiKey }: PrintableRouteProps) {
+  const staticMapUrl = generateStaticMapUrl(route, homeBase, googleMapsApiKey);
 
   return (
     <div className="printable-route p-8 bg-white text-black">
