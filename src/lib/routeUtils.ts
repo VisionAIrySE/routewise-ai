@@ -282,6 +282,9 @@ export function generatePrintableHTML(routeContent: string, queryDate?: string):
       days.push({ title: dayName, date, stops, summary });
     }
   }
+  
+  // Check if parsing failed - fall back to styled markdown rendering
+  const parsingFailed = days.length === 0;
 
   // Extract navigation addresses
   const navAddresses: string[] = [];
@@ -304,6 +307,43 @@ export function generatePrintableHTML(routeContent: string, queryDate?: string):
       case 'FIXED': return { bg: '#f5f3ff', text: '#7c3aed', badge: '#8b5cf6' };
       default: return { bg: '#f0fdf4', text: '#16a34a', badge: '#22c55e' };
     }
+  };
+
+  // Convert markdown to styled HTML for fallback
+  const formatMarkdownContent = (content: string): string => {
+    return content
+      // Headers
+      .replace(/^### (.+)$/gm, '<h3 style="font-size: 18px; font-weight: 600; color: #1e3a5f; margin: 24px 0 12px 0; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0;">$1</h3>')
+      .replace(/^## (.+)$/gm, '<h2 style="font-size: 22px; font-weight: 700; color: #1e3a5f; margin: 28px 0 16px 0;">$1</h2>')
+      .replace(/^# (.+)$/gm, '<h1 style="font-size: 28px; font-weight: 700; color: #1e3a5f; margin: 32px 0 20px 0;">$1</h1>')
+      // Bold
+      .replace(/\*\*([^*]+)\*\*/g, '<strong style="font-weight: 600; color: #1e293b;">$1</strong>')
+      // Emojis with styling
+      .replace(/📅/g, '<span style="margin-right: 8px;">📅</span>')
+      .replace(/📍/g, '<span style="color: #3b82f6; margin-right: 6px;">📍</span>')
+      .replace(/📊/g, '<span style="margin-right: 8px;">📊</span>')
+      .replace(/🏠/g, '<span style="margin-right: 8px;">🏠</span>')
+      .replace(/📤/g, '<span style="margin-right: 8px;">📤</span>')
+      .replace(/🔴/g, '<span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: #dc2626; margin-right: 6px;"></span>')
+      .replace(/🟠/g, '<span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: #f97316; margin-right: 6px;"></span>')
+      .replace(/🟡/g, '<span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: #eab308; margin-right: 6px;"></span>')
+      .replace(/🟢/g, '<span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: #22c55e; margin-right: 6px;"></span>')
+      .replace(/🔵/g, '<span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: #8b5cf6; margin-right: 6px;"></span>')
+      // Horizontal rules
+      .replace(/^---+$/gm, '<hr style="border: none; border-top: 2px solid #e2e8f0; margin: 24px 0;">')
+      // Lists
+      .replace(/^- (.+)$/gm, '<div style="padding-left: 20px; margin: 4px 0;">• $1</div>')
+      .replace(/^\d+\.\s+(.+)$/gm, (match, p1, offset, str) => {
+        const num = match.match(/^(\d+)/)?.[1] || '•';
+        return `<div style="display: flex; margin: 6px 0;"><span style="min-width: 28px; font-weight: 600; color: #3b82f6;">${num}.</span><span>${p1}</span></div>`;
+      })
+      // Paragraphs (add spacing to double newlines)
+      .replace(/\n\n/g, '</p><p style="margin: 12px 0;">')
+      // Single newlines to line breaks
+      .replace(/\n/g, '<br>')
+      // Wrap in paragraph
+      .replace(/^/, '<p style="margin: 12px 0;">')
+      .replace(/$/, '</p>');
   };
 
   // Generate HTML
@@ -507,6 +547,14 @@ export function generatePrintableHTML(routeContent: string, queryDate?: string):
       font-size: 12px;
     }
     
+    .route-content {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 32px;
+      margin-top: 20px;
+    }
+    
     @media print {
       body { padding: 20px; }
       .day-section { page-break-inside: avoid; }
@@ -521,7 +569,11 @@ export function generatePrintableHTML(routeContent: string, queryDate?: string):
     <div class="date">Generated on ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} at ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
   </div>
 
-  ${days.map(day => `
+  ${parsingFailed ? `
+    <div class="route-content">
+      ${formatMarkdownContent(routeContent)}
+    </div>
+  ` : days.map(day => `
     <div class="day-section">
       <div class="day-header">
         <h2>${day.title}${day.date ? ` - ${day.date}` : ''}</h2>
