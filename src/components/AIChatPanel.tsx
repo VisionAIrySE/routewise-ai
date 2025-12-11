@@ -46,6 +46,7 @@ export function AIChatPanel({ open, onOpenChange }: AIChatPanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const lastAssistantRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
+  const lastAssistantIdRef = useRef<string | null>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -55,12 +56,24 @@ export function AIChatPanel({ open, onOpenChange }: AIChatPanelProps) {
     [messages]
   );
 
-  // Scroll to show the top of the latest assistant message
+  // Find the last assistant message
+  const lastAssistantMessage = useMemo(() => 
+    [...messages].reverse().find(m => m.role === 'assistant'),
+    [messages]
+  );
+
+  // Scroll to show the top of the latest assistant message only when a NEW one arrives
   useEffect(() => {
-    if (lastAssistantRef.current && scrollRef.current) {
-      lastAssistantRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (lastAssistantMessage && lastAssistantMessage.id !== lastAssistantIdRef.current) {
+      lastAssistantIdRef.current = lastAssistantMessage.id;
+      // Small delay to ensure DOM is updated
+      setTimeout(() => {
+        if (lastAssistantRef.current) {
+          lastAssistantRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 50);
     }
-  }, [messages]);
+  }, [lastAssistantMessage]);
 
   // Initialize speech recognition
   useEffect(() => {
