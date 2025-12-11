@@ -84,9 +84,9 @@ export function CSVUploadModal({ open, onOpenChange }: CSVUploadModalProps) {
         throw new Error(result.error || `Upload failed: ${response.status}`);
       }
       
-      // Extract records count from response
-      const recordsCount = result.records_processed || result.count || result.records || 0;
-      const companyDetected = result.company_detected || result.company || 'Unknown';
+      // Extract records count from response - n8n returns inserted_to_airtable, valid_inspections, or total_rows_in_file
+      const recordsCount = result.inserted_to_airtable || result.valid_inspections || result.total_rows_in_file || result.records_processed || result.count || result.records || 0;
+      const companyDetected = result.company || result.company_detected || 'Unknown';
 
       // Update recent uploads
       const newUpload: RecentUpload = {
