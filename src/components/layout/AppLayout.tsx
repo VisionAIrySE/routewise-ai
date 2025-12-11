@@ -67,7 +67,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             onClick={() => setUploadModalOpen(true)}
           >
             <Upload className="h-4 w-4" />
-            Upload CSV
+            Upload CSV/XLS
           </Button>
         </div>
       </aside>
