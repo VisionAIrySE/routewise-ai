@@ -62,77 +62,108 @@ const rightColumn = promptCategories.slice(3);
 
 export function ExamplePrompts({ onPromptClick }: ExamplePromptsProps) {
   return (
-    <div className="rounded-xl border border-border bg-card animate-fade-in">
-      <Accordion type="single" collapsible defaultValue="ai-assistant">
-        <AccordionItem value="ai-assistant" className="border-0">
-          <AccordionTrigger className="px-6 py-4 hover:no-underline">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                <Sparkles className="h-5 w-5 text-primary" />
-              </div>
-              <div className="text-left">
-                <h3 className="font-semibold text-foreground">AI Route Assistant</h3>
-                <p className="text-sm text-muted-foreground font-normal">
-                  Click any prompt to get started
-                </p>
-              </div>
+    <div className="space-y-4 animate-fade-in">
+      {/* Prominent CTA Section */}
+      <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 via-card to-primary/10 p-6 lg:p-8">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+          <div className="flex items-start gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/25">
+              <Sparkles className="h-7 w-7 text-primary-foreground" />
             </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-6 pb-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Left Column */}
-              <div className="space-y-5">
-                {leftColumn.map(([category, categoryPrompts]) => (
-                  <div key={category}>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-2">
-                      {category}
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {categoryPrompts.map((prompt, index) => (
-                        <Button
-                          key={index}
-                          variant="outline"
-                          size="sm"
-                          className="h-auto py-1.5 px-2.5 text-xs text-left whitespace-normal"
-                          onClick={() => onPromptClick?.(prompt)}
-                        >
-                          <MessageCircle className="h-3 w-3 mr-1.5 shrink-0" />
-                          {prompt}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
+            <div className="space-y-2">
+              <h2 className="text-xl font-bold text-foreground lg:text-2xl">
+                AI RouteWise Assistant
+              </h2>
+              <p className="text-muted-foreground max-w-xl">
+                Plan, review, prioritize, and adjust your inspection schedule based on your needs. 
+                Just describe your availability and let AI optimize your routes!
+              </p>
+            </div>
+          </div>
+          <Button
+            size="lg"
+            className="shrink-0 gap-2 shadow-lg shadow-primary/25 text-base px-6 py-6"
+            onClick={() => onPromptClick?.("I have time available today, what should I prioritize?")}
+          >
+            <MessageCircle className="h-5 w-5" />
+            Start Planning
+          </Button>
+        </div>
+      </div>
 
-              {/* Right Column */}
-              <div className="space-y-5">
-                {rightColumn.map(([category, categoryPrompts]) => (
-                  <div key={category}>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-2">
-                      {category}
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {categoryPrompts.map((prompt, index) => (
-                        <Button
-                          key={index}
-                          variant="outline"
-                          size="sm"
-                          className="h-auto py-1.5 px-2.5 text-xs text-left whitespace-normal"
-                          onClick={() => onPromptClick?.(prompt)}
-                        >
-                          <MessageCircle className="h-3 w-3 mr-1.5 shrink-0" />
-                          {prompt}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+      {/* Prompt Suggestions Accordion */}
+      <div className="rounded-xl border border-border bg-card">
+        <Accordion type="single" collapsible>
+          <AccordionItem value="prompt-suggestions" className="border-0">
+            <AccordionTrigger className="px-6 py-4 hover:no-underline">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted">
+                  <MessageCircle className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <div className="text-left">
+                  <h3 className="font-medium text-foreground">Prompt Suggestions</h3>
+                  <p className="text-sm text-muted-foreground font-normal">
+                    Example prompts to help you get started
+                  </p>
+                </div>
               </div>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Left Column */}
+                <div className="space-y-5">
+                  {leftColumn.map(([category, categoryPrompts]) => (
+                    <div key={category}>
+                      <h4 className="text-sm font-medium text-muted-foreground mb-2">
+                        {category}
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {categoryPrompts.map((prompt, index) => (
+                          <Button
+                            key={index}
+                            variant="outline"
+                            size="sm"
+                            className="h-auto py-1.5 px-2.5 text-xs text-left whitespace-normal"
+                            onClick={() => onPromptClick?.(prompt)}
+                          >
+                            <MessageCircle className="h-3 w-3 mr-1.5 shrink-0" />
+                            {prompt}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Right Column */}
+                <div className="space-y-5">
+                  {rightColumn.map(([category, categoryPrompts]) => (
+                    <div key={category}>
+                      <h4 className="text-sm font-medium text-muted-foreground mb-2">
+                        {category}
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {categoryPrompts.map((prompt, index) => (
+                          <Button
+                            key={index}
+                            variant="outline"
+                            size="sm"
+                            className="h-auto py-1.5 px-2.5 text-xs text-left whitespace-normal"
+                            onClick={() => onPromptClick?.(prompt)}
+                          >
+                            <MessageCircle className="h-3 w-3 mr-1.5 shrink-0" />
+                            {prompt}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </div>
     </div>
   );
 }
