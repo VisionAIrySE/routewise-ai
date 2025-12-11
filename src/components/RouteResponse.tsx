@@ -46,7 +46,7 @@ export function RouteResponse({ response }: RouteResponseProps) {
     }
   };
 
-  // If we have optimized routes with coordinates, show the map view
+  // If we have optimized routes with actual stops, show the map view
   if (hasOptimizedRoutes(response)) {
     return (
       <div className="route-response w-full">
