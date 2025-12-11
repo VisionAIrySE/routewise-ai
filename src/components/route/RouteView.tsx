@@ -54,23 +54,34 @@ export function RouteView({ routes, homeBase, onSaveRoute }: RouteViewProps) {
   const printRoute = () => {
     const html = generatePrintWindowHTML(currentRoute, homeBase, googleMapsApiKey);
     
-    // Create a Blob and open it in a new tab
-    const blob = new Blob([html], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const printWindow = window.open(url, '_blank');
+    // Create a hidden iframe for printing
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'absolute';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = 'none';
+    iframe.style.left = '-9999px';
+    document.body.appendChild(iframe);
     
-    if (printWindow) {
-      printWindow.onload = () => {
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (iframeDoc) {
+      iframeDoc.open();
+      iframeDoc.write(html);
+      iframeDoc.close();
+      
+      // Wait for content to load then print
+      setTimeout(() => {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+        // Clean up after print dialog closes
         setTimeout(() => {
-          printWindow.print();
-          URL.revokeObjectURL(url);
-        }, 300);
-      };
+          document.body.removeChild(iframe);
+        }, 1000);
+      }, 300);
     } else {
-      URL.revokeObjectURL(url);
       toast({
-        title: 'Popup Blocked',
-        description: 'Please allow popups to print the route',
+        title: 'Print Failed',
+        description: 'Could not create print preview',
         variant: 'destructive',
       });
     }
