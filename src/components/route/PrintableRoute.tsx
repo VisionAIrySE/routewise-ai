@@ -41,7 +41,7 @@ export function PrintableRoute({ route, homeBase, googleMapsApiKey }: PrintableR
   };
 
   return (
-    <div className="printable-route hidden print:block p-8 bg-white text-black">
+    <div className="printable-route p-8 bg-white text-black">
       {/* Header */}
       <div className="border-b-2 border-gray-300 pb-4 mb-6">
         <h1 className="text-2xl font-bold">Route Plan: {route.day}</h1>
