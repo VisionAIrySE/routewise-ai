@@ -52,14 +52,17 @@ export function RouteView({ routes, homeBase, onSaveRoute }: RouteViewProps) {
   };
 
   const printRoute = () => {
-    const printWindow = window.open('', '_blank');
+    const html = generatePrintWindowHTML(currentRoute, homeBase, googleMapsApiKey);
+    const printWindow = window.open('about:blank', '_blank');
     if (printWindow) {
-      const html = generatePrintWindowHTML(currentRoute, homeBase, googleMapsApiKey);
+      printWindow.document.open();
       printWindow.document.write(html);
       printWindow.document.close();
-      printWindow.onload = () => {
+      // Wait for content to render before printing
+      setTimeout(() => {
+        printWindow.focus();
         printWindow.print();
-      };
+      }, 250);
     } else {
       toast({
         title: 'Popup Blocked',
