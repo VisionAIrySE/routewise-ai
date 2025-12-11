@@ -163,59 +163,14 @@ export function extractAddresses(response: RouteOptimizerResponse): string[] {
 }
 
 export function extractPrintableRouteContent(routePlan: string): string {
-  // Strategy: Find the last "EXPORT FOR NAVIGATION" section and work backwards
-  // to find where that route block starts (the first 📅 DAY header of that block)
+  // Find the last occurrence of "Route Optimization" and take everything after it
+  const lastRouteOptIndex = routePlan.lastIndexOf('Route Optimization');
   
-  const exportMatch = routePlan.lastIndexOf('EXPORT FOR NAVIGATION');
-  
-  if (exportMatch !== -1) {
-    // Found export section - now find the route block that contains it
-    // Look backwards from the export section to find 📅 DAY headers
-    const beforeExport = routePlan.substring(0, exportMatch);
-    
-    // Find all day headers before the export
-    const dayPattern = /📅\s*(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY)[^\n]*/gi;
-    const matches: { index: number; day: string }[] = [];
-    let match;
-    while ((match = dayPattern.exec(beforeExport)) !== null) {
-      matches.push({ index: match.index, day: match[1] });
-    }
-    
-    if (matches.length > 0) {
-      // Work backwards from the last match to find consecutive route days
-      // They're part of the same route if there's actual route content (STOP markers) between them
-      let startIndex = matches[matches.length - 1].index;
-      
-      for (let i = matches.length - 2; i >= 0; i--) {
-        const contentBetween = routePlan.substring(matches[i].index, matches[i + 1].index);
-        // If there's route content between consecutive days, include the earlier day
-        if (/📍\s*STOP\s*\d+/i.test(contentBetween) && /RETURN TO HOME|SUMMARY/i.test(contentBetween)) {
-          startIndex = matches[i].index;
-        } else {
-          // No route content between - this is a break, stop here
-          break;
-        }
-      }
-      
-      return routePlan.substring(startIndex);
-    }
+  if (lastRouteOptIndex !== -1) {
+    return routePlan.substring(lastRouteOptIndex);
   }
   
-  // Fallback: Find the last 📅 DAY header with route content
-  const dayPattern = /📅\s*(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY)[^\n]*/gi;
-  const matches: { index: number }[] = [];
-  let match;
-  while ((match = dayPattern.exec(routePlan)) !== null) {
-    const afterMatch = routePlan.substring(match.index, match.index + 500);
-    if (/📍\s*STOP\s*\d+/i.test(afterMatch)) {
-      matches.push({ index: match.index });
-    }
-  }
-  
-  if (matches.length > 0) {
-    return routePlan.substring(matches[matches.length - 1].index);
-  }
-  
+  // Fallback: return full content
   return routePlan;
 }
 
