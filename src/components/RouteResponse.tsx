@@ -1,4 +1,5 @@
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useState } from 'react';
 import { Copy, MapPin, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -172,6 +173,7 @@ export function RouteResponse({ response }: RouteResponseProps) {
       {response.route_plan && (
         <div className="route-plan-content prose prose-sm dark:prose-invert max-w-none">
           <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
             components={{
               h1: ({ children }) => (
                 <h1 className="text-xl font-bold mt-6 mb-3 text-foreground">{children}</h1>
@@ -210,6 +212,28 @@ export function RouteResponse({ response }: RouteResponseProps) {
               ),
               p: ({ children }) => (
                 <p className="my-2 text-foreground">{children}</p>
+              ),
+              table: ({ children }) => (
+                <div className="overflow-x-auto my-4">
+                  <table className="w-full border-collapse border border-border text-sm">
+                    {children}
+                  </table>
+                </div>
+              ),
+              thead: ({ children }) => (
+                <thead className="bg-muted">{children}</thead>
+              ),
+              tbody: ({ children }) => (
+                <tbody>{children}</tbody>
+              ),
+              tr: ({ children }) => (
+                <tr className="border-b border-border">{children}</tr>
+              ),
+              th: ({ children }) => (
+                <th className="px-3 py-2 text-left font-semibold text-foreground border border-border">{children}</th>
+              ),
+              td: ({ children }) => (
+                <td className="px-3 py-2 text-foreground border border-border">{children}</td>
               ),
             }}
           >
