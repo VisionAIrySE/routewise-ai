@@ -38,7 +38,7 @@ export interface RouteOptimizerResponse {
   success: boolean;
   query: string;
   query_date: string;
-  available_hours: number;
+  available_hours: number | null;
   total_pending: number;
   urgency_counts: {
     CRITICAL: number;
@@ -48,9 +48,12 @@ export interface RouteOptimizerResponse {
     UNKNOWN: number;
   };
   route_plan?: string;
+  ai_summary?: string;
   optimized_routes?: RouteDay[];
   home_base?: HomeBase;
   generated_at: string;
+  deferred?: string[];
+  deferred_reason?: string;
 }
 
 export function isRouteOptimizerResponse(data: unknown): data is RouteOptimizerResponse {
