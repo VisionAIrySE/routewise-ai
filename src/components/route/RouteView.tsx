@@ -54,16 +54,21 @@ export function RouteView({ routes, homeBase, onSaveRoute }: RouteViewProps) {
   const printRoute = () => {
     const html = generatePrintWindowHTML(currentRoute, homeBase, googleMapsApiKey);
     
-    // Open new window with the print content - let user print manually with Ctrl+P
-    const printWindow = window.open('', 'RouteWise_Print', 'width=900,height=700');
-    if (printWindow) {
-      printWindow.document.write(html);
-      printWindow.document.close();
+    // Create Blob and open in new tab
+    const blob = new Blob([html], { type: 'text/html' });
+    const blobUrl = URL.createObjectURL(blob);
+    const newWindow = window.open(blobUrl, '_blank');
+    
+    if (newWindow) {
+      newWindow.onload = () => {
+        URL.revokeObjectURL(blobUrl);
+      };
       toast({
-        title: 'Print Preview Ready',
-        description: 'Use Ctrl+P (or Cmd+P on Mac) to print',
+        title: 'Print Preview Opened',
+        description: 'Click the Print button in the new tab',
       });
     } else {
+      URL.revokeObjectURL(blobUrl);
       toast({
         title: 'Popup Blocked',
         description: 'Please allow popups for this site to print',

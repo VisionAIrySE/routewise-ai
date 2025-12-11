@@ -175,10 +175,36 @@ export function generatePrintWindowHTML(
     }
     @media print {
       body { padding: 20px; }
+      .print-button { display: none !important; }
+    }
+    
+    .print-button {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .print-button:hover {
+      background: #2563eb;
     }
   </style>
 </head>
 <body>
+  <button class="print-button" onclick="window.print()">
+    🖨️ Print Route
+  </button>
+  
   <div class="header">
     <div class="brand">RouteWise AI</div>
     <h1>Route Plan: ${route.day}</h1>
