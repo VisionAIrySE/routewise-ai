@@ -54,34 +54,19 @@ export function RouteView({ routes, homeBase, onSaveRoute }: RouteViewProps) {
   const printRoute = () => {
     const html = generatePrintWindowHTML(currentRoute, homeBase, googleMapsApiKey);
     
-    // Create a hidden iframe for printing
-    const iframe = document.createElement('iframe');
-    iframe.style.position = 'absolute';
-    iframe.style.width = '0';
-    iframe.style.height = '0';
-    iframe.style.border = 'none';
-    iframe.style.left = '-9999px';
-    document.body.appendChild(iframe);
-    
-    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-    if (iframeDoc) {
-      iframeDoc.open();
-      iframeDoc.write(html);
-      iframeDoc.close();
-      
-      // Wait for content to load then print
-      setTimeout(() => {
-        iframe.contentWindow?.focus();
-        iframe.contentWindow?.print();
-        // Clean up after print dialog closes
-        setTimeout(() => {
-          document.body.removeChild(iframe);
-        }, 1000);
-      }, 300);
+    // Open new window with the print content - let user print manually with Ctrl+P
+    const printWindow = window.open('', 'RouteWise_Print', 'width=900,height=700');
+    if (printWindow) {
+      printWindow.document.write(html);
+      printWindow.document.close();
+      toast({
+        title: 'Print Preview Ready',
+        description: 'Use Ctrl+P (or Cmd+P on Mac) to print',
+      });
     } else {
       toast({
-        title: 'Print Failed',
-        description: 'Could not create print preview',
+        title: 'Popup Blocked',
+        description: 'Please allow popups for this site to print',
         variant: 'destructive',
       });
     }
