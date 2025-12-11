@@ -137,15 +137,30 @@ export function RouteView({ routes, homeBase, onSaveRoute }: RouteViewProps) {
 
         {/* Action Buttons */}
         <div className="flex flex-wrap gap-2 mt-4">
-          <Button variant="outline" size="sm" onClick={copyAddresses}>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={copyAddresses}
+            disabled={currentRoute.stops.length === 0}
+          >
             <Copy className="h-4 w-4 mr-2" />
             Copy Addresses
           </Button>
-          <Button variant="outline" size="sm" onClick={openInGoogleMaps}>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={openInGoogleMaps}
+            disabled={currentRoute.stops.length === 0}
+          >
             <Navigation className="h-4 w-4 mr-2" />
             Open in Maps
           </Button>
-          <Button variant="outline" size="sm" onClick={printRoute}>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={printRoute}
+            disabled={currentRoute.stops.length === 0}
+          >
             <Printer className="h-4 w-4 mr-2" />
             Print Route
           </Button>
