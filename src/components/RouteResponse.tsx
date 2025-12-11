@@ -250,6 +250,8 @@ export function RouteResponse({ response }: RouteResponseProps) {
       {(() => {
         const addresses = extractAddresses(response);
         const mapsUrl = generateGoogleMapsUrl(addresses);
+        console.log('[RouteResponse] Extracted addresses:', addresses);
+        console.log('[RouteResponse] Generated Maps URL:', mapsUrl);
         return (response.route_plan || addresses.length > 0) && (
           <div className="flex gap-2 mt-4 pt-4 border-t border-border flex-wrap print:hidden">
             <Button 
