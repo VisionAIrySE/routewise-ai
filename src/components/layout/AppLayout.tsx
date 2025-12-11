@@ -4,14 +4,12 @@ import {
   LayoutDashboard, 
   Calendar, 
   ClipboardList, 
-  Upload,
   Menu,
   MapPin
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { CSVUploadModal } from '@/components/CSVUploadModal';
 import { AIChatPanel } from '@/components/AIChatPanel';
 
 interface AppLayoutProps {
@@ -27,7 +25,6 @@ const navigation = [
 export function AppLayout({ children }: AppLayoutProps) {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [chatPanelOpen, setChatPanelOpen] = useState(false);
 
   return (
@@ -60,16 +57,6 @@ export function AppLayout({ children }: AppLayoutProps) {
             );
           })}
         </nav>
-        <div className="absolute bottom-4 left-4 right-4">
-          <Button
-            variant="outline"
-            className="w-full justify-start gap-2"
-            onClick={() => setUploadModalOpen(true)}
-          >
-            <Upload className="h-4 w-4" />
-            Upload CSV/XLS
-          </Button>
-        </div>
       </aside>
 
       {/* Mobile Header */}
@@ -89,13 +76,6 @@ export function AppLayout({ children }: AppLayoutProps) {
             <span className="font-semibold">RouteWise-AI</span>
           </div>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setUploadModalOpen(true)}
-        >
-          <Upload className="h-5 w-5" />
-        </Button>
       </header>
 
       {/* Mobile Navigation Sheet */}
@@ -137,10 +117,6 @@ export function AppLayout({ children }: AppLayoutProps) {
           {children}
         </div>
       </main>
-
-
-      {/* CSV Upload Modal */}
-      <CSVUploadModal open={uploadModalOpen} onOpenChange={setUploadModalOpen} />
 
       {/* AI Chat Panel */}
       <AIChatPanel open={chatPanelOpen} onOpenChange={setChatPanelOpen} />
