@@ -355,6 +355,8 @@ export function generatePrintableHTML(routeContent: string, queryDate?: string):
   return `<!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RouteWise AI - Route Plan</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -362,7 +364,7 @@ export function generatePrintableHTML(routeContent: string, queryDate?: string):
       font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
       color: #1a1a2e;
       line-height: 1.5;
-      padding: 40px;
+      padding: 20px;
       max-width: 850px;
       margin: 0 auto;
       background: #fff;
@@ -370,47 +372,49 @@ export function generatePrintableHTML(routeContent: string, queryDate?: string):
     
     .header {
       border-bottom: 3px solid #3b82f6;
-      padding-bottom: 20px;
-      margin-bottom: 30px;
+      padding-bottom: 16px;
+      margin-bottom: 24px;
     }
     .header h1 {
-      font-size: 28px;
+      font-size: clamp(20px, 5vw, 28px);
       font-weight: 700;
       color: #1e3a5f;
       margin-bottom: 4px;
     }
     .header .brand {
       color: #3b82f6;
-      font-size: 14px;
+      font-size: 12px;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 1px;
     }
     .header .date {
       color: #64748b;
-      font-size: 16px;
+      font-size: clamp(12px, 3vw, 14px);
       margin-top: 8px;
     }
     
     .day-section {
-      margin-bottom: 40px;
+      margin-bottom: 32px;
       page-break-inside: avoid;
     }
     .day-header {
       background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
       color: white;
-      padding: 16px 24px;
+      padding: 14px 16px;
       border-radius: 12px 12px 0 0;
       display: flex;
+      flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
+      gap: 8px;
     }
     .day-header h2 {
-      font-size: 20px;
+      font-size: clamp(16px, 4vw, 20px);
       font-weight: 600;
     }
     .day-header .stats {
-      font-size: 14px;
+      font-size: clamp(11px, 3vw, 14px);
       opacity: 0.9;
     }
     
@@ -420,185 +424,215 @@ export function generatePrintableHTML(routeContent: string, queryDate?: string):
       background: white;
       border: 1px solid #e2e8f0;
       border-top: none;
+      display: block;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .stops-table thead, .stops-table tbody, .stops-table tr {
+      display: table;
+      width: 100%;
+      table-layout: fixed;
     }
     .stops-table th {
       background: #f8fafc;
-      padding: 12px 16px;
+      padding: 10px 8px;
       text-align: left;
       font-weight: 600;
-      font-size: 12px;
+      font-size: clamp(10px, 2.5vw, 12px);
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.3px;
       color: #475569;
       border-bottom: 2px solid #e2e8f0;
     }
     .stops-table td {
-      padding: 14px 16px;
+      padding: 10px 8px;
       border-bottom: 1px solid #e2e8f0;
       vertical-align: top;
+      font-size: clamp(12px, 3vw, 14px);
     }
     .stops-table tr:last-child td {
       border-bottom: none;
-    }
-    .stops-table tr:hover {
-      background: #f8fafc;
     }
     
     .stop-number {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 28px;
-      height: 28px;
+      width: 26px;
+      height: 26px;
       border-radius: 50%;
       color: white;
       font-weight: 700;
-      font-size: 13px;
+      font-size: 12px;
     }
     
     .stop-name {
       font-weight: 600;
       color: #1e293b;
       margin-bottom: 2px;
+      word-break: break-word;
     }
     .stop-address {
-      font-size: 13px;
+      font-size: clamp(11px, 2.5vw, 13px);
       color: #64748b;
+      word-break: break-word;
     }
     
     .urgency-badge {
       display: inline-block;
-      padding: 4px 10px;
-      border-radius: 12px;
-      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-size: clamp(9px, 2vw, 11px);
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.2px;
     }
     
     .call-ahead {
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      font-size: 12px;
+      font-size: 11px;
       color: #7c3aed;
       background: #f5f3ff;
-      padding: 4px 8px;
+      padding: 3px 6px;
       border-radius: 6px;
-      margin-top: 6px;
+      margin-top: 4px;
     }
     
     .summary-card {
       background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
       border: 1px solid #e2e8f0;
       border-radius: 0 0 12px 12px;
-      padding: 20px 24px;
+      padding: 16px;
       display: flex;
-      gap: 32px;
+      gap: 16px;
       flex-wrap: wrap;
     }
     .summary-item {
       display: flex;
       flex-direction: column;
+      min-width: 60px;
     }
     .summary-item .label {
-      font-size: 11px;
+      font-size: 10px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.3px;
       color: #64748b;
       margin-bottom: 2px;
     }
     .summary-item .value {
-      font-size: 18px;
+      font-size: clamp(14px, 4vw, 18px);
       font-weight: 700;
       color: #1e3a5f;
     }
     
     .nav-section {
-      margin-top: 40px;
-      padding: 24px;
+      margin-top: 32px;
+      padding: 16px;
       background: #f8fafc;
       border-radius: 12px;
       border: 1px solid #e2e8f0;
     }
     .nav-section h3 {
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 600;
       color: #1e3a5f;
-      margin-bottom: 16px;
-      padding-bottom: 12px;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
       border-bottom: 1px solid #e2e8f0;
     }
     .nav-address {
-      padding: 8px 0;
-      font-size: 14px;
+      padding: 6px 0;
+      font-size: clamp(12px, 3vw, 14px);
       color: #334155;
       border-bottom: 1px dashed #cbd5e1;
+      word-break: break-word;
     }
     .nav-address:last-child {
       border-bottom: none;
     }
     .nav-address strong {
       color: #3b82f6;
-      margin-right: 8px;
+      margin-right: 6px;
     }
     
     .footer {
-      margin-top: 40px;
-      padding-top: 20px;
+      margin-top: 32px;
+      padding-top: 16px;
       border-top: 1px solid #e2e8f0;
       text-align: center;
       color: #94a3b8;
-      font-size: 12px;
+      font-size: 11px;
     }
     
     .route-content {
       background: white;
       border: 1px solid #e2e8f0;
       border-radius: 12px;
-      padding: 32px;
-      margin-top: 20px;
-    }
-    
-    @media print {
-      body { padding: 20px; }
-      .day-section { page-break-inside: avoid; }
-      .nav-section { page-break-before: auto; }
-      .print-button { display: none !important; }
+      padding: 16px;
+      margin-top: 16px;
     }
     
     .print-button {
       position: fixed;
-      top: 20px;
+      bottom: 20px;
       right: 20px;
-      background: #3b82f6;
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
       color: white;
       border: none;
-      padding: 12px 24px;
-      border-radius: 8px;
+      padding: 14px 20px;
+      border-radius: 50px;
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
       display: flex;
       align-items: center;
       gap: 8px;
+      z-index: 1000;
+      transition: all 0.2s ease;
     }
     .print-button:hover {
-      background: #2563eb;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(59, 130, 246, 0.5);
+    }
+    
+    @media (max-width: 600px) {
+      body { padding: 12px; }
+      .stops-table th:nth-child(3),
+      .stops-table td:nth-child(3),
+      .stops-table th:nth-child(6),
+      .stops-table td:nth-child(6) {
+        display: none;
+      }
+      .print-button {
+        bottom: 16px;
+        right: 16px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+    }
+    
+    @media print {
+      body { padding: 10px; }
+      .day-section { page-break-inside: avoid; }
+      .nav-section { page-break-before: auto; }
+      .print-button { display: none !important; }
+      .stops-table th, .stops-table td { display: table-cell; }
     }
   </style>
 </head>
 <body>
   <button class="print-button" onclick="window.print()">
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-    Print Route
+    Print
   </button>
   
   <div class="header">
     <div class="brand">RouteWise AI</div>
     <h1>Route Plan${queryDate ? ` - ${queryDate}` : ''}</h1>
-    <div class="date">Generated on ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} at ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
+    <div class="date">Generated ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} at ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
   </div>
 
   ${parsingFailed ? `
