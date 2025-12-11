@@ -4,10 +4,8 @@ import {
   LayoutDashboard, 
   Calendar, 
   ClipboardList, 
-  MessageCircle, 
   Upload,
   Menu,
-  X,
   MapPin
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -140,14 +138,6 @@ export function AppLayout({ children }: AppLayoutProps) {
         </div>
       </main>
 
-      {/* AI Chat FAB */}
-      <Button
-        size="lg"
-        className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg"
-        onClick={() => setChatPanelOpen(true)}
-      >
-        <MessageCircle className="h-6 w-6" />
-      </Button>
 
       {/* CSV Upload Modal */}
       <CSVUploadModal open={uploadModalOpen} onOpenChange={setUploadModalOpen} />
