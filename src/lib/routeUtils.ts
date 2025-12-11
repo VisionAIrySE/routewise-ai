@@ -115,9 +115,11 @@ export function extractAddresses(response: RouteOptimizerResponse): string[] {
     }
 
     // Look for Oregon addresses anywhere in the text (pattern: street, city, OR zipcode)
-    const addressPattern = /\d+\s+[\w\s]+(?:ST|AVE|RD|DR|CT|LN|LOOP|WAY|BLVD|PL|CIR|TRL|HWY)[,\s]+[\w\s]+,\s*OR\s+\d{5}/gi;
+    // More strict pattern to avoid matching full stop descriptions
+    const addressPattern = /(\d+\s+[\w\s]+(?:ST|AVE|RD|DR|CT|LN|LOOP|WAY|BLVD|PL|CIR|TRL|HWY)[,\s]+[\w\s]+,\s*OR\s+\d{5})/gi;
     const foundAddresses = text.match(addressPattern);
     if (foundAddresses && foundAddresses.length > 0) {
+      // Clean up and dedupe addresses
       const cleaned = [...new Set(foundAddresses.map(addr => addr.trim()))];
       return cleaned;
     }
@@ -141,17 +143,15 @@ export function extractAddresses(response: RouteOptimizerResponse): string[] {
       }
     }
 
-    // Fall back to any line with OR + zipcode that looks like an address
+    // Fall back to extracting just the address portion from lines containing OR + zipcode
     const lines = text.split('\n');
     const addresses: string[] = [];
     for (const line of lines) {
       const trimmed = line.trim();
-      if (/\d+\s+\w+.*,\s*OR\s+\d{5}/.test(trimmed) && !trimmed.startsWith('Lat:')) {
-        // Clean up the address (remove leading numbers, pipe symbols, etc.)
-        const cleaned = trimmed.replace(/^\d+\.\s*/, '').replace(/\|/g, '').trim();
-        if (cleaned.length > 10) {
-          addresses.push(cleaned);
-        }
+      // If line contains an Oregon address, extract just that address portion
+      const addrMatch = trimmed.match(/(\d+\s+[\w\s]+(?:ST|AVE|RD|DR|CT|LN|LOOP|WAY|BLVD|PL|CIR|TRL|HWY)[,\s]+[\w\s]+,\s*OR\s+\d{5})/i);
+      if (addrMatch && !trimmed.startsWith('Lat:')) {
+        addresses.push(addrMatch[1].trim());
       }
     }
     if (addresses.length > 0) {
