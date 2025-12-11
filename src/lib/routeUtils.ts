@@ -108,30 +108,37 @@ export function extractAddresses(response: RouteOptimizerResponse): string[] {
       const addresses = exportMatch[1]
         .split('\n')
         .map(line => line.trim())
-        .filter(line => line.length > 0 && /\d{5}/.test(line)); // Must have zip code
+        .filter(line => line.length > 0 && /\d{5}/.test(line));
       if (addresses.length > 0) {
         return addresses;
       }
     }
 
-    // Try to extract addresses from GFM table rows
-    // Look for table cells containing addresses (with zip codes)
+    // Look for Oregon addresses anywhere in the text (pattern: street, city, OR zipcode)
+    // This catches addresses in table cells or anywhere else
+    const addressPattern = /\d+\s+[\w\s]+(?:ST|AVE|RD|DR|CT|LN|LOOP|WAY|BLVD|PL|CIR|TRL|HWY)[,\s]+[\w\s]+,\s*OR\s+\d{5}/gi;
+    const foundAddresses = text.match(addressPattern);
+    if (foundAddresses && foundAddresses.length > 0) {
+      // Clean up and deduplicate
+      const cleaned = [...new Set(foundAddresses.map(addr => addr.trim()))];
+      return cleaned;
+    }
+
+    // Try to extract from table cells with zip codes
     const tableRowMatches = text.match(/\|[^|]*\d{5}[^|]*\|/g);
     if (tableRowMatches) {
       const addresses: string[] = [];
       for (const match of tableRowMatches) {
-        // Extract the cell content that has a zip code
         const cells = match.split('|').filter(cell => cell.trim());
         for (const cell of cells) {
           const trimmed = cell.trim();
-          // Must have a 5-digit zip and look like an address (has comma or street indicators)
           if (/\d{5}/.test(trimmed) && (trimmed.includes(',') || /\d+\s+\w+/.test(trimmed))) {
             addresses.push(trimmed);
           }
         }
       }
       if (addresses.length > 0) {
-        return addresses;
+        return [...new Set(addresses)];
       }
     }
 
@@ -140,22 +147,16 @@ export function extractAddresses(response: RouteOptimizerResponse): string[] {
     if (emojiMatches) {
       return emojiMatches
         .map(match => match.replace(/^📍\s*/, '').trim())
-        .filter(addr => /\d{5}/.test(addr)); // Must have zip code
+        .filter(addr => /\d{5}/.test(addr));
     }
   }
 
   return [];
 }
 
-export function copyAddressesToClipboard(addresses: string[]): number {
-  navigator.clipboard.writeText(addresses.join('\n'));
-  return addresses.length;
-}
+export function generateGoogleMapsUrl(addresses: string[]): string | null {
+  if (addresses.length === 0) return null;
 
-export function openInGoogleMaps(addresses: string[]): boolean {
-  if (addresses.length === 0) return false;
-
-  // Google Maps multi-stop URL
   const origin = encodeURIComponent(addresses[0]);
   const destination = encodeURIComponent(addresses[addresses.length - 1]);
   const waypoints = addresses.slice(1, -1).map(a => encodeURIComponent(a)).join('|');
@@ -165,7 +166,26 @@ export function openInGoogleMaps(addresses: string[]): boolean {
     url += `&waypoints=${waypoints}`;
   }
   
-  window.open(url, '_blank');
+  return url;
+}
+
+export function copyAddressesToClipboard(addresses: string[]): number {
+  navigator.clipboard.writeText(addresses.join('\n'));
+  return addresses.length;
+}
+
+export function openInGoogleMaps(addresses: string[]): boolean {
+  const url = generateGoogleMapsUrl(addresses);
+  if (!url) return false;
+
+  // Use an anchor element click to avoid popup blockers
+  const link = document.createElement('a');
+  link.href = url;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
   return true;
 }
 

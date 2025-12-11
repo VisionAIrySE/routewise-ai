@@ -12,6 +12,7 @@ import {
   saveRouteToN8n,
   copyAddressesToClipboard,
   openInGoogleMaps,
+  generateGoogleMapsUrl,
   extractAddresses,
   DEFAULT_HOME_BASE,
 } from '@/lib/routeUtils';
@@ -245,6 +246,7 @@ export function RouteResponse({ response }: RouteResponseProps) {
       {/* Action Buttons for text-based route plans */}
       {(() => {
         const addresses = extractAddresses(response);
+        const mapsUrl = generateGoogleMapsUrl(addresses);
         return (response.route_plan || addresses.length > 0) && (
           <div className="flex gap-2 mt-4 pt-4 border-t border-border flex-wrap print:hidden">
             <Button 
@@ -262,34 +264,30 @@ export function RouteResponse({ response }: RouteResponseProps) {
               <Copy className="w-4 h-4 mr-2" />
               Copy Addresses {addresses.length > 0 && `(${addresses.length})`}
             </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              disabled={addresses.length === 0}
-              onClick={() => {
-                const success = openInGoogleMaps(addresses);
-                if (!success) {
-                  toast({
-                    title: 'No Addresses Found',
-                    description: 'Could not extract addresses from the route plan',
-                    variant: 'destructive',
-                  });
-                } else {
-                  toast({
-                    title: 'Opening Google Maps',
-                    description: 'If blocked by popup blocker, please allow popups for this site',
-                  });
-                }
-              }}
-            >
-              <MapPin className="w-4 h-4 mr-2" />
-              Open in Maps
-            </Button>
+            {mapsUrl ? (
+              <a
+                href={mapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3"
+              >
+                <MapPin className="w-4 h-4" />
+                Open in Maps
+              </a>
+            ) : (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                disabled
+              >
+                <MapPin className="w-4 h-4 mr-2" />
+                Open in Maps
+              </Button>
+            )}
             <Button 
               variant="outline" 
               size="sm" 
               onClick={() => {
-                // Add print class to body to show only route content
                 document.body.classList.add('printing-route');
                 setTimeout(() => {
                   window.print();
