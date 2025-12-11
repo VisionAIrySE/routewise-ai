@@ -274,13 +274,18 @@ export function AIChatPanel({ open, onOpenChange }: AIChatPanelProps) {
         <div className="border-t border-border p-5 flex-shrink-0">
           <div className="flex gap-3">
             <Button
-              variant={isListening ? "destructive" : "outline"}
+              variant={isListening ? "destructive" : "default"}
               size="lg"
               onClick={toggleListening}
-              className={cn("h-12 px-4", isListening && "animate-pulse")}
+              className={cn(
+                "h-12 w-12 rounded-full p-0 shadow-lg transition-all",
+                isListening 
+                  ? "animate-pulse ring-4 ring-destructive/30" 
+                  : "bg-primary hover:bg-primary/90 hover:scale-105"
+              )}
               title={isListening ? "Stop listening" : "Start voice input"}
             >
-              {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+              {isListening ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
             </Button>
             <Input
               placeholder={isListening ? "Listening..." : "Type your message..."}
