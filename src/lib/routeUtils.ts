@@ -162,6 +162,27 @@ export function extractAddresses(response: RouteOptimizerResponse): string[] {
   return [];
 }
 
+export function extractPrintableRouteContent(routePlan: string): string {
+  // Find where the actual route starts (first day header with 📅)
+  const dayHeaderMatch = routePlan.match(/📅\s*(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY)/i);
+  if (!dayHeaderMatch) {
+    // Try alternate patterns - look for "ROUTE SEQUENCE" or numbered stops
+    const routeSeqMatch = routePlan.match(/ROUTE SEQUENCE/i);
+    if (routeSeqMatch && routeSeqMatch.index !== undefined) {
+      // Find the section header before ROUTE SEQUENCE
+      const beforeSeq = routePlan.substring(0, routeSeqMatch.index);
+      const lastHeaderMatch = beforeSeq.match(/.*📅.*$/m);
+      if (lastHeaderMatch && lastHeaderMatch.index !== undefined) {
+        return routePlan.substring(lastHeaderMatch.index);
+      }
+    }
+    return routePlan; // Return full content if no pattern found
+  }
+
+  const startIndex = dayHeaderMatch.index || 0;
+  return routePlan.substring(startIndex);
+}
+
 export function generateGoogleMapsUrl(addresses: string[]): string | null {
   if (addresses.length === 0) return null;
 

@@ -14,6 +14,7 @@ import {
   openInGoogleMaps,
   generateGoogleMapsUrl,
   extractAddresses,
+  extractPrintableRouteContent,
   DEFAULT_HOME_BASE,
 } from '@/lib/routeUtils';
 import { RouteView } from '@/components/route/RouteView';
@@ -299,7 +300,10 @@ export function RouteResponse({ response }: RouteResponseProps) {
                   });
                   return;
                 }
-                
+                // Extract just the route content (days + stops + addresses)
+                const printableContent = response.route_plan 
+                  ? extractPrintableRouteContent(response.route_plan)
+                  : routeContent.innerHTML;
                 const printWindow = window.open('', '_blank');
                 if (printWindow) {
                   printWindow.document.write(`
@@ -308,17 +312,19 @@ export function RouteResponse({ response }: RouteResponseProps) {
                     <head>
                       <title>RouteWise - Route Plan</title>
                       <style>
-                        body { font-family: system-ui, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
-                        h1, h2, h3 { margin-top: 1em; }
+                        body { font-family: system-ui, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; line-height: 1.5; }
+                        h1 { font-size: 18px; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+                        h2 { font-size: 16px; margin-top: 24px; }
                         table { border-collapse: collapse; width: 100%; margin: 1em 0; }
                         th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
                         th { background: #f5f5f5; }
                         hr { margin: 2em 0; border: none; border-top: 1px solid #ccc; }
+                        pre { white-space: pre-wrap; font-family: inherit; }
                       </style>
                     </head>
                     <body>
-                      <h1>RouteWise AI - Route Plan</h1>
-                      ${routeContent.innerHTML}
+                      <h1>RouteWise AI - Route Plan for ${response.query_date || 'Today'}</h1>
+                      <pre>${printableContent}</pre>
                     </body>
                     </html>
                   `);
