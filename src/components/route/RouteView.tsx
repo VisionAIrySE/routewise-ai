@@ -52,7 +52,13 @@ export function RouteView({ routes, homeBase, onSaveRoute }: RouteViewProps) {
   };
 
   const printRoute = () => {
+    console.log('[PrintRoute] Current route:', currentRoute);
+    console.log('[PrintRoute] Stops count:', currentRoute?.stops?.length);
+    
     const html = generatePrintWindowHTML(currentRoute, homeBase, googleMapsApiKey);
+    console.log('[PrintRoute] Generated HTML length:', html?.length);
+    console.log('[PrintRoute] HTML preview:', html?.substring(0, 500));
+    
     const printWindow = window.open('about:blank', '_blank');
     if (printWindow) {
       printWindow.document.open();
@@ -62,7 +68,7 @@ export function RouteView({ routes, homeBase, onSaveRoute }: RouteViewProps) {
       setTimeout(() => {
         printWindow.focus();
         printWindow.print();
-      }, 250);
+      }, 500);
     } else {
       toast({
         title: 'Popup Blocked',
