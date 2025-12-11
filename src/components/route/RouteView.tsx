@@ -52,24 +52,22 @@ export function RouteView({ routes, homeBase, onSaveRoute }: RouteViewProps) {
   };
 
   const printRoute = () => {
-    console.log('[PrintRoute] Current route:', currentRoute);
-    console.log('[PrintRoute] Stops count:', currentRoute?.stops?.length);
-    
     const html = generatePrintWindowHTML(currentRoute, homeBase, googleMapsApiKey);
-    console.log('[PrintRoute] Generated HTML length:', html?.length);
-    console.log('[PrintRoute] HTML preview:', html?.substring(0, 500));
     
-    const printWindow = window.open('about:blank', '_blank');
+    // Create a Blob and open it in a new tab
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const printWindow = window.open(url, '_blank');
+    
     if (printWindow) {
-      printWindow.document.open();
-      printWindow.document.write(html);
-      printWindow.document.close();
-      // Wait for content to render before printing
-      setTimeout(() => {
-        printWindow.focus();
-        printWindow.print();
-      }, 500);
+      printWindow.onload = () => {
+        setTimeout(() => {
+          printWindow.print();
+          URL.revokeObjectURL(url);
+        }, 300);
+      };
     } else {
+      URL.revokeObjectURL(url);
       toast({
         title: 'Popup Blocked',
         description: 'Please allow popups to print the route',
