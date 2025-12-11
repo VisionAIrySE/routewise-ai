@@ -312,6 +312,11 @@ export function generatePrintableHTML(routeContent: string, queryDate?: string):
   // Convert markdown to styled HTML for fallback
   const formatMarkdownContent = (content: string): string => {
     return content
+      // Remove box-drawing characters (UTF-8 encoding issues)
+      .replace(/[╔╗╚╝║═╠╣╬╦╩┌┐└┘│─├┤┬┴┼]/g, '')
+      .replace(/[â€"â€™â€œâ€�]/g, '') // Common UTF-8 mojibake
+      .replace(/➔|➤|➜|→|▶/g, '→') // Normalize arrows
+      .replace(/✓|✔/g, '✓') // Normalize checkmarks
       // Headers
       .replace(/^### (.+)$/gm, '<h3 style="font-size: 18px; font-weight: 600; color: #1e3a5f; margin: 24px 0 12px 0; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0;">$1</h3>')
       .replace(/^## (.+)$/gm, '<h2 style="font-size: 22px; font-weight: 700; color: #1e3a5f; margin: 28px 0 16px 0;">$1</h2>')
@@ -586,7 +591,8 @@ export function generatePrintableHTML(routeContent: string, queryDate?: string):
 </head>
 <body>
   <button class="print-button" onclick="window.print()">
-    🖨️ Print Route
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+    Print Route
   </button>
   
   <div class="header">
