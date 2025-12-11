@@ -669,10 +669,13 @@ export function generateGoogleMapsUrl(addresses: string[]): string | null {
 
   const origin = encodeURIComponent(addresses[0]);
   const destination = encodeURIComponent(addresses[addresses.length - 1]);
-  const waypoints = addresses.slice(1, -1).map(a => encodeURIComponent(a)).join('|');
+  
+  // Build waypoints - encode the pipe separator as %7C for better browser compatibility
+  const waypointsArray = addresses.slice(1, -1);
+  const waypoints = waypointsArray.map(a => encodeURIComponent(a)).join('%7C');
 
   let url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}`;
-  if (waypoints) {
+  if (waypointsArray.length > 0) {
     url += `&waypoints=${waypoints}`;
   }
   
