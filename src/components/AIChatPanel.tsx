@@ -44,6 +44,7 @@ export function AIChatPanel({ open, onOpenChange }: AIChatPanelProps) {
   const [input, setInput] = useState('');
   const [isListening, setIsListening] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const lastAssistantRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -54,9 +55,10 @@ export function AIChatPanel({ open, onOpenChange }: AIChatPanelProps) {
     [messages]
   );
 
+  // Scroll to show the top of the latest assistant message
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    if (lastAssistantRef.current && scrollRef.current) {
+      lastAssistantRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }, [messages]);
 
@@ -258,9 +260,15 @@ export function AIChatPanel({ open, onOpenChange }: AIChatPanelProps) {
                 <p className="text-sm mt-2">Try asking me to optimize your schedule or prioritize inspections.</p>
               </div>
             )}
-            {messages.map((message) => (
+            {messages.map((message, index) => {
+              // Find if this is the last assistant message
+              const isLastAssistant = message.role === 'assistant' && 
+                !messages.slice(index + 1).some(m => m.role === 'assistant');
+              
+              return (
               <div
                 key={message.id}
+                ref={isLastAssistant ? lastAssistantRef : null}
                 className={cn(
                   'flex gap-4',
                   message.role === 'user' ? 'flex-row-reverse' : 'flex-row',
@@ -309,7 +317,8 @@ export function AIChatPanel({ open, onOpenChange }: AIChatPanelProps) {
                   </div>
                 )}
               </div>
-            ))}
+              );
+            })}
             {isLoading && (
               <div className="flex gap-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
