@@ -163,23 +163,46 @@ export function extractAddresses(response: RouteOptimizerResponse): string[] {
 }
 
 export function extractPrintableRouteContent(routePlan: string): string {
-  // Find where the actual route starts (first day header with 📅)
-  const dayHeaderMatch = routePlan.match(/📅\s*(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY)/i);
-  if (!dayHeaderMatch) {
-    // Try alternate patterns - look for "ROUTE SEQUENCE" or numbered stops
-    const routeSeqMatch = routePlan.match(/ROUTE SEQUENCE/i);
-    if (routeSeqMatch && routeSeqMatch.index !== undefined) {
-      // Find the section header before ROUTE SEQUENCE
-      const beforeSeq = routePlan.substring(0, routeSeqMatch.index);
-      const lastHeaderMatch = beforeSeq.match(/.*📅.*$/m);
-      if (lastHeaderMatch && lastHeaderMatch.index !== undefined) {
-        return routePlan.substring(lastHeaderMatch.index);
-      }
+  // Find ALL day headers with route sequences (complete route blocks)
+  // Pattern: 📅 DAY followed by route info, stops, etc.
+  const dayPattern = /📅\s*(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY)[^\n]*\n/gi;
+  
+  // Find all matches and their positions
+  const matches: { index: number; day: string }[] = [];
+  let match;
+  while ((match = dayPattern.exec(routePlan)) !== null) {
+    // Check if this day header has actual route content (STOP markers nearby)
+    const afterMatch = routePlan.substring(match.index, match.index + 500);
+    if (/📍\s*STOP\s*\d+/i.test(afterMatch) || /ROUTE SEQUENCE/i.test(afterMatch)) {
+      matches.push({ index: match.index, day: match[1] });
     }
-    return routePlan; // Return full content if no pattern found
   }
-
-  const startIndex = dayHeaderMatch.index || 0;
+  
+  if (matches.length === 0) {
+    return routePlan; // No route blocks found, return full content
+  }
+  
+  // Find the LAST complete route block (handles redrafts/changes)
+  // A complete block starts with 📅 DAY and contains STOP markers
+  // If there are multiple days in the final route (Thu + Fri), take from the first of that group
+  
+  // Check if the last two matches are consecutive days (part of same route)
+  // by looking at the content between them - if short, they're part of same route
+  let startIndex = matches[matches.length - 1].index;
+  
+  if (matches.length >= 2) {
+    // Check if this looks like a multi-day route by seeing if there's substantial
+    // route content between the last two day markers
+    const secondToLast = matches[matches.length - 2];
+    const contentBetween = routePlan.substring(secondToLast.index, startIndex);
+    
+    // If the content between has STOP markers and a SUMMARY, it's part of the same route
+    if (/📍\s*STOP/i.test(contentBetween) && /SUMMARY/i.test(contentBetween)) {
+      // This is a multi-day route, use the earlier day as start
+      startIndex = secondToLast.index;
+    }
+  }
+  
   return routePlan.substring(startIndex);
 }
 
