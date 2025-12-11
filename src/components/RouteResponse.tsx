@@ -11,6 +11,7 @@ import {
   saveRouteToN8n,
   copyAddressesToClipboard,
   openInGoogleMaps,
+  extractAddresses,
   DEFAULT_HOME_BASE,
 } from '@/lib/routeUtils';
 import { RouteView } from '@/components/route/RouteView';
@@ -218,49 +219,54 @@ export function RouteResponse({ response }: RouteResponseProps) {
       )}
 
       {/* Action Buttons for text-based route plans */}
-      {response.route_plan && (
-        <div className="flex gap-2 mt-4 pt-4 border-t border-border flex-wrap">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => {
-              const count = copyAddressesToClipboard(response.route_plan!);
-              toast({
-                title: 'Addresses Copied',
-                description: `${count} addresses copied to clipboard`,
-              });
-            }}
-          >
-            <Copy className="w-4 h-4 mr-2" />
-            Copy Addresses
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => {
-              const success = openInGoogleMaps(response.route_plan!);
-              if (!success) {
+      {(() => {
+        const addresses = extractAddresses(response);
+        return (response.route_plan || addresses.length > 0) && (
+          <div className="flex gap-2 mt-4 pt-4 border-t border-border flex-wrap">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              disabled={addresses.length === 0}
+              onClick={() => {
+                const count = copyAddressesToClipboard(addresses);
                 toast({
-                  title: 'No Addresses Found',
-                  description: 'Could not extract addresses from the route plan',
-                  variant: 'destructive',
+                  title: 'Addresses Copied',
+                  description: `${count} addresses copied to clipboard`,
                 });
-              }
-            }}
-          >
-            <MapPin className="w-4 h-4 mr-2" />
-            Open in Maps
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => window.print()}
-          >
-            <Printer className="w-4 h-4 mr-2" />
-            Print Route
-          </Button>
-        </div>
-      )}
+              }}
+            >
+              <Copy className="w-4 h-4 mr-2" />
+              Copy Addresses {addresses.length > 0 && `(${addresses.length})`}
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              disabled={addresses.length === 0}
+              onClick={() => {
+                const success = openInGoogleMaps(addresses);
+                if (!success) {
+                  toast({
+                    title: 'No Addresses Found',
+                    description: 'Could not extract addresses from the route plan',
+                    variant: 'destructive',
+                  });
+                }
+              }}
+            >
+              <MapPin className="w-4 h-4 mr-2" />
+              Open in Maps
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => window.print()}
+            >
+              <Printer className="w-4 h-4 mr-2" />
+              Print Route
+            </Button>
+          </div>
+        );
+      })()}
     </div>
   );
 }

@@ -67,10 +67,11 @@ export function isRouteOptimizerResponse(data: unknown): data is RouteOptimizerR
 }
 
 export function hasOptimizedRoutes(response: RouteOptimizerResponse): boolean {
-  return (
-    Array.isArray(response.optimized_routes) && 
+  return !!(
+    response.optimized_routes &&
     response.optimized_routes.length > 0 &&
-    response.optimized_routes.some(route => route.stops && route.stops.length > 0)
+    response.optimized_routes[0].stops &&
+    response.optimized_routes[0].stops.length > 0
   );
 }
 
@@ -86,29 +87,51 @@ export function parseRouteResponse(content: string): RouteOptimizerResponse | nu
   return null;
 }
 
-export function extractAddresses(routePlan: string): string[] {
-  // Look for the "EXPORT FOR NAVIGATION" section
-  const exportMatch = routePlan.match(/EXPORT FOR NAVIGATION:\n([\s\S]*?)(?:\n```|$)/);
-  if (exportMatch) {
-    return exportMatch[1]
-      .split('\n')
-      .map(line => line.trim())
-      .filter(line => line.length > 0 && !line.startsWith('#'));
+export function extractAddresses(response: RouteOptimizerResponse): string[] {
+  // First try optimized_routes if it has actual stops
+  if (response.optimized_routes && response.optimized_routes.length > 0) {
+    const addresses = response.optimized_routes.flatMap(route =>
+      (route.stops || []).map(stop => stop.address)
+    );
+    if (addresses.length > 0) {
+      return addresses;
+    }
   }
 
-  // Fallback: extract addresses from 📍 markers
-  const addressMatches = routePlan.matchAll(/📍\s*([^\n]+)/g);
-  return Array.from(addressMatches, m => m[1].trim());
+  // Fall back to parsing route_plan markdown
+  if (response.route_plan) {
+    const text = response.route_plan;
+
+    // Try EXPORT FOR NAVIGATION block first
+    const exportMatch = text.match(/EXPORT FOR NAVIGATION:\s*\n([\s\S]*?)(?:\n---|\n\n\*\*|$)/i);
+    if (exportMatch) {
+      const addresses = exportMatch[1]
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0 && /\d{5}/.test(line)); // Must have zip code
+      if (addresses.length > 0) {
+        return addresses;
+      }
+    }
+
+    // Fall back to 📍 emoji lines
+    const emojiMatches = text.match(/📍\s*([^\n]+)/g);
+    if (emojiMatches) {
+      return emojiMatches
+        .map(match => match.replace(/^📍\s*/, '').trim())
+        .filter(addr => /\d{5}/.test(addr)); // Must have zip code
+    }
+  }
+
+  return [];
 }
 
-export function copyAddressesToClipboard(routePlan: string): number {
-  const addresses = extractAddresses(routePlan);
+export function copyAddressesToClipboard(addresses: string[]): number {
   navigator.clipboard.writeText(addresses.join('\n'));
   return addresses.length;
 }
 
-export function openInGoogleMaps(routePlan: string): boolean {
-  const addresses = extractAddresses(routePlan);
+export function openInGoogleMaps(addresses: string[]): boolean {
   if (addresses.length === 0) return false;
 
   // Google Maps multi-stop URL
