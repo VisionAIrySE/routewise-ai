@@ -102,52 +102,60 @@ export function extractAddresses(response: RouteOptimizerResponse): string[] {
   if (response.route_plan) {
     const text = response.route_plan;
 
-    // Try EXPORT FOR NAVIGATION block first
-    const exportMatch = text.match(/EXPORT FOR NAVIGATION:\s*\n([\s\S]*?)(?:\n---|\n\n\*\*|$)/i);
+    // Try EXPORT FOR NAVIGATION block (with or without colon, with emoji)
+    const exportMatch = text.match(/(?:📤\s*)?EXPORT FOR NAVIGATION:?\s*\n([\s\S]*?)(?:\n📊|\n---|\n\n\*\*|$)/i);
     if (exportMatch) {
       const addresses = exportMatch[1]
         .split('\n')
-        .map(line => line.trim())
-        .filter(line => line.length > 0 && /\d{5}/.test(line));
+        .map(line => line.replace(/^\d+\.\s*/, '').trim()) // Remove leading numbers like "1. "
+        .filter(line => line.length > 0 && /\d{5}/.test(line) && !line.match(/^(THURSDAY|FRIDAY|SATURDAY|SUNDAY|MONDAY|TUESDAY|WEDNESDAY)/i));
       if (addresses.length > 0) {
         return addresses;
       }
     }
 
     // Look for Oregon addresses anywhere in the text (pattern: street, city, OR zipcode)
-    // This catches addresses in table cells or anywhere else
     const addressPattern = /\d+\s+[\w\s]+(?:ST|AVE|RD|DR|CT|LN|LOOP|WAY|BLVD|PL|CIR|TRL|HWY)[,\s]+[\w\s]+,\s*OR\s+\d{5}/gi;
     const foundAddresses = text.match(addressPattern);
     if (foundAddresses && foundAddresses.length > 0) {
-      // Clean up and deduplicate
       const cleaned = [...new Set(foundAddresses.map(addr => addr.trim()))];
       return cleaned;
     }
 
-    // Try to extract from table cells with zip codes
-    const tableRowMatches = text.match(/\|[^|]*\d{5}[^|]*\|/g);
-    if (tableRowMatches) {
+    // Try to extract from 📍 STOP lines
+    const stopMatches = text.match(/📍 STOP \d+[^\n]*\n\n[^\n]+\n([^\n]+)/g);
+    if (stopMatches) {
       const addresses: string[] = [];
-      for (const match of tableRowMatches) {
-        const cells = match.split('|').filter(cell => cell.trim());
-        for (const cell of cells) {
-          const trimmed = cell.trim();
-          if (/\d{5}/.test(trimmed) && (trimmed.includes(',') || /\d+\s+\w+/.test(trimmed))) {
-            addresses.push(trimmed);
+      for (const match of stopMatches) {
+        const lines = match.split('\n').filter(l => l.trim());
+        // Address is typically the 3rd line after "📍 STOP" header and name line
+        if (lines.length >= 3) {
+          const addrLine = lines[2].trim();
+          if (/\d{5}/.test(addrLine)) {
+            addresses.push(addrLine);
           }
         }
       }
       if (addresses.length > 0) {
-        return [...new Set(addresses)];
+        return addresses;
       }
     }
 
-    // Fall back to 📍 emoji lines
-    const emojiMatches = text.match(/📍\s*([^\n]+)/g);
-    if (emojiMatches) {
-      return emojiMatches
-        .map(match => match.replace(/^📍\s*/, '').trim())
-        .filter(addr => /\d{5}/.test(addr));
+    // Fall back to any line with OR + zipcode that looks like an address
+    const lines = text.split('\n');
+    const addresses: string[] = [];
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (/\d+\s+\w+.*,\s*OR\s+\d{5}/.test(trimmed) && !trimmed.startsWith('Lat:')) {
+        // Clean up the address (remove leading numbers, pipe symbols, etc.)
+        const cleaned = trimmed.replace(/^\d+\.\s*/, '').replace(/\|/g, '').trim();
+        if (cleaned.length > 10) {
+          addresses.push(cleaned);
+        }
+      }
+    }
+    if (addresses.length > 0) {
+      return [...new Set(addresses)];
     }
   }
 
