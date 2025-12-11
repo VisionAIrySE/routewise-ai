@@ -64,7 +64,11 @@ export function isRouteOptimizerResponse(data: unknown): data is RouteOptimizerR
 }
 
 export function hasOptimizedRoutes(response: RouteOptimizerResponse): boolean {
-  return Array.isArray(response.optimized_routes) && response.optimized_routes.length > 0;
+  return (
+    Array.isArray(response.optimized_routes) && 
+    response.optimized_routes.length > 0 &&
+    response.optimized_routes.some(route => route.stops && route.stops.length > 0)
+  );
 }
 
 export function parseRouteResponse(content: string): RouteOptimizerResponse | null {
