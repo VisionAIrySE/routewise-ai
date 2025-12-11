@@ -239,16 +239,18 @@ export function AIChatPanel({ open, onOpenChange }: AIChatPanelProps) {
         )}
       >
         <DialogHeader className="border-b border-border px-6 py-5 flex-shrink-0">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center">
             <DialogTitle className="flex items-center gap-3 text-xl">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
                 <Sparkles className="h-5 w-5 text-primary-foreground" />
               </div>
               RouteWise AI Assistant
             </DialogTitle>
-            <Button variant="ghost" size="icon" onClick={handleNewSession} title="New Session">
-              <RotateCcw className="h-5 w-5" />
-            </Button>
+            <div className="flex-1 flex justify-center">
+              <Button variant="ghost" size="icon" onClick={handleNewSession} title="New Session">
+                <RotateCcw className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
         </DialogHeader>
 
