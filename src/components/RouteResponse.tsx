@@ -1,6 +1,6 @@
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Copy, MapPin, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -25,6 +25,7 @@ interface RouteResponseProps {
 export function RouteResponse({ response }: RouteResponseProps) {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
+  const routeContentRef = useRef<HTMLDivElement>(null);
 
   const handleSaveRoute = async (route: RouteDay) => {
     setIsSaving(true);
@@ -172,7 +173,7 @@ export function RouteResponse({ response }: RouteResponseProps) {
 
       {/* Markdown Content */}
       {response.route_plan && (
-        <div className="route-plan-content prose prose-sm dark:prose-invert max-w-none">
+        <div ref={routeContentRef} className="route-plan-content prose prose-sm dark:prose-invert max-w-none">
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{
@@ -288,8 +289,8 @@ export function RouteResponse({ response }: RouteResponseProps) {
               variant="outline" 
               size="sm" 
               onClick={() => {
-                // Create a printable window with just the route content
-                const routeContent = document.querySelector('.route-plan-content');
+                // Use the ref to get THIS component's route content
+                const routeContent = routeContentRef.current;
                 if (!routeContent) {
                   toast({
                     title: 'Print Failed',
