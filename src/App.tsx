@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Inspections from "./pages/Inspections";
 import Calendar from "./pages/Calendar";
 import RouteDetail from "./pages/RouteDetail";
+import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -18,15 +19,14 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AppLayout>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/inspections" element={<Inspections />} />
-            <Route path="/calendar" element={<Calendar />} />
-            <Route path="/routes/:routeId" element={<RouteDetail />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AppLayout>
+        <Routes>
+          <Route path="/install" element={<Install />} />
+          <Route path="/" element={<AppLayout><Index /></AppLayout>} />
+          <Route path="/inspections" element={<AppLayout><Inspections /></AppLayout>} />
+          <Route path="/calendar" element={<AppLayout><Calendar /></AppLayout>} />
+          <Route path="/routes/:routeId" element={<AppLayout><RouteDetail /></AppLayout>} />
+          <Route path="*" element={<AppLayout><NotFound /></AppLayout>} />
+        </Routes>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
