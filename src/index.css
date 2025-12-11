@@ -154,12 +154,21 @@
 }
 
 /* Print Styles */
+.print-only {
+  display: none !important;
+}
+
 @media print {
   body {
     background: white !important;
     color: black !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+
+  /* Hide everything except printable content */
+  body > *:not(#print-route-container) {
+    display: none !important;
   }
 
   .no-print,
@@ -169,16 +178,23 @@
   aside,
   .sidebar,
   button:not(.print-include),
-  [role="navigation"] {
+  [role="navigation"],
+  [role="dialog"],
+  [data-radix-dialog-overlay],
+  [data-radix-dialog-content],
+  .chat-panel-dialog {
     display: none !important;
   }
 
-  .print-only {
+  .print-only,
+  #print-route-container {
     display: block !important;
+    position: static !important;
   }
 
   .printable-route {
     display: block !important;
+    position: static !important;
   }
 
   .route-response {

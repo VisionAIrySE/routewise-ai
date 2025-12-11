@@ -1,4 +1,5 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { RouteMap } from './RouteMap';
 import { RouteSummaryCard } from './RouteSummaryCard';
 import { RouteStopList } from './RouteStopList';
@@ -19,7 +20,7 @@ export function RouteView({ routes, homeBase, onSaveRoute }: RouteViewProps) {
   const [selectedStopId, setSelectedStopId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
   const [isSaving, setIsSaving] = useState(false);
-  const printRef = useRef<HTMLDivElement>(null);
+  const [isPrinting, setIsPrinting] = useState(false);
   const { toast } = useToast();
 
   const currentRoute = routes[selectedDay];
@@ -53,7 +54,12 @@ export function RouteView({ routes, homeBase, onSaveRoute }: RouteViewProps) {
   };
 
   const printRoute = () => {
-    window.print();
+    setIsPrinting(true);
+    // Small delay to ensure portal renders before print
+    setTimeout(() => {
+      window.print();
+      setIsPrinting(false);
+    }, 100);
   };
 
   const handleSaveRoute = async () => {
@@ -86,14 +92,17 @@ export function RouteView({ routes, homeBase, onSaveRoute }: RouteViewProps) {
 
   return (
     <div className="space-y-4">
-      {/* Printable Version (hidden on screen) */}
-      <div ref={printRef}>
-        <PrintableRoute 
-          route={currentRoute} 
-          homeBase={homeBase}
-          googleMapsApiKey={googleMapsApiKey}
-        />
-      </div>
+      {/* Printable Version - rendered via portal at body level so it's not hidden by dialog */}
+      {isPrinting && createPortal(
+        <div id="print-route-container" className="print-only">
+          <PrintableRoute 
+            route={currentRoute} 
+            homeBase={homeBase}
+            googleMapsApiKey={googleMapsApiKey}
+          />
+        </div>,
+        document.body
+      )}
 
       {/* Screen Version */}
       <div className="no-print">
