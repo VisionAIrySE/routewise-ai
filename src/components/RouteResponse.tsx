@@ -306,13 +306,15 @@ export function RouteResponse({ response }: RouteResponseProps) {
                   return;
                 }
 
-                const printWindow = window.open('', '_blank');
+                const html = generatePrintableHTML(printableContent, response.query_date);
+                const printWindow = window.open('', 'RouteWise_Print', 'width=900,height=700');
                 if (printWindow) {
-                  printWindow.document.write(generatePrintableHTML(printableContent, response.query_date));
+                  printWindow.document.write(html);
                   printWindow.document.close();
-                  printWindow.onload = () => {
-                    printWindow.print();
-                  };
+                  toast({
+                    title: 'Print Preview Ready',
+                    description: 'Use Ctrl+P (or Cmd+P on Mac) to print from the new window',
+                  });
                 } else {
                   toast({
                     title: 'Popup Blocked',
