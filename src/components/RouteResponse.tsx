@@ -1,5 +1,7 @@
 import ReactMarkdown from 'react-markdown';
 import { useState } from 'react';
+import { Copy, MapPin, Printer } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import {
   RouteOptimizerResponse,
@@ -7,6 +9,8 @@ import {
   formatGeneratedTime,
   hasOptimizedRoutes,
   saveRouteToN8n,
+  copyAddressesToClipboard,
+  openInGoogleMaps,
   DEFAULT_HOME_BASE,
 } from '@/lib/routeUtils';
 import { RouteView } from '@/components/route/RouteView';
@@ -195,7 +199,50 @@ export function RouteResponse({ response }: RouteResponseProps) {
         </div>
       )}
 
-      {/* Note: Action buttons only available in RouteView with structured route data */}
+      {/* Action Buttons for text-based route plans */}
+      {response.route_plan && (
+        <div className="flex gap-2 mt-4 pt-4 border-t border-border flex-wrap">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => {
+              const count = copyAddressesToClipboard(response.route_plan!);
+              toast({
+                title: 'Addresses Copied',
+                description: `${count} addresses copied to clipboard`,
+              });
+            }}
+          >
+            <Copy className="w-4 h-4 mr-2" />
+            Copy Addresses
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => {
+              const success = openInGoogleMaps(response.route_plan!);
+              if (!success) {
+                toast({
+                  title: 'No Addresses Found',
+                  description: 'Could not extract addresses from the route plan',
+                  variant: 'destructive',
+                });
+              }
+            }}
+          >
+            <MapPin className="w-4 h-4 mr-2" />
+            Open in Maps
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => window.print()}
+          >
+            <Printer className="w-4 h-4 mr-2" />
+            Print Route
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
