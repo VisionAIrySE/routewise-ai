@@ -288,11 +288,50 @@ export function RouteResponse({ response }: RouteResponseProps) {
               variant="outline" 
               size="sm" 
               onClick={() => {
-                document.body.classList.add('printing-route');
-                setTimeout(() => {
-                  window.print();
-                  document.body.classList.remove('printing-route');
-                }, 100);
+                // Create a printable window with just the route content
+                const routeContent = document.querySelector('.route-plan-content');
+                if (!routeContent) {
+                  toast({
+                    title: 'Print Failed',
+                    description: 'No route content found to print',
+                    variant: 'destructive',
+                  });
+                  return;
+                }
+                
+                const printWindow = window.open('', '_blank');
+                if (printWindow) {
+                  printWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                      <title>RouteWise - Route Plan</title>
+                      <style>
+                        body { font-family: system-ui, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+                        h1, h2, h3 { margin-top: 1em; }
+                        table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+                        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+                        th { background: #f5f5f5; }
+                        hr { margin: 2em 0; border: none; border-top: 1px solid #ccc; }
+                      </style>
+                    </head>
+                    <body>
+                      <h1>RouteWise AI - Route Plan</h1>
+                      ${routeContent.innerHTML}
+                    </body>
+                    </html>
+                  `);
+                  printWindow.document.close();
+                  printWindow.onload = () => {
+                    printWindow.print();
+                  };
+                } else {
+                  toast({
+                    title: 'Popup Blocked',
+                    description: 'Please allow popups to print the route',
+                    variant: 'destructive',
+                  });
+                }
               }}
             >
               <Printer className="w-4 h-4 mr-2" />
