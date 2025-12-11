@@ -91,13 +91,44 @@ export function AIChatPanel({ open, onOpenChange }: AIChatPanelProps) {
       recognitionRef.current.onerror = (event: any) => {
         console.error('Speech recognition error:', event.error);
         setIsListening(false);
-        if (event.error === 'not-allowed') {
-          toast({
+        
+        const errorMessages: Record<string, { title: string; description: string }> = {
+          'not-allowed': {
             title: 'Microphone Access Denied',
-            description: 'Please allow microphone access to use voice input.',
-            variant: 'destructive',
-          });
-        }
+            description: 'Please allow microphone access in your browser settings.',
+          },
+          'no-speech': {
+            title: 'No Speech Detected',
+            description: 'Please speak clearly into your microphone.',
+          },
+          'audio-capture': {
+            title: 'No Microphone Found',
+            description: 'Please connect a microphone and try again.',
+          },
+          'network': {
+            title: 'Network Error',
+            description: 'Please check your internet connection and try again.',
+          },
+          'service-not-allowed': {
+            title: 'Service Not Available',
+            description: 'Speech recognition service is not available. Try refreshing the page.',
+          },
+          'aborted': {
+            title: 'Cancelled',
+            description: 'Speech recognition was cancelled.',
+          },
+        };
+
+        const errorInfo = errorMessages[event.error] || {
+          title: 'Voice Input Error',
+          description: `An error occurred: ${event.error}. Please try again.`,
+        };
+
+        toast({
+          title: errorInfo.title,
+          description: errorInfo.description,
+          variant: 'destructive',
+        });
       };
 
       recognitionRef.current.onend = () => {
@@ -112,7 +143,7 @@ export function AIChatPanel({ open, onOpenChange }: AIChatPanelProps) {
     };
   }, [toast]);
 
-  const toggleListening = () => {
+  const toggleListening = async () => {
     if (!recognitionRef.current) {
       toast({
         title: 'Not Supported',
@@ -127,10 +158,35 @@ export function AIChatPanel({ open, onOpenChange }: AIChatPanelProps) {
       setIsListening(false);
     } else {
       try {
+        // Request microphone permission first
+        await navigator.mediaDevices.getUserMedia({ audio: true });
         recognitionRef.current.start();
         setIsListening(true);
-      } catch (error) {
+        toast({
+          title: 'Listening...',
+          description: 'Speak now. Click the mic button again to stop.',
+        });
+      } catch (error: any) {
         console.error('Error starting speech recognition:', error);
+        if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+          toast({
+            title: 'Microphone Access Denied',
+            description: 'Please allow microphone access in your browser settings and try again.',
+            variant: 'destructive',
+          });
+        } else if (error.name === 'NotFoundError') {
+          toast({
+            title: 'No Microphone Found',
+            description: 'Please connect a microphone and try again.',
+            variant: 'destructive',
+          });
+        } else {
+          toast({
+            title: 'Voice Input Error',
+            description: 'Could not start voice input. Please try again.',
+            variant: 'destructive',
+          });
+        }
       }
     }
   };
