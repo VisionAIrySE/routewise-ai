@@ -1,9 +1,8 @@
-import { useState, useRef, useEffect } from 'react';
-import { createPortal } from 'react-dom';
+import { useState } from 'react';
 import { RouteMap } from './RouteMap';
 import { RouteSummaryCard } from './RouteSummaryCard';
 import { RouteStopList } from './RouteStopList';
-import { PrintableRoute } from './PrintableRoute';
+import { generatePrintWindowHTML } from './PrintableRoute';
 import { Button } from '@/components/ui/button';
 import { Copy, Navigation, Printer, Map, List, Save, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -20,7 +19,6 @@ export function RouteView({ routes, homeBase, onSaveRoute }: RouteViewProps) {
   const [selectedStopId, setSelectedStopId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
   const [isSaving, setIsSaving] = useState(false);
-  const [isPrinting, setIsPrinting] = useState(false);
   const { toast } = useToast();
 
   const currentRoute = routes[selectedDay];
@@ -54,12 +52,21 @@ export function RouteView({ routes, homeBase, onSaveRoute }: RouteViewProps) {
   };
 
   const printRoute = () => {
-    setIsPrinting(true);
-    // Small delay to ensure portal renders before print
-    setTimeout(() => {
-      window.print();
-      setIsPrinting(false);
-    }, 100);
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      const html = generatePrintWindowHTML(currentRoute, homeBase, googleMapsApiKey);
+      printWindow.document.write(html);
+      printWindow.document.close();
+      printWindow.onload = () => {
+        printWindow.print();
+      };
+    } else {
+      toast({
+        title: 'Popup Blocked',
+        description: 'Please allow popups to print the route',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleSaveRoute = async () => {
@@ -92,18 +99,6 @@ export function RouteView({ routes, homeBase, onSaveRoute }: RouteViewProps) {
 
   return (
     <div className="space-y-4">
-      {/* Printable Version - rendered via portal at body level so it's not hidden by dialog */}
-      {isPrinting && createPortal(
-        <div id="print-route-container" className="print-only">
-          <PrintableRoute 
-            route={currentRoute} 
-            homeBase={homeBase}
-            googleMapsApiKey={googleMapsApiKey}
-          />
-        </div>,
-        document.body
-      )}
-
       {/* Screen Version */}
       <div className="no-print">
         {/* Day Selector (if multiple days) */}
