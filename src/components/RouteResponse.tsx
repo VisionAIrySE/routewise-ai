@@ -149,6 +149,24 @@ export function RouteResponse({ response }: RouteResponseProps) {
         </div>
       </div>
 
+      {/* AI Summary (when no route_plan) */}
+      {response.ai_summary && !response.route_plan && (
+        <div className="mb-4 p-4 bg-card rounded-lg border border-border">
+          <p className="text-foreground">{response.ai_summary}</p>
+        </div>
+      )}
+
+      {/* Deferred Inspections */}
+      {response.deferred && response.deferred.length > 0 && (
+        <div className="mb-4 p-3 bg-muted/50 rounded-lg border border-border">
+          <p className="text-sm font-medium text-muted-foreground mb-1">Deferred locations:</p>
+          <p className="text-sm text-foreground">{response.deferred.join(', ')}</p>
+          {response.deferred_reason && (
+            <p className="text-xs text-muted-foreground mt-1">{response.deferred_reason}</p>
+          )}
+        </div>
+      )}
+
       {/* Markdown Content */}
       {response.route_plan && (
         <div className="route-plan-content prose prose-sm dark:prose-invert max-w-none">
