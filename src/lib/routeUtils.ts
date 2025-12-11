@@ -174,6 +174,444 @@ export function extractPrintableRouteContent(routePlan: string): string {
   return routePlan;
 }
 
+export function generatePrintableHTML(routeContent: string, queryDate?: string): string {
+  // Parse the route content to extract structured data
+  const days: Array<{
+    title: string;
+    date: string;
+    stops: Array<{
+      order: number;
+      name: string;
+      address: string;
+      company: string;
+      urgency: string;
+      duration: string;
+      driveTime: string;
+      scheduledTime?: string;
+      callAhead?: boolean;
+    }>;
+    summary?: {
+      totalStops: string;
+      totalHours: string;
+      driveHours: string;
+      miles: string;
+      fuel: string;
+      zones: string[];
+    };
+  }> = [];
+
+  // Parse day sections
+  const dayPattern = /📅\s*(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY)[^\n]*\n([^]*?)(?=📅\s*(?:MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY)|📤\s*EXPORT|$)/gi;
+  let dayMatch;
+  
+  while ((dayMatch = dayPattern.exec(routeContent)) !== null) {
+    const dayName = dayMatch[1];
+    const dayContent = dayMatch[2];
+    
+    // Extract date from the header line
+    const dateMatch = dayMatch[0].match(/\(([^)]+)\)/);
+    const date = dateMatch ? dateMatch[1] : '';
+    
+    const stops: typeof days[0]['stops'] = [];
+    
+    // Parse stops
+    const stopPattern = /📍\s*STOP\s*(\d+)[^\n]*\n\n([^\n]+)\n([^\n]+)(?:\n([^\n]+))?/gi;
+    let stopMatch;
+    
+    while ((stopMatch = stopPattern.exec(dayContent)) !== null) {
+      const order = parseInt(stopMatch[1]);
+      const name = stopMatch[2].trim();
+      const address = stopMatch[3].trim();
+      const details = stopMatch[4] || '';
+      
+      // Parse company and urgency from details
+      const companyMatch = details.match(/\*\*([^*]+)\*\*/);
+      const urgencyMatch = details.match(/🔴|🟠|🟡|🟢|🔵/);
+      const durationMatch = details.match(/⏱️\s*(\d+)\s*min/);
+      const driveMatch = details.match(/🚗\s*(\d+)\s*min/);
+      const callAhead = details.includes('📞');
+      const scheduledMatch = details.match(/📅\s*Scheduled:\s*([^\s|]+)/);
+      
+      let urgency = 'NORMAL';
+      if (urgencyMatch) {
+        switch (urgencyMatch[0]) {
+          case '🔴': urgency = 'CRITICAL'; break;
+          case '🟠': urgency = 'URGENT'; break;
+          case '🟡': urgency = 'SOON'; break;
+          case '🟢': urgency = 'NORMAL'; break;
+          case '🔵': urgency = 'FIXED'; break;
+        }
+      }
+      
+      stops.push({
+        order,
+        name,
+        address,
+        company: companyMatch ? companyMatch[1] : '',
+        urgency,
+        duration: durationMatch ? `${durationMatch[1]}m` : '',
+        driveTime: driveMatch ? `${driveMatch[1]}m` : '',
+        scheduledTime: scheduledMatch ? scheduledMatch[1] : undefined,
+        callAhead
+      });
+    }
+    
+    // Parse summary
+    const summaryMatch = dayContent.match(/📊\s*DAY SUMMARY[^]*?(?=🏠|📤|$)/i);
+    let summary;
+    if (summaryMatch) {
+      const summaryText = summaryMatch[0];
+      const stopsMatch = summaryText.match(/Stops:\s*(\d+)/);
+      const hoursMatch = summaryText.match(/Total Hours:\s*([\d.]+)/);
+      const driveMatch = summaryText.match(/Drive Time:\s*([\d.]+)/);
+      const milesMatch = summaryText.match(/Distance:\s*([\d.]+)/);
+      const fuelMatch = summaryText.match(/Fuel:\s*\$?([\d.]+)/);
+      const zonesMatch = summaryText.match(/Zones?:\s*([^\n]+)/);
+      
+      summary = {
+        totalStops: stopsMatch ? stopsMatch[1] : String(stops.length),
+        totalHours: hoursMatch ? hoursMatch[1] : '',
+        driveHours: driveMatch ? driveMatch[1] : '',
+        miles: milesMatch ? milesMatch[1] : '',
+        fuel: fuelMatch ? fuelMatch[1] : '',
+        zones: zonesMatch ? zonesMatch[1].split(',').map(z => z.trim()) : []
+      };
+    }
+    
+    if (stops.length > 0) {
+      days.push({ title: dayName, date, stops, summary });
+    }
+  }
+
+  // Extract navigation addresses
+  const navAddresses: string[] = [];
+  const exportMatch = routeContent.match(/📤\s*EXPORT FOR NAVIGATION:?\s*\n([\s\S]*?)(?=\n📊|$)/i);
+  if (exportMatch) {
+    const lines = exportMatch[1].split('\n').filter(l => l.trim());
+    for (const line of lines) {
+      const cleaned = line.replace(/^\d+\.\s*/, '').trim();
+      if (cleaned && /\d{5}/.test(cleaned)) {
+        navAddresses.push(cleaned);
+      }
+    }
+  }
+
+  const getUrgencyColor = (urgency: string) => {
+    switch (urgency) {
+      case 'CRITICAL': return { bg: '#fef2f2', text: '#dc2626', badge: '#dc2626' };
+      case 'URGENT': return { bg: '#fff7ed', text: '#ea580c', badge: '#f97316' };
+      case 'SOON': return { bg: '#fefce8', text: '#ca8a04', badge: '#eab308' };
+      case 'FIXED': return { bg: '#f5f3ff', text: '#7c3aed', badge: '#8b5cf6' };
+      default: return { bg: '#f0fdf4', text: '#16a34a', badge: '#22c55e' };
+    }
+  };
+
+  // Generate HTML
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <title>RouteWise AI - Route Plan</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { 
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      color: #1a1a2e;
+      line-height: 1.5;
+      padding: 40px;
+      max-width: 850px;
+      margin: 0 auto;
+      background: #fff;
+    }
+    
+    .header {
+      border-bottom: 3px solid #3b82f6;
+      padding-bottom: 20px;
+      margin-bottom: 30px;
+    }
+    .header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1e3a5f;
+      margin-bottom: 4px;
+    }
+    .header .brand {
+      color: #3b82f6;
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .header .date {
+      color: #64748b;
+      font-size: 16px;
+      margin-top: 8px;
+    }
+    
+    .day-section {
+      margin-bottom: 40px;
+      page-break-inside: avoid;
+    }
+    .day-header {
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      color: white;
+      padding: 16px 24px;
+      border-radius: 12px 12px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .day-header h2 {
+      font-size: 20px;
+      font-weight: 600;
+    }
+    .day-header .stats {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    
+    .stops-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-top: none;
+    }
+    .stops-table th {
+      background: #f8fafc;
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #475569;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .stops-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid #e2e8f0;
+      vertical-align: top;
+    }
+    .stops-table tr:last-child td {
+      border-bottom: none;
+    }
+    .stops-table tr:hover {
+      background: #f8fafc;
+    }
+    
+    .stop-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      color: white;
+      font-weight: 700;
+      font-size: 13px;
+    }
+    
+    .stop-name {
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 2px;
+    }
+    .stop-address {
+      font-size: 13px;
+      color: #64748b;
+    }
+    
+    .urgency-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    
+    .call-ahead {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      color: #7c3aed;
+      background: #f5f3ff;
+      padding: 4px 8px;
+      border-radius: 6px;
+      margin-top: 6px;
+    }
+    
+    .summary-card {
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      border: 1px solid #e2e8f0;
+      border-radius: 0 0 12px 12px;
+      padding: 20px 24px;
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+    .summary-item {
+      display: flex;
+      flex-direction: column;
+    }
+    .summary-item .label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #64748b;
+      margin-bottom: 2px;
+    }
+    .summary-item .value {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1e3a5f;
+    }
+    
+    .nav-section {
+      margin-top: 40px;
+      padding: 24px;
+      background: #f8fafc;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+    }
+    .nav-section h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1e3a5f;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .nav-address {
+      padding: 8px 0;
+      font-size: 14px;
+      color: #334155;
+      border-bottom: 1px dashed #cbd5e1;
+    }
+    .nav-address:last-child {
+      border-bottom: none;
+    }
+    .nav-address strong {
+      color: #3b82f6;
+      margin-right: 8px;
+    }
+    
+    .footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #e2e8f0;
+      text-align: center;
+      color: #94a3b8;
+      font-size: 12px;
+    }
+    
+    @media print {
+      body { padding: 20px; }
+      .day-section { page-break-inside: avoid; }
+      .nav-section { page-break-before: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="brand">RouteWise AI</div>
+    <h1>Route Plan${queryDate ? ` - ${queryDate}` : ''}</h1>
+    <div class="date">Generated on ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} at ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
+  </div>
+
+  ${days.map(day => `
+    <div class="day-section">
+      <div class="day-header">
+        <h2>${day.title}${day.date ? ` - ${day.date}` : ''}</h2>
+        <div class="stats">${day.stops.length} stops${day.summary?.totalHours ? ` • ${day.summary.totalHours}h total` : ''}</div>
+      </div>
+      
+      <table class="stops-table">
+        <thead>
+          <tr>
+            <th style="width: 50px;">#</th>
+            <th>Property</th>
+            <th style="width: 80px;">Company</th>
+            <th style="width: 90px;">Urgency</th>
+            <th style="width: 70px;">Time</th>
+            <th style="width: 70px;">Drive</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${day.stops.map(stop => {
+            const colors = getUrgencyColor(stop.urgency);
+            return `
+              <tr>
+                <td>
+                  <span class="stop-number" style="background-color: ${colors.badge};">${stop.order}</span>
+                </td>
+                <td>
+                  <div class="stop-name">${stop.name}</div>
+                  <div class="stop-address">${stop.address}</div>
+                  ${stop.callAhead ? '<div class="call-ahead">📞 Call Ahead</div>' : ''}
+                  ${stop.scheduledTime ? `<div class="call-ahead">🕐 ${stop.scheduledTime}</div>` : ''}
+                </td>
+                <td>${stop.company}</td>
+                <td>
+                  <span class="urgency-badge" style="background-color: ${colors.bg}; color: ${colors.text};">
+                    ${stop.urgency}
+                  </span>
+                </td>
+                <td>${stop.duration}</td>
+                <td>${stop.driveTime || '-'}</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+      
+      ${day.summary ? `
+        <div class="summary-card">
+          <div class="summary-item">
+            <span class="label">Total Stops</span>
+            <span class="value">${day.summary.totalStops}</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Total Hours</span>
+            <span class="value">${day.summary.totalHours}h</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Drive Time</span>
+            <span class="value">${day.summary.driveHours}h</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Distance</span>
+            <span class="value">${day.summary.miles} mi</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Est. Fuel</span>
+            <span class="value">$${day.summary.fuel}</span>
+          </div>
+        </div>
+      ` : ''}
+    </div>
+  `).join('')}
+
+  ${navAddresses.length > 0 ? `
+    <div class="nav-section">
+      <h3>📍 Addresses for Navigation</h3>
+      ${navAddresses.map((addr, i) => `
+        <div class="nav-address">
+          <strong>${i + 1}.</strong> ${addr}
+        </div>
+      `).join('')}
+    </div>
+  ` : ''}
+
+  <div class="footer">
+    RouteWise AI • Inspector Route Optimizer
+  </div>
+</body>
+</html>`;
+}
+
 export function generateGoogleMapsUrl(addresses: string[]): string | null {
   if (addresses.length === 0) return null;
 
