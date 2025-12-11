@@ -293,9 +293,12 @@ export function RouteResponse({ response }: RouteResponseProps) {
               variant="outline" 
               size="sm" 
               onClick={() => {
+                console.log('[Print] Button clicked');
                 const printableContent = response.route_plan 
                   ? extractPrintableRouteContent(response.route_plan)
                   : '';
+                
+                console.log('[Print] Printable content length:', printableContent?.length);
                 
                 if (!printableContent) {
                   toast({
@@ -307,21 +310,16 @@ export function RouteResponse({ response }: RouteResponseProps) {
                 }
 
                 const html = generatePrintableHTML(printableContent, response.query_date);
-                const printWindow = window.open('', 'RouteWise_Print', 'width=900,height=700');
-                if (printWindow) {
-                  printWindow.document.write(html);
-                  printWindow.document.close();
-                  toast({
-                    title: 'Print Preview Ready',
-                    description: 'Use Ctrl+P (or Cmd+P on Mac) to print from the new window',
-                  });
-                } else {
-                  toast({
-                    title: 'Popup Blocked',
-                    description: 'Please allow popups to print the route',
-                    variant: 'destructive',
-                  });
-                }
+                console.log('[Print] Generated HTML length:', html?.length);
+                
+                // Use data URI to open in new tab - most reliable method
+                const dataUri = 'data:text/html;charset=utf-8,' + encodeURIComponent(html);
+                window.open(dataUri, '_blank');
+                
+                toast({
+                  title: 'Print Preview Opened',
+                  description: 'Use Ctrl+P (Cmd+P on Mac) to print from the new tab',
+                });
               }}
             >
               <Printer className="w-4 h-4 mr-2" />
