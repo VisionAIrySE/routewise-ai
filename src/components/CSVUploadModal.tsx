@@ -23,6 +23,8 @@ interface RecentUpload {
   date: string;
 }
 
+const N8N_UPLOAD_WEBHOOK = 'https://visionairy.app.n8n.cloud/webhook/upload-inspections';
+
 export function CSVUploadModal({ open, onOpenChange }: CSVUploadModalProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -68,20 +70,21 @@ export function CSVUploadModal({ open, onOpenChange }: CSVUploadModalProps) {
     setUploading(true);
 
     try {
+      // Get the current user ID for multi-user support
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+
       const formData = new FormData();
       formData.append('file', file);
+      if (userId) {
+        formData.append('user_id', userId);
+      }
 
-      // Use the Edge Function for CSV upload
-      const response = await fetch(
-        'https://ftlprmktjrhkxwrgwtig.supabase.co/functions/v1/csv-upload',
-        {
-          method: 'POST',
-          headers: {
-            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0bHBybWt0anJoa3h3cmd3dGlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzOTU0MjIsImV4cCI6MjA3OTk3MTQyMn0.jjXzhQcLcBINGLssVkC3fs6AW8MkspXbiPGkRpu80rk',
-          },
-          body: formData,
-        }
-      );
+      // Send directly to n8n webhook (no more Edge Function proxy)
+      const response = await fetch(N8N_UPLOAD_WEBHOOK, {
+        method: 'POST',
+        body: formData,
+      });
 
       const result = await response.json();
 

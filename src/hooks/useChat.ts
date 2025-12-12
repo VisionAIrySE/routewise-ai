@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { RouteOptimizerResponse, isRouteOptimizerResponse } from '@/lib/routeUtils';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface Message {
   id: string;
@@ -57,6 +58,10 @@ export function useChat() {
     setIsLoading(true);
 
     try {
+      // Get the current user ID for multi-user support
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+
       const webhookUrl = 'https://visionairy.app.n8n.cloud/webhook/route-query';
 
       const response = await fetch(webhookUrl, {
@@ -65,6 +70,7 @@ export function useChat() {
         body: JSON.stringify({
           message: content,
           session_id: sessionId,
+          user_id: userId,
         }),
       });
 
