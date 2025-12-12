@@ -129,6 +129,49 @@ export function AddressAutocomplete({ value, onChange, placeholder, error }: Add
     );
   };
 
+  // Geocode manually typed address (fallback when user doesn't select from dropdown)
+  const geocodeAddress = () => {
+    if (!inputValue || inputValue.length < 10 || !isGoogleLoaded) return;
+    if (!window.google?.maps?.Geocoder) return;
+
+    setIsLoading(true);
+    const geocoder = new window.google.maps.Geocoder();
+    geocoder.geocode({ address: inputValue }, (results: any[], status: string) => {
+      setIsLoading(false);
+      if (status === 'OK' && results && results[0]) {
+        const result: AddressResult = {
+          address: results[0].formatted_address,
+          lat: results[0].geometry.location.lat(),
+          lng: results[0].geometry.location.lng(),
+        };
+        setInputValue(result.address);
+        onChange(result);
+        setShowDropdown(false);
+        setPredictions([]);
+      }
+    });
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (predictions.length > 0) {
+        handleSelect(predictions[0]);
+      } else {
+        geocodeAddress();
+      }
+    }
+  };
+
+  const handleBlur = () => {
+    // Small delay to allow dropdown clicks to register
+    setTimeout(() => {
+      if (inputValue && !showDropdown) {
+        geocodeAddress();
+      }
+    }, 200);
+  };
+
   return (
     <div className="relative">
       <div className="relative">
@@ -137,6 +180,8 @@ export function AddressAutocomplete({ value, onChange, placeholder, error }: Add
           ref={inputRef}
           value={inputValue}
           onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
+          onBlur={handleBlur}
           onFocus={() => predictions.length > 0 && setShowDropdown(true)}
           placeholder={placeholder || "Enter your address"}
           className={`pl-10 ${error ? 'border-destructive' : ''}`}
