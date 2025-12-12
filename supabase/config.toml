@@ -1,7 +1,10 @@
-project_id = "ftlprmktjrhkxwrgwtig"
+project_id = "rsylbntdtflyoaxiwhvm"
 
 [functions.airtable-proxy]
 verify_jwt = false
 
 [functions.csv-upload]
+verify_jwt = false
+
+[functions.n8n-proxy]
 verify_jwt = false
