@@ -6,8 +6,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const N8N_ROUTE_QUERY_URL = Deno.env.get('VITE_N8N_ROUTE_WEBHOOK_URL') || 'https://visionairy.app.n8n.cloud/webhook/route-query';
-const N8N_UPLOAD_URL = Deno.env.get('VITE_N8N_CSV_WEBHOOK_URL') || 'https://visionairy.app.n8n.cloud/webhook/upload-inspections';
+// Hardcoded n8n webhook URLs - VITE_* env vars are not available in edge functions
+const N8N_ROUTE_QUERY_URL = 'https://visionairy.app.n8n.cloud/webhook/route-query';
+const N8N_UPLOAD_URL = 'https://visionairy.app.n8n.cloud/webhook/upload-inspections';
 
 serve(async (req) => {
   // Handle CORS preflight requests
