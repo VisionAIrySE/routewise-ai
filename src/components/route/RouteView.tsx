@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import { RouteMap } from './RouteMap';
 import { RouteSummaryCard } from './RouteSummaryCard';
 import { RouteStopList } from './RouteStopList';
 import { generatePrintWindowHTML } from './PrintableRoute';
 import { Button } from '@/components/ui/button';
-import { Copy, Navigation, Printer, Map, List, Save, Loader2 } from 'lucide-react';
+import { Copy, Navigation, Printer, Save, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { RouteDay } from '@/lib/routeUtils';
 
@@ -17,7 +16,6 @@ interface RouteViewProps {
 export function RouteView({ routes, homeBase, onSaveRoute }: RouteViewProps) {
   const [selectedDay, setSelectedDay] = useState(0);
   const [selectedStopId, setSelectedStopId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
@@ -182,53 +180,15 @@ export function RouteView({ routes, homeBase, onSaveRoute }: RouteViewProps) {
               Save Route
             </Button>
           )}
-          <div className="flex-1" />
-          <div className="flex border border-border rounded-lg overflow-hidden">
-            <Button
-              variant={viewMode === 'map' ? 'default' : 'ghost'}
-              size="sm"
-              className="rounded-none"
-              onClick={() => setViewMode('map')}
-            >
-              <Map className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'ghost'}
-              size="sm"
-              className="rounded-none"
-              onClick={() => setViewMode('list')}
-            >
-              <List className="h-4 w-4" />
-            </Button>
-          </div>
         </div>
 
-        {/* Map or List View */}
+        {/* List View */}
         <div className="mt-4">
-          {viewMode === 'map' ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div className="rounded-lg overflow-hidden border border-border">
-                <RouteMap
-                  stops={currentRoute.stops}
-                  homeBase={homeBase}
-                  onStopClick={(stop) => setSelectedStopId(stop.id)}
-                />
-              </div>
-              <div className="max-h-[400px] overflow-y-auto">
-                <RouteStopList
-                  stops={currentRoute.stops}
-                  selectedStopId={selectedStopId || undefined}
-                  onStopClick={(stop) => setSelectedStopId(stop.id)}
-                />
-              </div>
-            </div>
-          ) : (
-            <RouteStopList
-              stops={currentRoute.stops}
-              selectedStopId={selectedStopId || undefined}
-              onStopClick={(stop) => setSelectedStopId(stop.id)}
-            />
-          )}
+          <RouteStopList
+            stops={currentRoute.stops}
+            selectedStopId={selectedStopId || undefined}
+            onStopClick={(stop) => setSelectedStopId(stop.id)}
+          />
         </div>
       </div>
     </div>
