@@ -4,7 +4,7 @@ import { RouteSummaryCard } from './RouteSummaryCard';
 import { RouteStopList } from './RouteStopList';
 import { generatePrintWindowHTML } from './PrintableRoute';
 import { Button } from '@/components/ui/button';
-import { Copy, Navigation, Printer, Map, List, Save, Loader2 } from 'lucide-react';
+import { Copy, Printer, Map, List, Save, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { RouteDay } from '@/lib/routeUtils';
 
@@ -37,19 +37,6 @@ export function RouteView({ routes, homeBase, onSaveRoute }: RouteViewProps) {
     });
   };
 
-  const openInGoogleMaps = () => {
-    const stops = currentRoute.stops;
-    if (stops.length === 0) return;
-
-    const origin = `${homeBase.lat},${homeBase.lng}`;
-    const destination = origin;
-    const waypoints = stops
-      .map(stop => `${stop.lat},${stop.lng}`)
-      .join('|');
-
-    const url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&waypoints=${waypoints}&travelmode=driving`;
-    window.open(url, '_blank');
-  };
 
   const printRoute = () => {
     const html = generatePrintWindowHTML(currentRoute, homeBase, googleMapsApiKey);
@@ -148,15 +135,6 @@ export function RouteView({ routes, homeBase, onSaveRoute }: RouteViewProps) {
           >
             <Copy className="h-4 w-4 mr-2" />
             Copy Addresses
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={openInGoogleMaps}
-            disabled={currentRoute.stops.length === 0}
-          >
-            <Navigation className="h-4 w-4 mr-2" />
-            Open in Maps
           </Button>
           <Button 
             variant="outline" 
