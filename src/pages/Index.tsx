@@ -6,6 +6,7 @@ import { WeeklyProgress } from '@/components/WeeklyProgress';
 import { ExamplePrompts } from '@/components/ExamplePrompts';
 import { AIChatPanel } from '@/components/AIChatPanel';
 import { CSVUploadModal } from '@/components/CSVUploadModal';
+import { DataSourceIndicator } from '@/components/DataSourceIndicator';
 import { useInspectionStats } from '@/hooks/useInspections';
 import { Button } from '@/components/ui/button';
 
@@ -86,7 +87,8 @@ const Dashboard = () => {
         <div className="lg:col-span-2">
           <TodayRouteCard />
         </div>
-        <div>
+        <div className="space-y-6">
+          <DataSourceIndicator />
           <WeeklyProgress />
         </div>
       </div>
