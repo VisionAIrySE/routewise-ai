@@ -1,20 +1,17 @@
 import { useState } from 'react';
-import { AlertTriangle, AlertCircle, Clock, ClipboardList, Upload } from 'lucide-react';
+import { AlertTriangle, AlertCircle, Clock, ClipboardList } from 'lucide-react';
 import { StatCard } from '@/components/StatCard';
 import { TodayRouteCard } from '@/components/TodayRouteCard';
 import { WeeklyProgress } from '@/components/WeeklyProgress';
 import { ExamplePrompts } from '@/components/ExamplePrompts';
 import { AIChatPanel } from '@/components/AIChatPanel';
-import { CSVUploadModal } from '@/components/CSVUploadModal';
 import { DataSourceIndicator } from '@/components/DataSourceIndicator';
 import { useInspectionStats } from '@/hooks/useInspections';
-import { Button } from '@/components/ui/button';
 
 const Dashboard = () => {
   const { stats, isLoading, error } = useInspectionStats();
   const [chatOpen, setChatOpen] = useState(false);
   const [initialPrompt, setInitialPrompt] = useState<string | undefined>();
-  const [uploadModalOpen, setUploadModalOpen] = useState(false);
 
   const handlePromptClick = (prompt: string) => {
     setInitialPrompt(prompt);
@@ -96,27 +93,11 @@ const Dashboard = () => {
       {/* Example Prompts */}
       <ExamplePrompts onPromptClick={handlePromptClick} />
 
-      {/* Prominent Upload Button */}
-      <div className="flex justify-center mt-8 mb-4">
-        <Button
-          size="lg"
-          variant="outline"
-          onClick={() => setUploadModalOpen(true)}
-          className="h-14 px-8 text-lg gap-3 border-2 border-dashed border-primary/50 hover:border-primary hover:bg-primary/5 transition-all"
-        >
-          <Upload className="h-6 w-6" />
-          Upload CSV/XLS File
-        </Button>
-      </div>
-
       {/* AI Chat Panel - triggered from prompts */}
       <AIChatPanel
         open={chatOpen}
         onOpenChange={setChatOpen}
       />
-
-      {/* CSV Upload Modal */}
-      <CSVUploadModal open={uploadModalOpen} onOpenChange={setUploadModalOpen} />
     </div>
   );
 };
