@@ -9,8 +9,10 @@ export interface RouteStop {
   urgency: string;
   duration_minutes: number;
   drive_minutes_to_next: number | null;
+  drive_miles_to_next: number | null;
   needs_call_ahead: boolean;
   scheduled_time?: string;
+  days_remaining?: number;
 }
 
 export interface RouteDay {
@@ -774,12 +776,56 @@ export function formatGeneratedTime(isoString: string): string {
 }
 
 export const DEFAULT_HOME_BASE: HomeBase = {
-  lat: 43.8879,
-  lng: -121.4386,
-  address: 'Sunriver, OR 97707'
+  lat: 43.901998,
+  lng: -121.4317847,
+  address: '57870 Silver Fir Circle, Sunriver, OR 97707'
 };
 
 const N8N_ROUTE_WEBHOOK_URL = 'https://visionairy.app.n8n.cloud/webhook/route-query';
+
+export interface SavedRoute {
+  id: string;
+  date: string;
+  stops_count: number;
+  total_miles: number;
+  total_hours: number;
+  drive_hours: number;
+  fuel_cost: number;
+  zones: string;
+  start_time?: string;
+  finish_time?: string;
+  stops: RouteStop[];
+  created_at?: string;
+}
+
+export interface SavedRoutesResponse {
+  success: boolean;
+  routes: SavedRoute[];
+  count: number;
+}
+
+export async function fetchSavedRoutes(): Promise<SavedRoutesResponse> {
+  try {
+    const response = await fetch(N8N_ROUTE_WEBHOOK_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        action: 'get_saved_routes'
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to fetch saved routes:', error);
+    return { success: false, routes: [], count: 0 };
+  }
+}
 
 export async function saveRouteToN8n(route: RouteDay, fullResponse?: RouteOptimizerResponse): Promise<{ success: boolean; message?: string }> {
   try {
@@ -811,5 +857,73 @@ export async function saveRouteToN8n(route: RouteDay, fullResponse?: RouteOptimi
   } catch (error) {
     console.error('Failed to save route:', error);
     return { success: false, message: error instanceof Error ? error.message : 'Failed to save route' };
+  }
+}
+
+// Reconciliation types
+export interface MissingInspection {
+  id: string;
+  inspection_id: string;
+  company: string;
+  insured_name: string;
+  address: string;
+  urgency: string;
+  days_remaining: number;
+}
+
+export interface UploadResponse {
+  success: boolean;
+  message: string;
+  company: string;
+  batch_id: string;
+  total_rows_in_file: number;
+  valid_inspections: number;
+  inserted_to_airtable: number;
+  timestamp: string;
+  needs_reconciliation?: boolean;
+  missing_inspections?: MissingInspection[];
+  missing_count?: number;
+  reconciliation_message?: string;
+}
+
+export interface ReconciliationResult {
+  success: boolean;
+  message: string;
+  completed_count: number;
+  removed_count: number;
+  total_updated: number;
+}
+
+export async function confirmReconciliation(
+  completedIds: string[],
+  removedIds: string[]
+): Promise<ReconciliationResult> {
+  try {
+    const response = await fetch(N8N_ROUTE_WEBHOOK_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        action: 'reconcile',
+        completed_ids: completedIds,
+        removed_ids: removedIds
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to confirm reconciliation:', error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to reconcile',
+      completed_count: 0,
+      removed_count: 0,
+      total_updated: 0
+    };
   }
 }

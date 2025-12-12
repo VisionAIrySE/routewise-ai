@@ -14,12 +14,16 @@ export interface Message {
 const INITIAL_MESSAGE: Message = {
   id: 'initial',
   role: 'assistant',
-  content: `Welcome! I can help you plan optimized routes. Tell me your availability (e.g., "I have 4 hours tomorrow starting at 9am") and I'll create an efficient route considering:
+  content: `Welcome, I'm RouteWise! I'll help you optimize your planned routes to get the most out of your time and travel!
+
+Tell me your availability (e.g., "I have 4 hours tomorrow, starting at 9AM.") and I'll create the most efficient route considering:
 
 • Urgent deadlines
-• Fixed SIG appointments  
+• Preset appointments
 • Geographic clustering
-• Drive time optimization`,
+• Drive time optimization
+
+Feel free to adjust the route and add or delete stops from your uploaded pipeline as we go. Let's get started!`,
   timestamp: new Date(),
 };
 

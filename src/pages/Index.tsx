@@ -1,17 +1,19 @@
 import { useState } from 'react';
 import { AlertTriangle, AlertCircle, Clock, ClipboardList } from 'lucide-react';
 import { StatCard } from '@/components/StatCard';
-import { TodayRouteCard } from '@/components/TodayRouteCard';
-import { WeeklyProgress } from '@/components/WeeklyProgress';
+import { UpcomingAppointments } from '@/components/UpcomingAppointments';
+import { CompletionStats } from '@/components/CompletionStats';
+import { DataSources } from '@/components/DataSources';
 import { ExamplePrompts } from '@/components/ExamplePrompts';
 import { AIChatPanel } from '@/components/AIChatPanel';
-import { DataSourceIndicator } from '@/components/DataSourceIndicator';
+import { CSVUploadModal } from '@/components/CSVUploadModal';
 import { useInspectionStats } from '@/hooks/useInspections';
 
 const Dashboard = () => {
   const { stats, isLoading, error } = useInspectionStats();
   const [chatOpen, setChatOpen] = useState(false);
   const [initialPrompt, setInitialPrompt] = useState<string | undefined>();
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
 
   const handlePromptClick = (prompt: string) => {
     setInitialPrompt(prompt);
@@ -29,8 +31,8 @@ const Dashboard = () => {
         </p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+      {/* Urgency Stats Grid */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
         {isLoading ? (
           <>
             {[1, 2, 3, 4].map((i) => (
@@ -79,18 +81,25 @@ const Dashboard = () => {
         )}
       </div>
 
-      {/* Main Content */}
-      <div className="grid gap-6 lg:grid-cols-3 mb-8">
-        <div className="lg:col-span-2">
-          <TodayRouteCard />
+      {/* Main Content - 3 Column Grid */}
+      <div className="grid gap-6 lg:grid-cols-3 mb-6">
+        {/* Left Column - Scheduled Appointments */}
+        <div>
+          <UpcomingAppointments />
         </div>
-        <div className="space-y-6">
-          <DataSourceIndicator />
-          <WeeklyProgress />
+
+        {/* Middle Column - Completion Stats */}
+        <div>
+          <CompletionStats />
+        </div>
+
+        {/* Right Column - Data Sources */}
+        <div>
+          <DataSources onUploadClick={() => setUploadModalOpen(true)} />
         </div>
       </div>
 
-      {/* Example Prompts */}
+      {/* AI Assistant Prompts */}
       <ExamplePrompts onPromptClick={handlePromptClick} />
 
       {/* AI Chat Panel - triggered from prompts */}
@@ -98,6 +107,9 @@ const Dashboard = () => {
         open={chatOpen}
         onOpenChange={setChatOpen}
       />
+
+      {/* CSV Upload Modal */}
+      <CSVUploadModal open={uploadModalOpen} onOpenChange={setUploadModalOpen} />
     </div>
   );
 };

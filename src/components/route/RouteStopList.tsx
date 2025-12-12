@@ -1,4 +1,4 @@
-import { ChevronRight, Phone, Clock, AlertTriangle } from 'lucide-react';
+import { ChevronRight, Phone, Clock, AlertTriangle, Calendar } from 'lucide-react';
 
 interface RouteStop {
   id: string;
@@ -9,6 +9,7 @@ interface RouteStop {
   urgency: string;
   duration_minutes: number;
   drive_minutes_to_next: number | null;
+  drive_miles_to_next: number | null;
   needs_call_ahead: boolean;
   scheduled_time?: string;
 }
@@ -73,6 +74,13 @@ export function RouteStopList({ stops, onStopClick, selectedStopId }: RouteStopL
                     </span>
                   )}
 
+                  {stop.company === 'SIG' && (
+                    <span className="text-xs text-purple-600 flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      Appt req'd
+                    </span>
+                  )}
+
                   {stop.scheduled_time && (
                     <span className="text-xs text-blue-600 flex items-center gap-1">
                       <AlertTriangle className="h-3 w-3" />
@@ -86,12 +94,12 @@ export function RouteStopList({ stops, onStopClick, selectedStopId }: RouteStopL
             </div>
           </div>
 
-          {/* Drive Time to Next */}
+          {/* Drive Time/Distance to Next */}
           {stop.drive_minutes_to_next && index < stops.length - 1 && (
             <div className="flex items-center gap-2 py-1 pl-4">
               <div className="w-0.5 h-4 bg-blue-200 ml-3.5"></div>
               <span className="text-xs text-muted-foreground">
-                {stop.drive_minutes_to_next} min drive
+                {stop.drive_minutes_to_next} min · {stop.drive_miles_to_next} mi
               </span>
             </div>
           )}
@@ -103,7 +111,7 @@ export function RouteStopList({ stops, onStopClick, selectedStopId }: RouteStopL
         <div className="flex items-center gap-2 py-1 pl-4">
           <div className="w-0.5 h-4 bg-blue-200 ml-3.5"></div>
           <span className="text-xs text-muted-foreground">
-            {stops[stops.length - 1].drive_minutes_to_next} min drive home
+            {stops[stops.length - 1].drive_minutes_to_next} min · {stops[stops.length - 1].drive_miles_to_next} mi home
           </span>
         </div>
       )}

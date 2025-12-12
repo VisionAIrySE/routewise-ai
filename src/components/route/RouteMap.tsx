@@ -31,8 +31,8 @@ const mapContainerStyle = {
 };
 
 const defaultCenter = {
-  lat: 43.8879,
-  lng: -121.4386
+  lat: 43.901998,
+  lng: -121.4317847
 };
 
 const mapOptions: google.maps.MapOptions = {

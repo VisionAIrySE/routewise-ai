@@ -109,9 +109,78 @@ export function useInspectionStats() {
 
 export function useWeeklyStats() {
   const { data: inspections, isLoading } = useAllInspections();
-  
+
   const completed = inspections?.filter(i => i.status === 'COMPLETED').length ?? 0;
   const total = inspections?.length ?? 0;
-  
+
   return { completed, total, isLoading };
+}
+
+// Enhanced completion stats with time periods
+export function useCompletionStats() {
+  return useQuery({
+    queryKey: ['inspections', 'completion-stats'],
+    queryFn: async () => {
+      // Fetch all completed inspections
+      const records = await fetchTable<InspectionFields>('Inspections', {
+        filterByFormula: "{Status} = 'COMPLETED'",
+      });
+
+      const now = new Date();
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - now.getDay()); // Sunday
+      startOfWeek.setHours(0, 0, 0, 0);
+
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const startOfYear = new Date(now.getFullYear(), 0, 1);
+
+      let thisWeek = 0;
+      let thisMonth = 0;
+      let thisYear = 0;
+      const byCompany: Record<string, number> = { MIL: 0, IPI: 0, SIG: 0 };
+
+      records.forEach(record => {
+        const completedDate = record.fields['Completed Date'];
+        const company = record.fields.Company;
+
+        if (company) {
+          byCompany[company] = (byCompany[company] || 0) + 1;
+        }
+
+        if (completedDate) {
+          const date = new Date(completedDate);
+          if (date >= startOfWeek) thisWeek++;
+          if (date >= startOfMonth) thisMonth++;
+          if (date >= startOfYear) thisYear++;
+        } else {
+          // If no completed date, count all as this year (legacy data)
+          thisYear++;
+        }
+      });
+
+      return {
+        thisWeek,
+        thisMonth,
+        thisYear,
+        total: records.length,
+        byCompany,
+      };
+    },
+    refetchInterval: 60000,
+  });
+}
+
+// Get inspections with fixed appointments
+export function useUpcomingAppointments() {
+  return useQuery({
+    queryKey: ['inspections', 'upcoming-appointments'],
+    queryFn: async () => {
+      const records = await fetchTable<InspectionFields>('Inspections', {
+        filterByFormula: "AND({Fixed Appointment} != '', {Status} != 'COMPLETED')",
+        sort: [{ field: 'Fixed Appointment', direction: 'asc' }],
+      });
+      return records.map(transformRecord);
+    },
+    refetchInterval: 60000,
+  });
 }

@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Calendar, 
-  ClipboardList, 
+import {
+  LayoutDashboard,
+  Calendar,
+  ClipboardList,
   Menu,
   Upload
 } from 'lucide-react';
@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { AIChatPanel } from '@/components/AIChatPanel';
 import { CSVUploadModal } from '@/components/CSVUploadModal';
+import { SavedRoutes } from '@/components/route/SavedRoutes';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -65,6 +66,11 @@ export function AppLayout({ children }: AppLayoutProps) {
             Upload CSV/XLS
           </Button>
         </nav>
+
+        {/* Saved Routes Section */}
+        <div className="mt-4 border-t border-border pt-4 px-2">
+          <SavedRoutes />
+        </div>
       </aside>
 
       {/* Mobile Header */}

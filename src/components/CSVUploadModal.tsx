@@ -9,6 +9,8 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { ReconcileInspections } from '@/components/ReconcileInspections';
+import { MissingInspection, UploadResponse } from '@/lib/routeUtils';
 
 interface CSVUploadModalProps {
   open: boolean;
@@ -24,6 +26,9 @@ interface RecentUpload {
 export function CSVUploadModal({ open, onOpenChange }: CSVUploadModalProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [showReconciliation, setShowReconciliation] = useState(false);
+  const [missingInspections, setMissingInspections] = useState<MissingInspection[]>([]);
+  const [reconciliationCompany, setReconciliationCompany] = useState('');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -83,10 +88,12 @@ export function CSVUploadModal({ open, onOpenChange }: CSVUploadModalProps) {
       if (!response.ok || result.error) {
         throw new Error(result.error || `Upload failed: ${response.status}`);
       }
-      
-      // Extract records count from response - n8n returns inserted_to_airtable, valid_inspections, or total_rows_in_file
-      const recordsCount = result.inserted_to_airtable || result.valid_inspections || result.total_rows_in_file || result.records_processed || result.count || result.records || 0;
-      const companyDetected = result.company || result.company_detected || 'Unknown';
+
+      const uploadResult = result as UploadResponse;
+
+      // Extract records count from response
+      const recordsCount = uploadResult.inserted_to_airtable || uploadResult.valid_inspections || uploadResult.total_rows_in_file || 0;
+      const companyDetected = uploadResult.company || 'Unknown';
 
       // Update recent uploads
       const newUpload: RecentUpload = {
@@ -106,7 +113,14 @@ export function CSVUploadModal({ open, onOpenChange }: CSVUploadModalProps) {
       // Refresh inspections data
       queryClient.invalidateQueries({ queryKey: ['inspections'] });
 
-      onOpenChange(false);
+      // Check if reconciliation is needed
+      if (uploadResult.needs_reconciliation && uploadResult.missing_inspections && uploadResult.missing_inspections.length > 0) {
+        setMissingInspections(uploadResult.missing_inspections);
+        setReconciliationCompany(companyDetected);
+        setShowReconciliation(true);
+      } else {
+        onOpenChange(false);
+      }
     } catch (error) {
       console.error('Upload error:', error);
       toast({
@@ -119,7 +133,17 @@ export function CSVUploadModal({ open, onOpenChange }: CSVUploadModalProps) {
     }
   };
 
+  const handleReconciliationComplete = (completedCount: number, removedCount: number) => {
+    toast({
+      title: 'Reconciliation Complete',
+      description: `${completedCount} completed, ${removedCount} removed`,
+    });
+    queryClient.invalidateQueries({ queryKey: ['inspections'] });
+    onOpenChange(false);
+  };
+
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
@@ -189,5 +213,14 @@ export function CSVUploadModal({ open, onOpenChange }: CSVUploadModalProps) {
         </div>
       </DialogContent>
     </Dialog>
+
+    <ReconcileInspections
+      open={showReconciliation}
+      onOpenChange={setShowReconciliation}
+      inspections={missingInspections}
+      company={reconciliationCompany}
+      onComplete={handleReconciliationComplete}
+    />
+    </>
   );
 }
