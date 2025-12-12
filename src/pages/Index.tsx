@@ -83,17 +83,12 @@ const Dashboard = () => {
 
       {/* Main Content - 3 Column Grid */}
       <div className="grid gap-6 lg:grid-cols-3 mb-6">
-        {/* Left Column - Scheduled Appointments */}
         <div>
           <UpcomingAppointments />
         </div>
-
-        {/* Middle Column - Completion Stats */}
         <div>
           <CompletionStats />
         </div>
-
-        {/* Right Column - Data Sources */}
         <div>
           <DataSources onUploadClick={() => setUploadModalOpen(true)} />
         </div>
@@ -102,7 +97,7 @@ const Dashboard = () => {
       {/* AI Assistant Prompts */}
       <ExamplePrompts onPromptClick={handlePromptClick} />
 
-      {/* AI Chat Panel - triggered from prompts */}
+      {/* AI Chat Panel */}
       <AIChatPanel
         open={chatOpen}
         onOpenChange={setChatOpen}
