@@ -66,7 +66,7 @@ export function useChat() {
         throw new Error('Not authenticated');
       }
 
-      const proxyUrl = 'https://rsylbntdtflyoaxiwhvm.supabase.co/functions/v1/n8n-proxy';
+      const proxyUrl = 'https://ftlprmktjrhkxwrgwtig.supabase.co/functions/v1/n8n-proxy';
 
       const response = await fetch(proxyUrl, {
         method: 'POST',

@@ -783,7 +783,7 @@ export const DEFAULT_HOME_BASE: HomeBase = {
 
 import { supabase } from '@/integrations/supabase/client';
 
-const N8N_PROXY_URL = 'https://rsylbntdtflyoaxiwhvm.supabase.co/functions/v1/n8n-proxy';
+const N8N_PROXY_URL = 'https://ftlprmktjrhkxwrgwtig.supabase.co/functions/v1/n8n-proxy';
 
 export interface SavedRoute {
   id: string;
