@@ -26,9 +26,6 @@ const Dashboard = () => {
         <h1 className="text-2xl font-bold text-foreground lg:text-3xl">
           Inspector Dashboard
         </h1>
-        <p className="mt-1 text-muted-foreground">
-          Overview of your inspection workload
-        </p>
       </div>
 
       {/* AI Assistant Prompts - Top Priority */}
