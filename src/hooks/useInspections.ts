@@ -109,10 +109,10 @@ export function useInspectionStats() {
 
 export function useWeeklyStats() {
   const { data: inspections, isLoading } = useAllInspections();
-
+  
   const completed = inspections?.filter(i => i.status === 'COMPLETED').length ?? 0;
   const total = inspections?.length ?? 0;
-
+  
   return { completed, total, isLoading };
 }
 
@@ -121,14 +121,13 @@ export function useCompletionStats() {
   return useQuery({
     queryKey: ['inspections', 'completion-stats'],
     queryFn: async () => {
-      // Fetch all completed inspections
       const records = await fetchTable<InspectionFields>('Inspections', {
         filterByFormula: "{Status} = 'COMPLETED'",
       });
 
       const now = new Date();
       const startOfWeek = new Date(now);
-      startOfWeek.setDate(now.getDate() - now.getDay()); // Sunday
+      startOfWeek.setDate(now.getDate() - now.getDay());
       startOfWeek.setHours(0, 0, 0, 0);
 
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -153,18 +152,11 @@ export function useCompletionStats() {
           if (date >= startOfMonth) thisMonth++;
           if (date >= startOfYear) thisYear++;
         } else {
-          // If no completed date, count all as this year (legacy data)
           thisYear++;
         }
       });
 
-      return {
-        thisWeek,
-        thisMonth,
-        thisYear,
-        total: records.length,
-        byCompany,
-      };
+      return { thisWeek, thisMonth, thisYear, total: records.length, byCompany };
     },
     refetchInterval: 60000,
   });
