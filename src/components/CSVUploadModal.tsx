@@ -24,7 +24,7 @@ interface RecentUpload {
   date: string;
 }
 
-const N8N_UPLOAD_WEBHOOK = 'https://visionairy.app.n8n.cloud/webhook/upload-inspections';
+const N8N_PROXY_URL = 'https://ftlprmktjrhkxwrgwtig.supabase.co/functions/v1/n8n-proxy';
 
 export function CSVUploadModal({ open, onOpenChange, onUploadComplete }: CSVUploadModalProps) {
   const [isDragging, setIsDragging] = useState(false);
@@ -71,19 +71,24 @@ export function CSVUploadModal({ open, onOpenChange, onUploadComplete }: CSVUplo
     setUploading(true);
 
     try {
-      // Get the current user ID for multi-user support
+      // Get the auth token for secure proxy calls
       const { data: { session } } = await supabase.auth.getSession();
-      const userId = session?.user?.id;
+      const token = session?.access_token;
+
+      if (!token) {
+        throw new Error('Not authenticated');
+      }
 
       const formData = new FormData();
       formData.append('file', file);
-      if (userId) {
-        formData.append('user_id', userId);
-      }
 
-      // Send directly to n8n webhook (no more Edge Function proxy)
-      const response = await fetch(N8N_UPLOAD_WEBHOOK, {
+      // Send through secure n8n-proxy Edge Function
+      const response = await fetch(`${N8N_PROXY_URL}?action=upload`, {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          // Don't set Content-Type for FormData - browser sets it automatically
+        },
         body: formData,
       });
 

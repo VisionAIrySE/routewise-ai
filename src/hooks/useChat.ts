@@ -58,19 +58,25 @@ export function useChat() {
     setIsLoading(true);
 
     try {
-      // Get the current user ID for multi-user support
+      // Get the auth token for secure proxy calls
       const { data: { session } } = await supabase.auth.getSession();
-      const userId = session?.user?.id;
+      const token = session?.access_token;
 
-      const webhookUrl = 'https://visionairy.app.n8n.cloud/webhook/route-query';
+      if (!token) {
+        throw new Error('Not authenticated');
+      }
 
-      const response = await fetch(webhookUrl, {
+      const proxyUrl = 'https://ftlprmktjrhkxwrgwtig.supabase.co/functions/v1/n8n-proxy';
+
+      const response = await fetch(proxyUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
         body: JSON.stringify({
           message: content,
           session_id: sessionId,
-          user_id: userId,
         }),
       });
 
