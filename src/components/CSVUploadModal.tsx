@@ -24,7 +24,7 @@ interface RecentUpload {
   date: string;
 }
 
-const N8N_PROXY_URL = 'https://ftlprmktjrhkxwrgwtig.supabase.co/functions/v1/n8n-proxy';
+const N8N_PROXY_URL = 'https://rsylbntdtflyoaxiwhvm.supabase.co/functions/v1/n8n-proxy';
 
 export function CSVUploadModal({ open, onOpenChange, onUploadComplete }: CSVUploadModalProps) {
   const [isDragging, setIsDragging] = useState(false);
