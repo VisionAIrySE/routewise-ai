@@ -5,12 +5,13 @@ import {
   Calendar, 
   ClipboardList, 
   Menu,
-  MapPin
+  Upload
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { AIChatPanel } from '@/components/AIChatPanel';
+import { CSVUploadModal } from '@/components/CSVUploadModal';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -26,6 +27,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [chatPanelOpen, setChatPanelOpen] = useState(false);
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-background">
@@ -54,6 +56,14 @@ export function AppLayout({ children }: AppLayoutProps) {
               </Link>
             );
           })}
+          <Button
+            variant="outline"
+            className="mt-4 flex items-center gap-3 w-full justify-start"
+            onClick={() => setUploadModalOpen(true)}
+          >
+            <Upload className="h-5 w-5" />
+            Upload CSV/XLS
+          </Button>
         </nav>
       </aside>
 
@@ -101,6 +111,17 @@ export function AppLayout({ children }: AppLayoutProps) {
                 </Link>
               );
             })}
+            <Button
+              variant="outline"
+              className="mt-4 flex items-center gap-3 w-full justify-start"
+              onClick={() => {
+                setUploadModalOpen(true);
+                setMobileMenuOpen(false);
+              }}
+            >
+              <Upload className="h-5 w-5" />
+              Upload CSV/XLS
+            </Button>
           </nav>
         </SheetContent>
       </Sheet>
@@ -114,6 +135,9 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       {/* AI Chat Panel */}
       <AIChatPanel open={chatPanelOpen} onOpenChange={setChatPanelOpen} />
+
+      {/* CSV Upload Modal */}
+      <CSVUploadModal open={uploadModalOpen} onOpenChange={setUploadModalOpen} />
     </div>
   );
 }
