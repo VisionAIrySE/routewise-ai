@@ -22,13 +22,18 @@ const Dashboard = () => {
 
   return (
     <div className="px-4 py-6 lg:px-8 lg:py-8">
-      <div className="mb-8">
+      <div className="mb-6">
         <h1 className="text-2xl font-bold text-foreground lg:text-3xl">
           Inspector Dashboard
         </h1>
         <p className="mt-1 text-muted-foreground">
           Overview of your inspection workload
         </p>
+      </div>
+
+      {/* AI Assistant Prompts - Top Priority */}
+      <div className="mb-8">
+        <ExamplePrompts onPromptClick={handlePromptClick} />
       </div>
 
       {/* Urgency Stats Grid */}
@@ -82,7 +87,7 @@ const Dashboard = () => {
       </div>
 
       {/* Main Content - 3 Column Grid */}
-      <div className="grid gap-6 lg:grid-cols-3 mb-6">
+      <div className="grid gap-6 lg:grid-cols-3">
         <div>
           <UpcomingAppointments />
         </div>
@@ -93,9 +98,6 @@ const Dashboard = () => {
           <DataSources onUploadClick={() => setUploadModalOpen(true)} />
         </div>
       </div>
-
-      {/* AI Assistant Prompts */}
-      <ExamplePrompts onPromptClick={handlePromptClick} />
 
       {/* AI Chat Panel */}
       <AIChatPanel
