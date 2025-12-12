@@ -67,9 +67,7 @@ export function ExamplePrompts({ onPromptClick }: ExamplePromptsProps) {
       <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 via-card to-primary/10 p-6 lg:p-8">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           <div className="flex items-start gap-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/25 overflow-hidden">
-              <img src="/favicon.png" alt="RouteWise-AI" className="h-10 w-10 object-contain" />
-            </div>
+            <img src="/favicon.png" alt="RouteWise-AI" className="h-14 w-14 shrink-0 rounded-2xl" />
             <div className="space-y-2">
               <h2 className="text-xl font-bold text-foreground lg:text-2xl">
                 RouteWise AI Assistant
