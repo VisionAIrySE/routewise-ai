@@ -15,6 +15,7 @@ import { MissingInspection, UploadResponse } from '@/lib/routeUtils';
 interface CSVUploadModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onUploadComplete?: () => void;
 }
 
 interface RecentUpload {
@@ -25,7 +26,7 @@ interface RecentUpload {
 
 const N8N_UPLOAD_WEBHOOK = 'https://visionairy.app.n8n.cloud/webhook/upload-inspections';
 
-export function CSVUploadModal({ open, onOpenChange }: CSVUploadModalProps) {
+export function CSVUploadModal({ open, onOpenChange, onUploadComplete }: CSVUploadModalProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [showReconciliation, setShowReconciliation] = useState(false);
@@ -123,6 +124,7 @@ export function CSVUploadModal({ open, onOpenChange }: CSVUploadModalProps) {
         setShowReconciliation(true);
       } else {
         onOpenChange(false);
+        onUploadComplete?.();
       }
     } catch (error) {
       console.error('Upload error:', error);
