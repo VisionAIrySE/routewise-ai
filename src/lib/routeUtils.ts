@@ -781,7 +781,9 @@ export const DEFAULT_HOME_BASE: HomeBase = {
   address: '57870 Silver Fir Circle, Sunriver, OR 97707'
 };
 
-const N8N_ROUTE_WEBHOOK_URL = 'https://visionairy.app.n8n.cloud/webhook/route-query';
+import { supabase } from '@/integrations/supabase/client';
+
+const N8N_PROXY_URL = 'https://ftlprmktjrhkxwrgwtig.supabase.co/functions/v1/n8n-proxy';
 
 export interface SavedRoute {
   id: string;
@@ -806,10 +808,19 @@ export interface SavedRoutesResponse {
 
 export async function fetchSavedRoutes(): Promise<SavedRoutesResponse> {
   try {
-    const response = await fetch(N8N_ROUTE_WEBHOOK_URL, {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+
+    if (!token) {
+      console.warn('No auth token available for fetchSavedRoutes');
+      return { success: false, routes: [], count: 0 };
+    }
+
+    const response = await fetch(N8N_PROXY_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
       },
       body: JSON.stringify({
         action: 'get_saved_routes'
@@ -829,10 +840,18 @@ export async function fetchSavedRoutes(): Promise<SavedRoutesResponse> {
 
 export async function saveRouteToN8n(route: RouteDay, fullResponse?: RouteOptimizerResponse): Promise<{ success: boolean; message?: string }> {
   try {
-    const response = await fetch(N8N_ROUTE_WEBHOOK_URL, {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+
+    if (!token) {
+      return { success: false, message: 'Not authenticated' };
+    }
+
+    const response = await fetch(N8N_PROXY_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
       },
       body: JSON.stringify({
         action: 'save_route',
@@ -899,10 +918,24 @@ export async function confirmReconciliation(
   removedIds: string[]
 ): Promise<ReconciliationResult> {
   try {
-    const response = await fetch(N8N_ROUTE_WEBHOOK_URL, {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+
+    if (!token) {
+      return {
+        success: false,
+        message: 'Not authenticated',
+        completed_count: 0,
+        removed_count: 0,
+        total_updated: 0
+      };
+    }
+
+    const response = await fetch(N8N_PROXY_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
       },
       body: JSON.stringify({
         action: 'reconcile',
