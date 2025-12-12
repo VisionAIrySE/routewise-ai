@@ -139,6 +139,36 @@ export type Database = {
           },
         ]
       }
+      companies: {
+        Row: {
+          code: string
+          created_at: string | null
+          default_inspection_minutes: number | null
+          id: string
+          is_active: boolean | null
+          name: string
+          requires_appointment: boolean | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          default_inspection_minutes?: number | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          requires_appointment?: boolean | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          default_inspection_minutes?: number | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          requires_appointment?: boolean | null
+        }
+        Relationships: []
+      }
       credential_guides: {
         Row: {
           common_errors: Json | null
@@ -804,6 +834,57 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          fuel_cost_per_gallon: number | null
+          home_address: string | null
+          home_lat: number | null
+          home_lng: number | null
+          id: string
+          name: string | null
+          onboarding_completed: boolean | null
+          phone: string | null
+          typical_end_time: string | null
+          typical_start_time: string | null
+          updated_at: string | null
+          vehicle_mpg: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          fuel_cost_per_gallon?: number | null
+          home_address?: string | null
+          home_lat?: number | null
+          home_lng?: number | null
+          id: string
+          name?: string | null
+          onboarding_completed?: boolean | null
+          phone?: string | null
+          typical_end_time?: string | null
+          typical_start_time?: string | null
+          updated_at?: string | null
+          vehicle_mpg?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          fuel_cost_per_gallon?: number | null
+          home_address?: string | null
+          home_lat?: number | null
+          home_lng?: number | null
+          id?: string
+          name?: string | null
+          onboarding_completed?: boolean | null
+          phone?: string | null
+          typical_end_time?: string | null
+          typical_start_time?: string | null
+          updated_at?: string | null
+          vehicle_mpg?: number | null
+        }
+        Relationships: []
+      }
       project_workflows: {
         Row: {
           created_at: string
@@ -1014,6 +1095,44 @@ export type Database = {
           keyword?: string
         }
         Relationships: []
+      }
+      user_companies: {
+        Row: {
+          avg_inspection_minutes: number | null
+          company_id: string | null
+          company_name: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          user_id: string
+        }
+        Insert: {
+          avg_inspection_minutes?: number | null
+          company_id?: string | null
+          company_name: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          user_id: string
+        }
+        Update: {
+          avg_inspection_minutes?: number | null
+          company_id?: string | null
+          company_name?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_companies_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       users: {
         Row: {

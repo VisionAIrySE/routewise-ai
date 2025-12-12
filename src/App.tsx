@@ -13,6 +13,7 @@ import RouteDetail from "./pages/RouteDetail";
 import Install from "./pages/Install";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,7 +31,14 @@ const App = () => (
             <Route path="/signup" element={<Signup />} />
             <Route path="/install" element={<Install />} />
             
-            {/* Protected routes */}
+            {/* Onboarding - protected but doesn't require onboarding complete */}
+            <Route path="/onboarding" element={
+              <ProtectedRoute requireOnboarding={false}>
+                <Onboarding />
+              </ProtectedRoute>
+            } />
+            
+            {/* Protected routes - require onboarding complete */}
             <Route path="/" element={
               <ProtectedRoute>
                 <AppLayout><Index /></AppLayout>
