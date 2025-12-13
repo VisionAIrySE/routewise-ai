@@ -118,6 +118,7 @@ export default function AdminUsers() {
 
   const getTierBadge = (tier: string | null) => {
     switch (tier) {
+      case 'lifetime': return <Badge className="bg-amber-500">Lifetime</Badge>;
       case 'team': return <Badge className="bg-primary">Team</Badge>;
       case 'individual': return <Badge variant="secondary">Individual</Badge>;
       case 'enterprise': return <Badge className="bg-purple-500">Enterprise</Badge>;

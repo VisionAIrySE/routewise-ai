@@ -6,11 +6,12 @@ export interface SubscriptionState {
   subscribed: boolean;
   productId: string | null;
   subscriptionEnd: string | null;
+  tier: string | null;
   loading: boolean;
   error: string | null;
 }
 
-// Product ID to tier mapping
+// Product ID to tier mapping (from Stripe)
 export const SUBSCRIPTION_TIERS = {
   'prod_TbBO42W3Tde65u': 'individual',
   'prod_TbBqMsplBvazKf': 'team',
@@ -21,25 +22,50 @@ export const PRICE_IDS = {
   team: 'price_1SdzSXGG50M447BhQ2vMf8xn',
 } as const;
 
+// Tiers that are always considered subscribed (bypass Stripe check)
+const ALWAYS_SUBSCRIBED_TIERS = ['lifetime', 'founder', 'owner'];
+
 export function useSubscription() {
-  const { session } = useAuth();
+  const { session, user } = useAuth();
   const [state, setState] = useState<SubscriptionState>({
     subscribed: false,
     productId: null,
     subscriptionEnd: null,
+    tier: null,
     loading: true,
     error: null,
   });
 
   const checkSubscription = useCallback(async () => {
-    if (!session?.access_token) {
+    if (!session?.access_token || !user) {
       setState(prev => ({ ...prev, loading: false, subscribed: false }));
       return;
     }
 
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));
+
+      // First check if user has a "lifetime" or similar tier in their profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('subscription_status, subscription_tier')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      // If user has a lifetime/founder tier, they're always subscribed
+      if (profile?.subscription_tier && ALWAYS_SUBSCRIBED_TIERS.includes(profile.subscription_tier)) {
+        setState({
+          subscribed: true,
+          productId: null,
+          subscriptionEnd: null,
+          tier: profile.subscription_tier,
+          loading: false,
+          error: null,
+        });
+        return;
+      }
       
+      // Otherwise check Stripe subscription
       const { data, error } = await supabase.functions.invoke('check-subscription', {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
@@ -48,10 +74,15 @@ export function useSubscription() {
 
       if (error) throw error;
 
+      const stripeTier = data.product_id 
+        ? SUBSCRIPTION_TIERS[data.product_id as keyof typeof SUBSCRIPTION_TIERS] ?? null 
+        : null;
+
       setState({
         subscribed: data.subscribed ?? false,
         productId: data.product_id ?? null,
         subscriptionEnd: data.subscription_end ?? null,
+        tier: stripeTier || profile?.subscription_tier || null,
         loading: false,
         error: null,
       });
@@ -63,7 +94,7 @@ export function useSubscription() {
         error: err instanceof Error ? err.message : 'Failed to check subscription',
       }));
     }
-  }, [session?.access_token]);
+  }, [session?.access_token, user]);
 
   const createCheckout = async (priceId: string, quantity: number = 1) => {
     if (!session?.access_token) {
@@ -115,13 +146,8 @@ export function useSubscription() {
     return () => clearInterval(interval);
   }, [session, checkSubscription]);
 
-  const tier = state.productId 
-    ? SUBSCRIPTION_TIERS[state.productId as keyof typeof SUBSCRIPTION_TIERS] ?? null 
-    : null;
-
   return {
     ...state,
-    tier,
     checkSubscription,
     createCheckout,
     openCustomerPortal,
