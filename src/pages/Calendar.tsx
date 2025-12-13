@@ -80,7 +80,7 @@ const Calendar = () => {
     // Navigate to route optimizer with route context
     // Store route in sessionStorage for the chat to pick up
     sessionStorage.setItem('editRoute', JSON.stringify(route));
-    navigate('/');
+    navigate('/app');
   };
 
   const handleDuplicateRoute = (route: SavedRouteDB) => {

@@ -64,7 +64,7 @@ export function TodayRouteCard() {
             </p>
           </div>
         </div>
-        <Link to={`/routes/${todayRoute.id}`}>
+        <Link to={`/app/routes/${todayRoute.id}`}>
           <Button variant="ghost" size="sm" className="gap-1">
             View All
             <ArrowRight className="h-4 w-4" />
