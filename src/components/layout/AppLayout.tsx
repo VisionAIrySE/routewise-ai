@@ -9,7 +9,9 @@ import {
   LogOut,
   User,
   Users,
+  Shield,
 } from 'lucide-react';
+import { useAdmin } from '@/hooks/useAdmin';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
@@ -33,9 +35,18 @@ export function AppLayout({ children }: AppLayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { isAdmin } = useAdmin();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [chatPanelOpen, setChatPanelOpen] = useState(false);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
+
+  const navigation = [
+    { name: 'Dashboard', href: '/app', icon: LayoutDashboard },
+    { name: 'Calendar', href: '/app/calendar', icon: Calendar },
+    { name: 'Inspections', href: '/app/inspections', icon: ClipboardList },
+    { name: 'Team', href: '/app/team', icon: Users },
+    ...(isAdmin ? [{ name: 'Admin', href: '/app/admin', icon: Shield }] : []),
+  ];
 
   const handleSignOut = async () => {
     await signOut();
