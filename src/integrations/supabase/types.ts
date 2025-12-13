@@ -846,6 +846,13 @@ export type Database = {
           name: string | null
           onboarding_completed: boolean | null
           phone: string | null
+          referral_code: string | null
+          referred_by: string | null
+          stripe_customer_id: string | null
+          subscription_ends_at: string | null
+          subscription_status: string | null
+          subscription_tier: string | null
+          trial_ends_at: string | null
           typical_end_time: string | null
           typical_start_time: string | null
           updated_at: string | null
@@ -862,6 +869,13 @@ export type Database = {
           name?: string | null
           onboarding_completed?: boolean | null
           phone?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
+          stripe_customer_id?: string | null
+          subscription_ends_at?: string | null
+          subscription_status?: string | null
+          subscription_tier?: string | null
+          trial_ends_at?: string | null
           typical_end_time?: string | null
           typical_start_time?: string | null
           updated_at?: string | null
@@ -878,12 +892,27 @@ export type Database = {
           name?: string | null
           onboarding_completed?: boolean | null
           phone?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
+          stripe_customer_id?: string | null
+          subscription_ends_at?: string | null
+          subscription_status?: string | null
+          subscription_tier?: string | null
+          trial_ends_at?: string | null
           typical_end_time?: string | null
           typical_start_time?: string | null
           updated_at?: string | null
           vehicle_mpg?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_referred_by_fkey"
+            columns: ["referred_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       project_workflows: {
         Row: {
@@ -999,6 +1028,90 @@ export type Database = {
         }
         Relationships: []
       }
+      promo_codes: {
+        Row: {
+          applicable_tiers: string[] | null
+          code: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          discount_type: string
+          discount_value: number
+          id: string
+          is_active: boolean | null
+          usage_count: number | null
+          usage_limit: number | null
+          valid_from: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          applicable_tiers?: string[] | null
+          code: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          discount_type: string
+          discount_value: number
+          id?: string
+          is_active?: boolean | null
+          usage_count?: number | null
+          usage_limit?: number | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          applicable_tiers?: string[] | null
+          code?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          is_active?: boolean | null
+          usage_count?: number | null
+          usage_limit?: number | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
+      referral_credits: {
+        Row: {
+          applied_at: string | null
+          created_at: string | null
+          credit_amount: number
+          credit_type: string
+          id: string
+          paid_out_at: string | null
+          referred_user_id: string
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          applied_at?: string | null
+          created_at?: string | null
+          credit_amount: number
+          credit_type: string
+          id?: string
+          paid_out_at?: string | null
+          referred_user_id: string
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          applied_at?: string | null
+          created_at?: string | null
+          credit_amount?: number
+          credit_type?: string
+          id?: string
+          paid_out_at?: string | null
+          referred_user_id?: string
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       saved_routes: {
         Row: {
           anchor_stop_id: string | null
@@ -1080,6 +1193,48 @@ export type Database = {
           updated_at?: string
           user_id?: string
           zones?: string[] | null
+        }
+        Relationships: []
+      }
+      subscription_events: {
+        Row: {
+          amount: number | null
+          created_at: string | null
+          created_by: string | null
+          event_type: string
+          from_status: string | null
+          from_tier: string | null
+          id: string
+          notes: string | null
+          to_status: string | null
+          to_tier: string | null
+          user_id: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          event_type: string
+          from_status?: string | null
+          from_tier?: string | null
+          id?: string
+          notes?: string | null
+          to_status?: string | null
+          to_tier?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          event_type?: string
+          from_status?: string | null
+          from_tier?: string | null
+          id?: string
+          notes?: string | null
+          to_status?: string | null
+          to_tier?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -1291,6 +1446,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
       }
       users: {
         Row: {
@@ -1940,7 +2116,15 @@ export type Database = {
       }
       get_user_team: { Args: { _user_id: string }; Returns: string }
       get_weekly_workflow_count: { Args: never; Returns: number }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_app_admin: { Args: { _user_id: string }; Returns: boolean }
       is_team_admin: {
         Args: { _team_id: string; _user_id: string }
         Returns: boolean
@@ -2233,6 +2417,7 @@ export type Database = {
       }
     }
     Enums: {
+      app_role: "user" | "admin" | "super_admin"
       team_member_status: "pending" | "active" | "removed"
       team_role: "owner" | "admin" | "member"
     }
@@ -2362,6 +2547,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["user", "admin", "super_admin"],
       team_member_status: ["pending", "active", "removed"],
       team_role: ["owner", "admin", "member"],
     },

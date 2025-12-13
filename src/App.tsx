@@ -19,6 +19,11 @@ import Signup from "./pages/Signup";
 import Pricing from "./pages/Pricing";
 import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
+import AdminOverview from "./pages/admin/AdminOverview";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminSubscriptions from "./pages/admin/AdminSubscriptions";
+import AdminPromoCodes from "./pages/admin/AdminPromoCodes";
+import AdminReferrals from "./pages/admin/AdminReferrals";
 
 const queryClient = new QueryClient();
 
@@ -71,6 +76,13 @@ const App = () => (
                 <AppLayout><TeamDashboard /></AppLayout>
               </ProtectedRoute>
             } />
+            
+            {/* Admin routes */}
+            <Route path="/app/admin" element={<AdminOverview />} />
+            <Route path="/app/admin/users" element={<AdminUsers />} />
+            <Route path="/app/admin/subscriptions" element={<AdminSubscriptions />} />
+            <Route path="/app/admin/promo-codes" element={<AdminPromoCodes />} />
+            <Route path="/app/admin/referrals" element={<AdminReferrals />} />
             
             {/* Catch-all */}
             <Route path="*" element={<NotFound />} />
