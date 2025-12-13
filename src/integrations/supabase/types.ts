@@ -1112,6 +1112,80 @@ export type Database = {
           },
         ]
       }
+      team_members: {
+        Row: {
+          email: string
+          id: string
+          invited_at: string
+          invited_by: string | null
+          joined_at: string | null
+          role: Database["public"]["Enums"]["team_role"]
+          status: Database["public"]["Enums"]["team_member_status"]
+          team_id: string
+          user_id: string | null
+        }
+        Insert: {
+          email: string
+          id?: string
+          invited_at?: string
+          invited_by?: string | null
+          joined_at?: string | null
+          role?: Database["public"]["Enums"]["team_role"]
+          status?: Database["public"]["Enums"]["team_member_status"]
+          team_id: string
+          user_id?: string | null
+        }
+        Update: {
+          email?: string
+          id?: string
+          invited_at?: string
+          invited_by?: string | null
+          joined_at?: string | null
+          role?: Database["public"]["Enums"]["team_role"]
+          status?: Database["public"]["Enums"]["team_member_status"]
+          team_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          owner_id: string
+          seat_count: number
+          stripe_subscription_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          owner_id: string
+          seat_count?: number
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          seat_count?: number
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       troubleshoot_turns: {
         Row: {
           ai_response: string
@@ -1864,8 +1938,17 @@ export type Database = {
         Args: { p_session_id: string }
         Returns: number
       }
+      get_user_team: { Args: { _user_id: string }; Returns: string }
       get_weekly_workflow_count: { Args: never; Returns: number }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_team_admin: {
+        Args: { _team_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_team_member: {
+        Args: { _team_id: string; _user_id: string }
+        Returns: boolean
+      }
       log_credit_transaction: {
         Args: {
           p_amount: number
@@ -2150,7 +2233,8 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      team_member_status: "pending" | "active" | "removed"
+      team_role: "owner" | "admin" | "member"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2277,6 +2361,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      team_member_status: ["pending", "active", "removed"],
+      team_role: ["owner", "admin", "member"],
+    },
   },
 } as const
