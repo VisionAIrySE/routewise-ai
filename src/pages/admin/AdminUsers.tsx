@@ -29,7 +29,8 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { useAdmin, AdminUser } from '@/hooks/useAdmin';
-import { Search, User, Calendar, Edit } from 'lucide-react';
+import { Search, User, Calendar, Edit, Gift, Copy } from 'lucide-react';
+import { toast } from 'sonner';
 import { format } from 'date-fns';
 
 export default function AdminUsers() {
@@ -185,6 +186,7 @@ export default function AdminUsers() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>User</TableHead>
+                    <TableHead>Referral Code</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Tier</TableHead>
                     <TableHead>Trial/Sub Ends</TableHead>
@@ -205,6 +207,29 @@ export default function AdminUsers() {
                             <div className="text-sm text-muted-foreground">{user.email}</div>
                           </div>
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        {user.referral_code ? (
+                          <div className="flex items-center gap-1.5">
+                            <Gift className="h-3.5 w-3.5 text-primary" />
+                            <code className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded">
+                              {user.referral_code}
+                            </code>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6"
+                              onClick={() => {
+                                navigator.clipboard.writeText(user.referral_code!);
+                                toast.success('Code copied');
+                              }}
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
                       </TableCell>
                       <TableCell>{getStatusBadge(user.subscription_status)}</TableCell>
                       <TableCell>{getTierBadge(user.subscription_tier)}</TableCell>
@@ -237,7 +262,7 @@ export default function AdminUsers() {
                   ))}
                   {filteredUsers.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                         No users found
                       </TableCell>
                     </TableRow>

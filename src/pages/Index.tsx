@@ -7,6 +7,7 @@ import { DataSources } from '@/components/DataSources';
 import { ExamplePrompts } from '@/components/ExamplePrompts';
 import { AIChatPanel } from '@/components/AIChatPanel';
 import { CSVUploadModal } from '@/components/CSVUploadModal';
+import { ReferralCodeCard } from '@/components/ReferralCodeCard';
 import { useInspectionStats } from '@/hooks/useInspections';
 
 const Dashboard = () => {
@@ -81,6 +82,11 @@ const Dashboard = () => {
             />
           </>
         )}
+      </div>
+
+      {/* Referral Code Card */}
+      <div className="mb-6">
+        <ReferralCodeCard />
       </div>
 
       {/* Main Content - 3 Column Grid */}

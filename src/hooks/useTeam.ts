@@ -23,6 +23,7 @@ export interface TeamMember {
   profile?: {
     name: string | null;
     email: string | null;
+    referral_code: string | null;
   };
 }
 
@@ -109,7 +110,7 @@ export function useTeam() {
           if (member.user_id) {
             const { data: profile } = await supabase
               .from('profiles')
-              .select('name, email')
+              .select('name, email, referral_code')
               .eq('id', member.user_id)
               .single();
             return { ...member, profile };

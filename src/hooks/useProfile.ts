@@ -15,6 +15,7 @@ export interface Profile {
   typical_start_time: string;
   typical_end_time: string;
   onboarding_completed: boolean;
+  referral_code: string | null;
   created_at: string;
   updated_at: string;
 }
