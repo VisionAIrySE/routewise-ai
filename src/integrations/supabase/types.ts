@@ -234,6 +234,7 @@ export type Database = {
           stripe_subscription_id: string | null
           subscription_started: string | null
           subscription_status: string | null
+          subscription_tier: string | null
           trial_ends_at: string | null
           typical_end_time: string | null
           typical_hours_per_day: number | null
@@ -259,6 +260,7 @@ export type Database = {
           stripe_subscription_id?: string | null
           subscription_started?: string | null
           subscription_status?: string | null
+          subscription_tier?: string | null
           trial_ends_at?: string | null
           typical_end_time?: string | null
           typical_hours_per_day?: number | null
@@ -284,6 +286,7 @@ export type Database = {
           stripe_subscription_id?: string | null
           subscription_started?: string | null
           subscription_status?: string | null
+          subscription_tier?: string | null
           trial_ends_at?: string | null
           typical_end_time?: string | null
           typical_hours_per_day?: number | null
