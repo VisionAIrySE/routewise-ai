@@ -999,6 +999,90 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_routes: {
+        Row: {
+          anchor_stop_id: string | null
+          created_at: string
+          day_of_week: number | null
+          drive_hours: number | null
+          exclusions: string[] | null
+          finish_time: string | null
+          fuel_cost: number | null
+          hours_requested: number | null
+          id: string
+          inspection_hours: number | null
+          location_filter: string | null
+          notes: string | null
+          original_request: string | null
+          planning_session_id: string | null
+          route_date: string
+          route_name: string | null
+          start_time: string | null
+          status: string
+          stops_count: number
+          stops_json: Json
+          total_hours: number | null
+          total_miles: number | null
+          updated_at: string
+          user_id: string
+          zones: string[] | null
+        }
+        Insert: {
+          anchor_stop_id?: string | null
+          created_at?: string
+          day_of_week?: number | null
+          drive_hours?: number | null
+          exclusions?: string[] | null
+          finish_time?: string | null
+          fuel_cost?: number | null
+          hours_requested?: number | null
+          id?: string
+          inspection_hours?: number | null
+          location_filter?: string | null
+          notes?: string | null
+          original_request?: string | null
+          planning_session_id?: string | null
+          route_date: string
+          route_name?: string | null
+          start_time?: string | null
+          status?: string
+          stops_count?: number
+          stops_json?: Json
+          total_hours?: number | null
+          total_miles?: number | null
+          updated_at?: string
+          user_id: string
+          zones?: string[] | null
+        }
+        Update: {
+          anchor_stop_id?: string | null
+          created_at?: string
+          day_of_week?: number | null
+          drive_hours?: number | null
+          exclusions?: string[] | null
+          finish_time?: string | null
+          fuel_cost?: number | null
+          hours_requested?: number | null
+          id?: string
+          inspection_hours?: number | null
+          location_filter?: string | null
+          notes?: string | null
+          original_request?: string | null
+          planning_session_id?: string | null
+          route_date?: string
+          route_name?: string | null
+          start_time?: string | null
+          status?: string
+          stops_count?: number
+          stops_json?: Json
+          total_hours?: number | null
+          total_miles?: number | null
+          updated_at?: string
+          user_id?: string
+          zones?: string[] | null
+        }
+        Relationships: []
+      }
       system_config: {
         Row: {
           key: string
