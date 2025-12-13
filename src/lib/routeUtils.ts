@@ -838,46 +838,62 @@ export async function fetchSavedRoutes(): Promise<SavedRoutesResponse> {
   }
 }
 
-export async function saveRouteToN8n(route: RouteDay, fullResponse?: RouteOptimizerResponse): Promise<{ success: boolean; message?: string }> {
+export async function saveRouteToSupabase(
+  route: RouteDay, 
+  fullResponse?: RouteOptimizerResponse,
+  originalRequest?: string
+): Promise<{ success: boolean; message?: string; routeId?: string }> {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    const token = session?.access_token;
+    const { data: { user } } = await supabase.auth.getUser();
 
-    if (!token) {
+    if (!user) {
       return { success: false, message: 'Not authenticated' };
     }
 
-    const response = await fetch(N8N_PROXY_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        action: 'save_route',
-        route_data: {
-          day: route.day,
-          date: route.date,
-          summary: route.summary,
-          stops: route.stops,
-          query_date: fullResponse?.query_date,
-          generated_at: fullResponse?.generated_at,
-          urgency_counts: fullResponse?.urgency_counts,
-        }
-      }),
-    });
+    // Parse date from route
+    const routeDate = route.date || fullResponse?.query_date || new Date().toISOString().split('T')[0];
+    const parsedDate = new Date(routeDate);
+    
+    // Extract zones from summary
+    const zones = route.summary?.zones || [];
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    const { data, error } = await supabase
+      .from('saved_routes')
+      .insert({
+        user_id: user.id,
+        route_date: routeDate,
+        day_of_week: parsedDate.getDay(),
+        route_name: route.day || null,
+        status: 'planned',
+        stops_count: route.stops?.length || 0,
+        total_miles: route.summary?.total_distance_miles || null,
+        total_hours: route.summary?.total_route_hours || null,
+        drive_hours: route.summary?.total_drive_hours || null,
+        inspection_hours: route.summary?.inspection_hours || null,
+        fuel_cost: route.summary?.estimated_fuel || null,
+        zones: zones.length > 0 ? zones : null,
+        start_time: route.stops?.[0]?.scheduled_time || null,
+        finish_time: route.stops?.[route.stops.length - 1]?.scheduled_time || null,
+        stops_json: route.stops || [],
+        original_request: originalRequest || null,
+      })
+      .select('id')
+      .single();
+
+    if (error) {
+      console.error('Failed to save route:', error);
+      return { success: false, message: error.message };
     }
 
-    const result = await response.json();
-    return { success: true, message: result.message || 'Route saved successfully' };
+    return { success: true, message: 'Route saved successfully', routeId: data?.id };
   } catch (error) {
     console.error('Failed to save route:', error);
     return { success: false, message: error instanceof Error ? error.message : 'Failed to save route' };
   }
 }
+
+// Legacy alias for backwards compatibility
+export const saveRouteToN8n = saveRouteToSupabase;
 
 // Reconciliation types
 export interface MissingInspection {

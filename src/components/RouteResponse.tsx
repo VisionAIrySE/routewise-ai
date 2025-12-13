@@ -36,7 +36,7 @@ export function RouteResponse({ response }: RouteResponseProps) {
       if (result.success) {
         toast({
           title: 'Route Saved!',
-          description: result.message || `${route.day} route saved to Airtable`,
+          description: result.message || `${route.day} route saved successfully`,
         });
       } else {
         throw new Error(result.message);

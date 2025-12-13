@@ -10,14 +10,14 @@ function mapDbToRoute(row: any): Route {
     id: row.id,
     routeDate: row.route_date,
     plannedCount: row.stops_count || 0,
-    completedCount: 0, // Would need to track this separately
-    completionRate: 0,
+    completedCount: row.status === 'completed' ? row.stops_count : 0,
+    completionRate: row.status === 'completed' ? 100 : 0,
     totalEstDriveTime: Math.round((row.drive_hours || 0) * 60),
     totalDistanceMiles: row.total_miles || 0,
     geographicFocus: row.zones?.join(', ') || '',
     aiRecommended: true,
     userModified: false,
-    routeNotes: '',
+    routeNotes: row.notes || '',
     sessionId: row.id,
   };
 }
@@ -34,7 +34,7 @@ export function useRoutes(dateRange?: { start: Date; end: Date }) {
         .from('saved_routes')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('route_date', { ascending: false });
 
       if (dateRange) {
         query = query
@@ -161,7 +161,7 @@ export function useRouteStops(routeId: string) {
           fullAddress: stop.address || '',
           company: stop.company as any || 'MIL',
           dueDate: '',
-          daysRemaining: 0,
+          daysRemaining: stop.days_remaining || 0,
           urgencyTier: stop.urgency as any || 'NORMAL',
           status: 'PENDING' as const,
           claimNumber: stop.name || '',

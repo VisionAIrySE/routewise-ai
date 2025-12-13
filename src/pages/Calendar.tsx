@@ -1,8 +1,13 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, MapPin, Timer, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { ChevronLeft, ChevronRight, Timer, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useMonthRoutes, useFixedAppointments } from '@/hooks/useRoutes';
+import { useFixedAppointments } from '@/hooks/useRoutes';
+import { useMonthSavedRoutes, type SavedRouteDB } from '@/hooks/useSavedRoutes';
+import { CalendarRouteCard } from '@/components/calendar/CalendarRouteCard';
+import { RouteDetailModal } from '@/components/calendar/RouteDetailModal';
+import { DuplicateRouteModal } from '@/components/calendar/DuplicateRouteModal';
 import { cn } from '@/lib/utils';
 import {
   format,
@@ -17,7 +22,12 @@ import {
 } from 'date-fns';
 
 const Calendar = () => {
+  const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedRoute, setSelectedRoute] = useState<SavedRouteDB | null>(null);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
+  const [routeToDuplicate, setRouteToDuplicate] = useState<SavedRouteDB | null>(null);
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
@@ -28,14 +38,14 @@ const Calendar = () => {
   const paddedDays = Array(startPadding).fill(null).concat(monthDays);
 
   // Fetch routes and appointments
-  const { data: monthRoutes = [], isLoading: routesLoading } = useMonthRoutes(currentDate);
+  const { data: savedRoutes = [], isLoading: routesLoading } = useMonthSavedRoutes(currentDate);
   const { data: fixedAppointments = [], isLoading: appointmentsLoading } = useFixedAppointments();
 
   const isLoading = routesLoading || appointmentsLoading;
 
-  const getRouteForDay = (day: Date | null) => {
-    if (!day) return null;
-    return monthRoutes.find((route) => isSameDay(new Date(route.routeDate), day));
+  const getRoutesForDay = (day: Date | null) => {
+    if (!day) return [];
+    return savedRoutes.filter((route) => isSameDay(new Date(route.route_date), day));
   };
 
   const getAppointmentsForDay = (day: Date | null) => {
@@ -45,6 +55,23 @@ const Calendar = () => {
     );
   };
 
+  const handleRouteClick = (route: SavedRouteDB) => {
+    setSelectedRoute(route);
+    setDetailModalOpen(true);
+  };
+
+  const handleEditRoute = (route: SavedRouteDB) => {
+    // Navigate to route optimizer with route context
+    // Store route in sessionStorage for the chat to pick up
+    sessionStorage.setItem('editRoute', JSON.stringify(route));
+    navigate('/');
+  };
+
+  const handleDuplicateRoute = (route: SavedRouteDB) => {
+    setRouteToDuplicate(route);
+    setDuplicateModalOpen(true);
+  };
+
   return (
     <div className="px-4 py-6 lg:px-8 lg:py-8">
       <div className="mb-6">
@@ -52,7 +79,7 @@ const Calendar = () => {
           Route Calendar
         </h1>
         <p className="mt-1 text-muted-foreground">
-          View and manage your inspection schedule
+          View and manage your saved routes and appointments
         </p>
       </div>
 
@@ -107,7 +134,7 @@ const Calendar = () => {
         ) : (
           <div className="grid grid-cols-7">
             {paddedDays.map((day, index) => {
-              const route = getRouteForDay(day);
+              const dayRoutes = getRoutesForDay(day);
               const appointments = getAppointmentsForDay(day);
               const isCurrentDay = day && isToday(day);
 
@@ -115,7 +142,7 @@ const Calendar = () => {
                 <div
                   key={index}
                   className={cn(
-                    'min-h-[100px] border-b border-r border-border p-2 transition-colors',
+                    'min-h-[120px] border-b border-r border-border p-2 transition-colors',
                     !day && 'bg-muted/30',
                     isCurrentDay && 'bg-primary/5',
                     index % 7 === 6 && 'border-r-0'
@@ -134,29 +161,30 @@ const Calendar = () => {
                         {format(day, 'd')}
                       </div>
 
-                      {route && (
-                        <div className="mb-1 rounded-md bg-primary/10 px-2 py-1 text-xs">
-                          <div className="flex items-center gap-1 text-primary font-medium">
-                            <MapPin className="h-3 w-3" />
-                            {route.plannedCount} stops
-                          </div>
-                          {route.completedCount > 0 && (
-                            <div className="text-muted-foreground mt-0.5">
-                              {route.completedCount}/{route.plannedCount} done
-                            </div>
-                          )}
-                        </div>
-                      )}
+                      {/* Saved Routes */}
+                      <div className="space-y-1.5">
+                        {dayRoutes.map((route) => (
+                          <CalendarRouteCard
+                            key={route.id}
+                            route={route}
+                            onClick={() => handleRouteClick(route)}
+                          />
+                        ))}
+                      </div>
 
+                      {/* Fixed Appointments */}
                       {appointments.map((apt) => (
                         <div
                           key={apt.id}
-                          className="rounded-md bg-fixed/10 px-2 py-1 text-xs mb-1"
+                          className="rounded-md bg-fixed/10 border border-fixed/20 px-2 py-1 text-xs mt-1"
                         >
                           <div className="flex items-center gap-1 text-fixed font-medium">
                             <Timer className="h-3 w-3" />
                             {format(new Date(apt.fixedAppointment!), 'h:mm a')}
                           </div>
+                          <p className="text-[10px] text-muted-foreground truncate mt-0.5">
+                            {apt.street}
+                          </p>
                         </div>
                       ))}
                     </>
@@ -208,6 +236,22 @@ const Calendar = () => {
           </div>
         )}
       </div>
+
+      {/* Route Detail Modal */}
+      <RouteDetailModal
+        route={selectedRoute}
+        open={detailModalOpen}
+        onOpenChange={setDetailModalOpen}
+        onEditRoute={handleEditRoute}
+        onDuplicateRoute={handleDuplicateRoute}
+      />
+
+      {/* Duplicate Route Modal */}
+      <DuplicateRouteModal
+        route={routeToDuplicate}
+        open={duplicateModalOpen}
+        onOpenChange={setDuplicateModalOpen}
+      />
     </div>
   );
 };
