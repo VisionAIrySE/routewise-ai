@@ -81,12 +81,12 @@ export default function Landing() {
             >
               Features
             </button>
-            <button
-              onClick={() => scrollToSection('pricing')}
+            <Link
+              to="/pricing"
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
               Pricing
-            </button>
+            </Link>
           </nav>
 
           <div className="flex items-center gap-3">
@@ -115,7 +115,7 @@ export default function Landing() {
             </p>
             <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
               <Button size="lg" asChild className="gap-2 text-base">
-                <Link to="/signup">
+                <Link to="/pricing">
                   Start Your Free Trial
                   <ChevronRight className="h-4 w-4" />
                 </Link>
@@ -250,7 +250,7 @@ export default function Landing() {
             Know other inspectors? Refer them to RouteWise AI and get 2 weeks free for each signup.
           </p>
           <Button asChild className="mt-6">
-            <Link to="/signup">Start Free Trial</Link>
+            <Link to="/pricing">Start Free Trial</Link>
           </Button>
         </div>
       </section>
@@ -265,7 +265,7 @@ export default function Landing() {
             It's already paid for itself.
           </p>
           <Button size="lg" asChild className="mt-8 gap-2 text-base">
-            <Link to="/signup">
+            <Link to="/pricing">
               Start Your Free Trial
               <ChevronRight className="h-4 w-4" />
             </Link>
