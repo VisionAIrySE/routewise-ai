@@ -29,7 +29,7 @@ const features = [
   { icon: CalendarDays, title: 'Multi-Day Planning', description: '"Mon/Wed/Fri, 5 hours each" - done' },
   { icon: Anchor, title: 'Appointment Anchors', description: 'Build your route around fixed appointments' },
   { icon: BarChart3, title: 'Track Completions', description: 'See your weekly, monthly, yearly stats' },
-  { icon: Save, title: 'Save Routes', description: 'Keep and reuse your optimized routes' },
+  { icon: Save, title: 'Save Routes', description: 'Plan, save, and adjust daily routes weeks in advance' },
   { icon: Clock, title: 'Duration Control', description: 'Adjust time per stop, route recalculates' },
   { icon: Printer, title: 'Print-Ready', description: 'Professional route sheets for the field' },
   { icon: Building2, title: 'Multi-Company', description: 'Combine stops from different sources' },
@@ -47,6 +47,7 @@ const painPoints = [
   'Hours spent on manual route planning',
   'Wasted drive time between stops',
   'Missed deadlines and penalties',
+  'Cancels and no-shows mid-route',
 ];
 
 export default function Landing() {
