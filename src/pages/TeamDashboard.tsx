@@ -40,7 +40,8 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useTeam, TeamMember, MemberRoute } from '@/hooks/useTeam';
-import { Users, UserPlus, Route, Calendar, Trash2, Shield, User, Mail, Clock, MapPin } from 'lucide-react';
+import { Users, UserPlus, Route, Calendar, Trash2, Shield, User, Mail, Clock, MapPin, Gift, Copy } from 'lucide-react';
+import { toast } from 'sonner';
 import { format } from 'date-fns';
 
 export default function TeamDashboard() {
@@ -241,6 +242,7 @@ export default function TeamDashboard() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Member</TableHead>
+                    <TableHead>Referral Code</TableHead>
                     <TableHead>Role</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Joined</TableHead>
@@ -264,6 +266,29 @@ export default function TeamDashboard() {
                             )}
                           </div>
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        {member.profile?.referral_code ? (
+                          <div className="flex items-center gap-1.5">
+                            <Gift className="h-3.5 w-3.5 text-primary" />
+                            <code className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded">
+                              {member.profile.referral_code}
+                            </code>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6"
+                              onClick={() => {
+                                navigator.clipboard.writeText(member.profile!.referral_code!);
+                                toast.success('Code copied');
+                              }}
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
                       </TableCell>
                       <TableCell>{getRoleBadge(member.role)}</TableCell>
                       <TableCell>{getStatusBadge(member.status)}</TableCell>
