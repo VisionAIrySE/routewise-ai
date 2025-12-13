@@ -73,15 +73,27 @@ export function useAdmin() {
         return;
       }
 
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .in('role', ['admin', 'super_admin'])
-        .maybeSingle();
+      try {
+        const { data, error } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .in('role', ['admin', 'super_admin'])
+          .maybeSingle();
 
-      setIsAdmin(!!data && !error);
-      setLoading(false);
+        console.log('[useAdmin] checkAdmin result', { userId: user.id, data, error });
+
+        if (error) {
+          console.error('[useAdmin] error checking admin status', error);
+        }
+
+        setIsAdmin(!!data && !error);
+      } catch (err) {
+        console.error('[useAdmin] unexpected error checking admin status', err);
+        setIsAdmin(false);
+      } finally {
+        setLoading(false);
+      }
     }
 
     checkAdmin();
