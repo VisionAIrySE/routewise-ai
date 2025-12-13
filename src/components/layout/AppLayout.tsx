@@ -24,23 +24,16 @@ interface AppLayoutProps {
   children: React.ReactNode;
 }
 
-const navigation = [
-  { name: 'Dashboard', href: '/app', icon: LayoutDashboard },
-  { name: 'Calendar', href: '/app/calendar', icon: Calendar },
-  { name: 'Inspections', href: '/app/inspections', icon: ClipboardList },
-  { name: 'Team', href: '/app/team', icon: Users },
-];
-
 export function AppLayout({ children }: AppLayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
-  const { isAdmin } = useAdmin();
+  const { isAdmin, loading: adminLoading } = useAdmin();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [chatPanelOpen, setChatPanelOpen] = useState(false);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
 
-  const navigation = [
+  const navItems = [
     { name: 'Dashboard', href: '/app', icon: LayoutDashboard },
     { name: 'Calendar', href: '/app/calendar', icon: Calendar },
     { name: 'Inspections', href: '/app/inspections', icon: ClipboardList },
@@ -64,7 +57,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           <span className="text-lg font-semibold text-foreground">RouteWise-AI</span>
         </div>
         <nav className="flex flex-col gap-1 p-4">
-          {navigation.map((item) => {
+          {navItems.map((item) => {
             const isActive = location.pathname === item.href || 
               (item.href === '/app' && location.pathname === '/app');
             return (
@@ -154,7 +147,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             <span className="text-lg font-semibold">RouteWise-AI</span>
           </div>
           <nav className="flex flex-col gap-1 p-4">
-            {navigation.map((item) => {
+            {navItems.map((item) => {
               const isActive = location.pathname === item.href ||
                 (item.href === '/app' && location.pathname === '/app');
               return (
