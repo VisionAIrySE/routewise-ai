@@ -23,7 +23,7 @@ const RouteDetail = () => {
       <div className="flex flex-col items-center justify-center min-h-[50vh] px-4">
         <h2 className="text-xl font-semibold text-foreground mb-2">Route not found</h2>
         <p className="text-muted-foreground mb-4">The route you're looking for doesn't exist.</p>
-        <Link to="/">
+        <Link to="/app">
           <Button>Back to Dashboard</Button>
         </Link>
       </div>
@@ -53,7 +53,7 @@ const RouteDetail = () => {
     <div className="px-4 py-6 lg:px-8 lg:py-8">
       {/* Header */}
       <div className="mb-6">
-        <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4">
+        <Link to="/app" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4">
           <ArrowLeft className="h-4 w-4" />
           Back to Dashboard
         </Link>

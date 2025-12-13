@@ -60,7 +60,7 @@ export default function Onboarding() {
   // Redirect if onboarding completed
   useEffect(() => {
     if (profile?.onboarding_completed) {
-      navigate('/', { replace: true });
+      navigate('/app', { replace: true });
     }
   }, [profile?.onboarding_completed, navigate]);
 
@@ -200,7 +200,7 @@ export default function Onboarding() {
     setIsSaving(true);
     try {
       await updateProfile.mutateAsync({ onboarding_completed: true });
-      navigate('/', { replace: true });
+      navigate('/app', { replace: true });
     } finally {
       setIsSaving(false);
     }
@@ -218,7 +218,7 @@ export default function Onboarding() {
   };
 
   const handleGoToDashboard = () => {
-    navigate('/', { replace: true });
+    navigate('/app', { replace: true });
   };
 
   const handleUploadFirst = () => {
@@ -227,7 +227,7 @@ export default function Onboarding() {
 
   const handleUploadComplete = () => {
     setShowUploadModal(false);
-    navigate('/', { replace: true });
+    navigate('/app', { replace: true });
   };
 
   const progressValue = ((step - 1) / TOTAL_STEPS) * 100;

@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
+import Landing from "./pages/Landing";
 import Index from "./pages/Index";
 import Inspections from "./pages/Inspections";
 import Calendar from "./pages/Calendar";
@@ -27,6 +28,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             {/* Public routes */}
+            <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/install" element={<Install />} />
@@ -39,29 +41,29 @@ const App = () => (
             } />
             
             {/* Protected routes - require onboarding complete */}
-            <Route path="/" element={
+            <Route path="/app" element={
               <ProtectedRoute>
                 <AppLayout><Index /></AppLayout>
               </ProtectedRoute>
             } />
-            <Route path="/inspections" element={
+            <Route path="/app/inspections" element={
               <ProtectedRoute>
                 <AppLayout><Inspections /></AppLayout>
               </ProtectedRoute>
             } />
-            <Route path="/calendar" element={
+            <Route path="/app/calendar" element={
               <ProtectedRoute>
                 <AppLayout><Calendar /></AppLayout>
               </ProtectedRoute>
             } />
-            <Route path="/routes/:routeId" element={
+            <Route path="/app/routes/:routeId" element={
               <ProtectedRoute>
                 <AppLayout><RouteDetail /></AppLayout>
               </ProtectedRoute>
             } />
             
             {/* Catch-all */}
-            <Route path="*" element={<AppLayout><NotFound /></AppLayout>} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>

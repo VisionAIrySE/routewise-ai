@@ -22,9 +22,9 @@ interface AppLayoutProps {
 }
 
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { name: 'Calendar', href: '/calendar', icon: Calendar },
-  { name: 'Inspections', href: '/inspections', icon: ClipboardList },
+  { name: 'Dashboard', href: '/app', icon: LayoutDashboard },
+  { name: 'Calendar', href: '/app/calendar', icon: Calendar },
+  { name: 'Inspections', href: '/app/inspections', icon: ClipboardList },
 ];
 
 export function AppLayout({ children }: AppLayoutProps) {
@@ -52,7 +52,8 @@ export function AppLayout({ children }: AppLayoutProps) {
         </div>
         <nav className="flex flex-col gap-1 p-4">
           {navigation.map((item) => {
-            const isActive = location.pathname === item.href;
+            const isActive = location.pathname === item.href || 
+              (item.href === '/app' && location.pathname === '/app');
             return (
               <Link
                 key={item.name}
@@ -141,7 +142,8 @@ export function AppLayout({ children }: AppLayoutProps) {
           </div>
           <nav className="flex flex-col gap-1 p-4">
             {navigation.map((item) => {
-              const isActive = location.pathname === item.href;
+              const isActive = location.pathname === item.href ||
+                (item.href === '/app' && location.pathname === '/app');
               return (
                 <Link
                   key={item.name}
