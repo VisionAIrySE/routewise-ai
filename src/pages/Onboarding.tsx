@@ -526,7 +526,7 @@ export default function Onboarding() {
               <div>
                 <h1 className="text-3xl font-bold text-foreground">You're all set!</h1>
                 <p className="text-muted-foreground mt-3 text-lg">
-                  Your 7-day free trial has started. Upload your first inspection CSV to see RouteWise in action.
+                  Welcome to RouteWise! Upload your first inspection CSV to see RouteWise in action.
                 </p>
               </div>
               <div className="space-y-3">

@@ -116,7 +116,7 @@ export default function Landing() {
             <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
               <Button size="lg" asChild className="gap-2 text-base">
                 <Link to="/pricing">
-                  Start Your Free Trial
+                  Get Started
                   <ChevronRight className="h-4 w-4" />
                 </Link>
               </Button>
@@ -250,7 +250,7 @@ export default function Landing() {
             Know other inspectors? Refer them to RouteWise AI and get 2 weeks free for each signup.
           </p>
           <Button asChild className="mt-6">
-            <Link to="/pricing">Start Free Trial</Link>
+            <Link to="/pricing">Get Started</Link>
           </Button>
         </div>
       </section>
@@ -266,12 +266,12 @@ export default function Landing() {
           </p>
           <Button size="lg" asChild className="mt-8 gap-2 text-base">
             <Link to="/pricing">
-              Start Your Free Trial
+              Get Started
               <ChevronRight className="h-4 w-4" />
             </Link>
           </Button>
           <p className="mt-4 text-sm text-muted-foreground">
-            2 weeks free with your subscription.
+            2 weeks included with your subscription.
           </p>
         </div>
       </section>

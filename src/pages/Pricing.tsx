@@ -76,7 +76,7 @@ export default function Pricing() {
               Simple, transparent pricing
             </h1>
             <p className="mt-4 text-lg text-muted-foreground">
-              Start with a 14-day free trial. Cancel anytime.
+              Subscribe today and get 2 weeks included upfront. Cancel anytime.
             </p>
           </div>
 
@@ -115,7 +115,7 @@ export default function Pricing() {
                       </p>
                     )}
                     <p className="mt-2 text-sm text-muted-foreground">
-                      14-day free trial included
+                      2 weeks included with subscription
                     </p>
                   </div>
                   <ul className="space-y-3">
@@ -135,7 +135,7 @@ export default function Pricing() {
                     asChild
                   >
                     <Link to={`/signup?plan=${plan.name.toLowerCase()}&price=${plan.priceId}`}>
-                      Start Free Trial
+                      Get Started
                     </Link>
                   </Button>
                 </CardFooter>
@@ -156,16 +156,6 @@ export default function Pricing() {
             </p>
           </div>
 
-          {/* Trial Info */}
-          <div className="mt-16 rounded-2xl border border-border bg-muted/30 p-8 text-center max-w-2xl mx-auto">
-            <h3 className="text-lg font-semibold text-foreground">
-              Try it risk-free
-            </h3>
-            <p className="mt-2 text-muted-foreground">
-              Your 14-day trial starts when you sign up. Credit card required to start, 
-              but you won't be charged until the trial ends. Cancel anytime.
-            </p>
-          </div>
         </div>
       </main>
     </div>
