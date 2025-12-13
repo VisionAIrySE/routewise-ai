@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Timer, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Timer, Loader2, Calendar as CalendarIcon, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useFixedAppointments } from '@/hooks/useRoutes';
@@ -8,30 +8,46 @@ import { useMonthSavedRoutes, type SavedRouteDB } from '@/hooks/useSavedRoutes';
 import { CalendarRouteCard } from '@/components/calendar/CalendarRouteCard';
 import { RouteDetailModal } from '@/components/calendar/RouteDetailModal';
 import { DuplicateRouteModal } from '@/components/calendar/DuplicateRouteModal';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import {
   format,
   startOfMonth,
   endOfMonth,
+  startOfWeek,
+  endOfWeek,
   eachDayOfInterval,
   isSameDay,
+  isSameMonth,
   addMonths,
   subMonths,
+  addWeeks,
+  subWeeks,
   getDay,
   isToday,
 } from 'date-fns';
 
 const Calendar = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedRoute, setSelectedRoute] = useState<SavedRouteDB | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
   const [routeToDuplicate, setRouteToDuplicate] = useState<SavedRouteDB | null>(null);
+  const [viewMode, setViewMode] = useState<'week' | 'month'>('week');
+
+  // Use week view on mobile by default
+  const effectiveViewMode = isMobile ? 'week' : viewMode;
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
   const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
+
+  // Week view days
+  const weekStart = startOfWeek(currentDate);
+  const weekEnd = endOfWeek(currentDate);
+  const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
 
   // Pad start of month with previous month's days
   const startPadding = getDay(monthStart);
@@ -84,115 +100,227 @@ const Calendar = () => {
       </div>
 
       {/* Calendar Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2 sm:gap-4">
           <Button
             variant="outline"
             size="icon"
-            onClick={() => setCurrentDate(subMonths(currentDate, 1))}
+            onClick={() => setCurrentDate(effectiveViewMode === 'week' ? subWeeks(currentDate, 1) : subMonths(currentDate, 1))}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <h2 className="text-xl font-semibold text-foreground min-w-[200px] text-center">
-            {format(currentDate, 'MMMM yyyy')}
+          <h2 className="text-lg sm:text-xl font-semibold text-foreground min-w-[140px] sm:min-w-[200px] text-center">
+            {effectiveViewMode === 'week' 
+              ? `${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d')}`
+              : format(currentDate, 'MMMM yyyy')
+            }
           </h2>
           <Button
             variant="outline"
             size="icon"
-            onClick={() => setCurrentDate(addMonths(currentDate, 1))}
+            onClick={() => setCurrentDate(effectiveViewMode === 'week' ? addWeeks(currentDate, 1) : addMonths(currentDate, 1))}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
-        <Button
-          variant="secondary"
-          onClick={() => setCurrentDate(new Date())}
-        >
-          Today
-        </Button>
+        <div className="flex items-center gap-2">
+          {!isMobile && (
+            <div className="flex rounded-lg border border-border overflow-hidden">
+              <Button
+                variant={viewMode === 'week' ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('week')}
+                className="rounded-none"
+              >
+                <List className="h-4 w-4 mr-1" />
+                Week
+              </Button>
+              <Button
+                variant={viewMode === 'month' ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('month')}
+                className="rounded-none"
+              >
+                <CalendarIcon className="h-4 w-4 mr-1" />
+                Month
+              </Button>
+            </div>
+          )}
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setCurrentDate(new Date())}
+          >
+            Today
+          </Button>
+        </div>
       </div>
 
       {/* Calendar Grid */}
       <div className="rounded-xl border border-border bg-card overflow-hidden mb-8">
-        {/* Day Headers */}
-        <div className="grid grid-cols-7 border-b border-border bg-muted/50">
-          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-            <div
-              key={day}
-              className="py-3 text-center text-sm font-medium text-muted-foreground"
-            >
-              {day}
-            </div>
-          ))}
-        </div>
-
-        {/* Calendar Days */}
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
-        ) : (
-          <div className="grid grid-cols-7">
-            {paddedDays.map((day, index) => {
+        ) : effectiveViewMode === 'week' ? (
+          /* Week View - Mobile Friendly */
+          <div className="divide-y divide-border">
+            {weekDays.map((day) => {
               const dayRoutes = getRoutesForDay(day);
               const appointments = getAppointmentsForDay(day);
-              const isCurrentDay = day && isToday(day);
+              const isCurrentDay = isToday(day);
+              const inCurrentMonth = isSameMonth(day, currentDate);
 
               return (
                 <div
-                  key={index}
+                  key={day.toISOString()}
                   className={cn(
-                    'min-h-[120px] border-b border-r border-border p-2 transition-colors',
-                    !day && 'bg-muted/30',
+                    'p-4 transition-colors',
                     isCurrentDay && 'bg-primary/5',
-                    index % 7 === 6 && 'border-r-0'
+                    !inCurrentMonth && 'opacity-50'
                   )}
                 >
-                  {day && (
-                    <>
-                      <div
-                        className={cn(
-                          'mb-2 flex h-7 w-7 items-center justify-center rounded-full text-sm',
-                          isCurrentDay
-                            ? 'bg-primary text-primary-foreground font-semibold'
-                            : 'text-foreground'
-                        )}
-                      >
-                        {format(day, 'd')}
-                      </div>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div
+                      className={cn(
+                        'flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold',
+                        isCurrentDay
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted text-foreground'
+                      )}
+                    >
+                      {format(day, 'd')}
+                    </div>
+                    <div>
+                      <p className={cn(
+                        'font-medium',
+                        isCurrentDay ? 'text-primary' : 'text-foreground'
+                      )}>
+                        {format(day, 'EEEE')}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {format(day, 'MMMM d, yyyy')}
+                      </p>
+                    </div>
+                  </div>
 
+                  {dayRoutes.length === 0 && appointments.length === 0 ? (
+                    <p className="text-sm text-muted-foreground pl-13">No routes or appointments</p>
+                  ) : (
+                    <div className="space-y-2 pl-13">
                       {/* Saved Routes */}
-                      <div className="space-y-1.5">
-                        {dayRoutes.map((route) => (
-                          <CalendarRouteCard
-                            key={route.id}
-                            route={route}
-                            onClick={() => handleRouteClick(route)}
-                          />
-                        ))}
-                      </div>
+                      {dayRoutes.map((route) => (
+                        <CalendarRouteCard
+                          key={route.id}
+                          route={route}
+                          onClick={() => handleRouteClick(route)}
+                          expanded
+                        />
+                      ))}
 
                       {/* Fixed Appointments */}
                       {appointments.map((apt) => (
                         <div
                           key={apt.id}
-                          className="rounded-md bg-fixed/10 border border-fixed/20 px-2 py-1 text-xs mt-1"
+                          className="rounded-lg bg-fixed/10 border border-fixed/20 p-3"
                         >
-                          <div className="flex items-center gap-1 text-fixed font-medium">
-                            <Timer className="h-3 w-3" />
+                          <div className="flex items-center gap-2 text-fixed font-medium">
+                            <Timer className="h-4 w-4" />
                             {format(new Date(apt.fixedAppointment!), 'h:mm a')}
+                            <Badge variant="fixed" className="ml-auto">SIG</Badge>
                           </div>
-                          <p className="text-[10px] text-muted-foreground truncate mt-0.5">
+                          <p className="text-sm text-foreground mt-1">
                             {apt.street}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {apt.city}, {apt.state}
                           </p>
                         </div>
                       ))}
-                    </>
+                    </div>
                   )}
                 </div>
               );
             })}
           </div>
+        ) : (
+          /* Month View */
+          <>
+            {/* Day Headers */}
+            <div className="grid grid-cols-7 border-b border-border bg-muted/50">
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                <div
+                  key={day}
+                  className="py-3 text-center text-sm font-medium text-muted-foreground"
+                >
+                  {day}
+                </div>
+              ))}
+            </div>
+
+            {/* Calendar Days */}
+            <div className="grid grid-cols-7">
+              {paddedDays.map((day, index) => {
+                const dayRoutes = getRoutesForDay(day);
+                const appointments = getAppointmentsForDay(day);
+                const isCurrentDay = day && isToday(day);
+
+                return (
+                  <div
+                    key={index}
+                    className={cn(
+                      'min-h-[120px] border-b border-r border-border p-2 transition-colors',
+                      !day && 'bg-muted/30',
+                      isCurrentDay && 'bg-primary/5',
+                      index % 7 === 6 && 'border-r-0'
+                    )}
+                  >
+                    {day && (
+                      <>
+                        <div
+                          className={cn(
+                            'mb-2 flex h-7 w-7 items-center justify-center rounded-full text-sm',
+                            isCurrentDay
+                              ? 'bg-primary text-primary-foreground font-semibold'
+                              : 'text-foreground'
+                          )}
+                        >
+                          {format(day, 'd')}
+                        </div>
+
+                        {/* Saved Routes */}
+                        <div className="space-y-1.5">
+                          {dayRoutes.map((route) => (
+                            <CalendarRouteCard
+                              key={route.id}
+                              route={route}
+                              onClick={() => handleRouteClick(route)}
+                            />
+                          ))}
+                        </div>
+
+                        {/* Fixed Appointments */}
+                        {appointments.map((apt) => (
+                          <div
+                            key={apt.id}
+                            className="rounded-md bg-fixed/10 border border-fixed/20 px-2 py-1 text-xs mt-1"
+                          >
+                            <div className="flex items-center gap-1 text-fixed font-medium">
+                              <Timer className="h-3 w-3" />
+                              {format(new Date(apt.fixedAppointment!), 'h:mm a')}
+                            </div>
+                            <p className="text-[10px] text-muted-foreground truncate mt-0.5">
+                              {apt.street}
+                            </p>
+                          </div>
+                        ))}
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
       </div>
 

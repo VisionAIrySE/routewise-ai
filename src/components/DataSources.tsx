@@ -17,10 +17,30 @@ export function DataSources({ onUploadClick }: DataSourcesProps) {
   const [recentUploads, setRecentUploads] = useState<RecentUpload[]>([]);
 
   useEffect(() => {
-    const stored = localStorage.getItem('recent-csv-uploads');
-    if (stored) {
-      setRecentUploads(JSON.parse(stored));
-    }
+    const loadUploads = () => {
+      const stored = localStorage.getItem('recent-csv-uploads');
+      if (stored) {
+        setRecentUploads(JSON.parse(stored));
+      }
+    };
+
+    loadUploads();
+
+    // Listen for storage changes (from other tabs or PWA updates)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'recent-csv-uploads') {
+        loadUploads();
+      }
+    };
+
+    // Also poll periodically to catch same-tab updates
+    const interval = setInterval(loadUploads, 5000);
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
   }, []);
 
   // Detect company from filename
