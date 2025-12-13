@@ -231,7 +231,7 @@ export default function Landing() {
             Boost inspector productivity. Improve on-time completions. Attract top talent.
           </p>
           <Button variant="outline" asChild className="mt-6 gap-2">
-            <a href="mailto:enterprise@routewise.ai">
+            <a href="mailto:Russ@VisionAIry.biz">
               <Mail className="h-4 w-4" />
               Drop us a line
             </a>
@@ -271,7 +271,7 @@ export default function Landing() {
             </Link>
           </Button>
           <p className="mt-4 text-sm text-muted-foreground">
-            No credit card required. 2 weeks free.
+            2 weeks free with your subscription.
           </p>
         </div>
       </section>
