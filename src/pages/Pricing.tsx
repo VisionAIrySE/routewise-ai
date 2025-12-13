@@ -109,6 +109,11 @@ export default function Pricing() {
                         /mo{plan.perSeat ? ' per seat' : ''}
                       </span>
                     </div>
+                    {plan.perSeat && (
+                      <p className="mt-1 text-sm font-medium text-primary">
+                        3 seat minimum
+                      </p>
+                    )}
                     <p className="mt-2 text-sm text-muted-foreground">
                       14-day free trial included
                     </p>
