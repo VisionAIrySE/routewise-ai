@@ -8,6 +8,7 @@ import {
   Upload,
   LogOut,
   User,
+  Users,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -25,6 +26,7 @@ const navigation = [
   { name: 'Dashboard', href: '/app', icon: LayoutDashboard },
   { name: 'Calendar', href: '/app/calendar', icon: Calendar },
   { name: 'Inspections', href: '/app/inspections', icon: ClipboardList },
+  { name: 'Team', href: '/app/team', icon: Users },
 ];
 
 export function AppLayout({ children }: AppLayoutProps) {

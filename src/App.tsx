@@ -12,6 +12,7 @@ import Index from "./pages/Index";
 import Inspections from "./pages/Inspections";
 import Calendar from "./pages/Calendar";
 import RouteDetail from "./pages/RouteDetail";
+import TeamDashboard from "./pages/TeamDashboard";
 import Install from "./pages/Install";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -63,6 +64,11 @@ const App = () => (
             <Route path="/app/routes/:routeId" element={
               <ProtectedRoute>
                 <AppLayout><RouteDetail /></AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/app/team" element={
+              <ProtectedRoute>
+                <AppLayout><TeamDashboard /></AppLayout>
               </ProtectedRoute>
             } />
             
