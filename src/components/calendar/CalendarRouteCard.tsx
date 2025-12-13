@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 interface CalendarRouteCardProps {
   route: SavedRouteDB;
   onClick: () => void;
+  expanded?: boolean;
 }
 
 const statusColors: Record<string, string> = {
@@ -15,19 +16,69 @@ const statusColors: Record<string, string> = {
   cancelled: 'bg-muted text-muted-foreground border-muted',
 };
 
-export function CalendarRouteCard({ route, onClick }: CalendarRouteCardProps) {
+export function CalendarRouteCard({ route, onClick, expanded = false }: CalendarRouteCardProps) {
   const statusLabel = route.status.replace('_', ' ');
 
+  if (expanded) {
+    // Expanded view for week/list mode
+    return (
+      <div
+        onClick={onClick}
+        className={cn(
+          'rounded-lg p-3 cursor-pointer transition-all',
+          'border hover:shadow-md',
+          statusColors[route.status] || statusColors.planned
+        )}
+      >
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2 font-medium">
+            <MapPin className="h-4 w-4 flex-shrink-0" />
+            <span>{route.route_name || 'Route'}</span>
+          </div>
+          <Badge variant="outline" className="text-xs capitalize">
+            {statusLabel}
+          </Badge>
+        </div>
+        <div className="flex items-center gap-4 text-sm opacity-80">
+          <span>{route.stops_count} stops</span>
+          {route.total_hours && (
+            <span className="flex items-center gap-1">
+              <Clock className="h-3.5 w-3.5" />
+              {route.total_hours.toFixed(1)} hours
+            </span>
+          )}
+          {route.total_miles && (
+            <span>{route.total_miles.toFixed(0)} miles</span>
+          )}
+        </div>
+        {route.zones && route.zones.length > 0 && (
+          <div className="flex gap-1.5 mt-2 flex-wrap">
+            {route.zones.map((zone) => (
+              <Badge
+                key={zone}
+                variant="outline"
+                className="text-xs"
+              >
+                {zone}
+              </Badge>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Compact view for month grid
   return (
     <div
       onClick={onClick}
       className={cn(
         'rounded-md px-2 py-1.5 text-xs cursor-pointer transition-all',
-        'border hover:shadow-sm',
+        'border hover:shadow-sm overflow-hidden',
         statusColors[route.status] || statusColors.planned
       )}
     >
-      <div className="flex items-center gap-1 font-medium truncate">
+      <div className="flex items-center gap-1 font-medium">
         <MapPin className="h-3 w-3 flex-shrink-0" />
         <span className="truncate">
           {route.route_name || 'Route'}
@@ -42,22 +93,6 @@ export function CalendarRouteCard({ route, onClick }: CalendarRouteCardProps) {
           </span>
         )}
       </div>
-      {route.zones && route.zones.length > 0 && (
-        <div className="flex gap-1 mt-1 flex-wrap">
-          {route.zones.slice(0, 2).map((zone) => (
-            <Badge
-              key={zone}
-              variant="outline"
-              className="text-[9px] px-1 py-0 h-4"
-            >
-              {zone}
-            </Badge>
-          ))}
-          {route.zones.length > 2 && (
-            <span className="text-[9px] opacity-60">+{route.zones.length - 2}</span>
-          )}
-        </div>
-      )}
     </div>
   );
 }
