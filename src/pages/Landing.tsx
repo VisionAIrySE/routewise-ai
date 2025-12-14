@@ -131,7 +131,7 @@ export default function Landing() {
             <div className="text-center lg:text-left">
               <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
                 Stop Chasing Deadlines.
-                <span className="block text-primary">Start Hitting Them, and More Of Them!</span>
+                <span className="block text-primary">Start Crushing Them, and More Of Them!</span>
               </h1>
               <p className="mt-6 text-lg text-muted-foreground sm:text-xl">
                 Inspector Route AI doesn't just optimize your drive—it prioritizes which stops matter most. Expiring inspections first. Clustered by proximity. Built around YOUR schedule and Flexible on the Fly!
