@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { RouteMap } from './RouteMap';
 import { RouteSummaryCard } from './RouteSummaryCard';
 import { RouteStopList } from './RouteStopList';
@@ -18,14 +18,27 @@ interface RouteViewProps {
   onRecalculate?: (excludeIds: string[]) => void;
 }
 
-export function RouteView({ routes, homeBase, fullResponse, onSaveRoute, onRecalculate }: RouteViewProps) {
+export function RouteView({ routes: initialRoutes, homeBase, fullResponse, onSaveRoute, onRecalculate }: RouteViewProps) {
   const [selectedDay, setSelectedDay] = useState(0);
   const [selectedStopId, setSelectedStopId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
   const [markedDone, setMarkedDone] = useState<string[]>([]);
   const [isMarkingDone, setIsMarkingDone] = useState(false);
+  // Track duration overrides separately
+  const [durationOverrides, setDurationOverrides] = useState<Record<string, number>>({});
   const { toast } = useToast();
   const { mutateAsync: saveRoute, isPending: isSaving } = useSaveRoute();
+
+  // Apply duration overrides to routes
+  const routes = useMemo(() => {
+    return initialRoutes.map(route => ({
+      ...route,
+      stops: route.stops.map(stop => ({
+        ...stop,
+        duration_minutes: durationOverrides[stop.id] ?? stop.duration_minutes
+      }))
+    }));
+  }, [initialRoutes, durationOverrides]);
 
   const currentRoute = routes[selectedDay];
   const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
@@ -125,12 +138,20 @@ export function RouteView({ routes, homeBase, fullResponse, onSaveRoute, onRecal
   };
 
   const handleDurationChange = (stopId: string, duration: number) => {
-    // Update the stop's duration in local state
-    // This would need proper state management to propagate changes
+    // Update duration in local state
+    setDurationOverrides(prev => ({
+      ...prev,
+      [stopId]: duration
+    }));
     toast({
       title: 'Duration Updated',
       description: `Stop duration changed to ${duration} minutes`
     });
+  };
+
+  // Toggle stop selection (click same stop to close)
+  const handleStopClick = (stop: RouteStop) => {
+    setSelectedStopId(prev => prev === stop.id ? null : stop.id);
   };
 
   const handleRecalculate = () => {
@@ -259,14 +280,14 @@ export function RouteView({ routes, homeBase, fullResponse, onSaveRoute, onRecal
                 <RouteMap
                   stops={currentRoute.stops.filter(s => !markedDone.includes(s.id))}
                   homeBase={homeBase}
-                  onStopClick={(stop) => setSelectedStopId(stop.id)}
+                  onStopClick={handleStopClick}
                 />
               </div>
               <div className="max-h-[400px] overflow-y-auto">
                 <RouteStopList
                   stops={currentRoute.stops}
                   selectedStopId={selectedStopId || undefined}
-                  onStopClick={(stop) => setSelectedStopId(stop.id)}
+                  onStopClick={handleStopClick}
                   onDurationChange={handleDurationChange}
                   onMarkDone={handleMarkDone}
                   completedStopIds={markedDone}
@@ -277,7 +298,7 @@ export function RouteView({ routes, homeBase, fullResponse, onSaveRoute, onRecal
             <RouteStopList
               stops={currentRoute.stops}
               selectedStopId={selectedStopId || undefined}
-              onStopClick={(stop) => setSelectedStopId(stop.id)}
+              onStopClick={handleStopClick}
               onDurationChange={handleDurationChange}
               onMarkDone={handleMarkDone}
               completedStopIds={markedDone}
