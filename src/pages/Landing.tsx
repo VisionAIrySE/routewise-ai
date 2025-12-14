@@ -123,7 +123,7 @@ export default function Landing() {
               <img 
                 src={heroInspector} 
                 alt="Field inspector using Inspector Route AI" 
-                className="rounded-2xl shadow-2xl max-w-sm w-full object-cover"
+                className="rounded-2xl shadow-2xl max-w-sm w-full object-cover ring-1 ring-black/10 drop-shadow-[0_25px_35px_rgba(0,0,0,0.25)]"
               />
               <div className="flex flex-col items-center gap-3">
                 <Button size="lg" asChild className="gap-2 text-base">
@@ -154,7 +154,7 @@ export default function Landing() {
               <img 
                 src={heroInspector} 
                 alt="Field inspector using Inspector Route AI" 
-                className="rounded-2xl shadow-2xl max-w-md w-full object-cover"
+                className="rounded-2xl shadow-2xl max-w-md w-full object-cover ring-1 ring-black/10 drop-shadow-[0_25px_35px_rgba(0,0,0,0.25)]"
               />
               <div className="flex flex-col items-center gap-3">
                 <Button size="lg" asChild className="gap-2 text-base">
