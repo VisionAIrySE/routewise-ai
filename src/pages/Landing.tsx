@@ -41,7 +41,7 @@ const inspectorRouteFeatures = [
 
 const steps = [
   { icon: Upload, title: 'Upload', description: 'Drop your XLS or CSV exports from your company portals. We read them all.' },
-  { icon: Brain, title: 'Prioritize', description: 'AI analyzes expiration dates, location clusters, and your time constraints. Critical deadlines bubble to the top automatically.' },
+  { icon: Brain, title: 'Prioritize', description: 'AI analyzes expiration dates, location clusters, and your time constraints conversationally in seconds. Just tell it your plans for the day. Critical deadlines bubble to the top automatically.' },
   { icon: Navigation, title: 'Go', description: 'Get a route that makes sense: nearby stops grouped together, urgent inspections first, built around your real schedule.' },
 ];
 
