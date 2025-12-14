@@ -1,17 +1,16 @@
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { useState, useRef } from 'react';
+import { useRef } from 'react';
 import { Copy, MapPin, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { useSaveRoute } from '@/hooks/useSavedRoutes';
 import {
   RouteOptimizerResponse,
   RouteDay,
   formatGeneratedTime,
   hasOptimizedRoutes,
-  saveRouteToN8n,
   copyAddressesToClipboard,
-  openInGoogleMaps,
   generateGoogleMapsUrl,
   extractAddresses,
   extractPrintableRouteContent,
@@ -26,29 +25,22 @@ interface RouteResponseProps {
 
 export function RouteResponse({ response }: RouteResponseProps) {
   const { toast } = useToast();
-  const [isSaving, setIsSaving] = useState(false);
+  const { mutateAsync: saveRoute, isPending: isSaving } = useSaveRoute();
   const routeContentRef = useRef<HTMLDivElement>(null);
 
   const handleSaveRoute = async (route: RouteDay) => {
-    setIsSaving(true);
     try {
-      const result = await saveRouteToN8n(route, response);
-      if (result.success) {
-        toast({
-          title: 'Route Saved!',
-          description: result.message || `${route.day} route saved successfully`,
-        });
-      } else {
-        throw new Error(result.message);
-      }
+      await saveRoute({ route, fullResponse: response });
+      toast({
+        title: 'Route Saved!',
+        description: `${route.day} route saved to calendar`,
+      });
     } catch (error) {
       toast({
         title: 'Save Failed',
         description: error instanceof Error ? error.message : 'Could not save route',
         variant: 'destructive',
       });
-    } finally {
-      setIsSaving(false);
     }
   };
 
