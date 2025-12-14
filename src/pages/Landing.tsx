@@ -13,7 +13,7 @@ import {
   Building2,
 } from 'lucide-react';
 import heroInspector from '@/assets/hero-inspector.png';
-import appScreenshot from '@/assets/chat-route-screenshot.png';
+import appScreenshot from '@/assets/route-demo-screenshot.png';
 
 const genericRoutingIssues = [
   'Shortest route, period',
