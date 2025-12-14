@@ -13,7 +13,7 @@ import {
   Building2,
 } from 'lucide-react';
 import heroInspector from '@/assets/hero-inspector.png';
-import { AnnotatedScreenshot } from '@/components/landing/AnnotatedScreenshot';
+import appScreenshot from '@/assets/app-screenshot.png';
 
 const genericRoutingIssues = [
   'Shortest route, period',
@@ -259,9 +259,15 @@ export default function Landing() {
             ))}
           </div>
 
-          {/* App Screenshot with Annotations */}
-          <div className="mt-20 text-center">
-            <AnnotatedScreenshot />
+          {/* App Screenshot */}
+          <div className="mt-16 text-center">
+            <div className="inline-block rounded-2xl border border-border bg-card p-4 shadow-xl">
+              <img 
+                src={appScreenshot} 
+                alt="Inspector Route AI app showing an optimized route" 
+                className="rounded-lg max-w-3xl w-full"
+              />
+            </div>
             <p className="mt-4 text-muted-foreground italic">
               A real 9-stop route, built in 22 seconds.
             </p>
