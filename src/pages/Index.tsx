@@ -8,6 +8,7 @@ import { ExamplePrompts } from '@/components/ExamplePrompts';
 import { AIChatPanel } from '@/components/AIChatPanel';
 import { CSVUploadModal } from '@/components/CSVUploadModal';
 import { ReferralCodeCard } from '@/components/ReferralCodeCard';
+import { SubscriptionManagement } from '@/components/SubscriptionManagement';
 import { useInspectionStats } from '@/hooks/useInspections';
 import { toast } from 'sonner';
 
@@ -106,9 +107,10 @@ const Dashboard = () => {
         )}
       </div>
 
-      {/* Referral Code Card */}
-      <div className="mb-6">
+      {/* Referral & Subscription Row */}
+      <div className="grid gap-6 lg:grid-cols-2 mb-6">
         <ReferralCodeCard />
+        <SubscriptionManagement />
       </div>
 
       {/* Main Content - 3 Column Grid */}

@@ -35,7 +35,7 @@ const inspectorRouteFeatures = [
   'Expiring inspections surfaced first',
   'Stops clustered by neighborhood',
   'Your anchored appointments respected',
-  'Route adapts to YOUR available hours',
+  'Route adapts to YOUR available hours and individual inspection times',
   'Adjust your route on the fly in the field',
 ];
 
@@ -59,7 +59,7 @@ const testimonials = [
   {
     quote: "The on-the-fly adjustments saved me when I hit a locked gate. Rerouted me to nearby stops instantly.",
     author: "James T.",
-    role: "Property Inspector, California",
+    role: "Mortgage Occupancy Inspector, Oregon",
   },
 ];
 
@@ -131,10 +131,10 @@ export default function Landing() {
             <div className="text-center lg:text-left">
               <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
                 Stop Chasing Deadlines.
-                <span className="block text-primary">Start Hitting Them, and more of them!</span>
+                <span className="block text-primary">Start Hitting Them, and More Of Them!</span>
               </h1>
               <p className="mt-6 text-lg text-muted-foreground sm:text-xl">
-                Inspector Route AI doesn't just optimize your drive—it prioritizes which stops matter most. Expiring inspections first. Clustered by proximity. Built around YOUR schedule.
+                Inspector Route AI doesn't just optimize your drive—it prioritizes which stops matter most. Expiring inspections first. Clustered by proximity. Built around YOUR schedule and Flexible on the Fly!
               </p>
               <div className="mt-8 flex flex-col items-center gap-3 lg:items-start">
                 <Button size="lg" asChild className="gap-2 text-base">
@@ -258,7 +258,7 @@ export default function Landing() {
               />
             </div>
             <p className="mt-4 text-muted-foreground italic">
-              A real 7-stop route, built in 22 seconds.
+              A real 8-stop route, built in 22 seconds.
             </p>
           </div>
         </div>
@@ -317,7 +317,7 @@ export default function Landing() {
       <section className="py-16 sm:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-foreground sm:text-4xl text-center mb-16">
-            Join inspectors who stopped missing deadlines
+            Join inspectors who stopped missing deadlines and complete more inspections
           </h2>
           
           <div className="grid gap-8 md:grid-cols-3">
@@ -360,10 +360,10 @@ export default function Landing() {
       <section id="pricing" className="py-20 sm:py-28">
         <div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-foreground sm:text-4xl">
-            One more inspection per day. Every day.
+            One to two more inspections per day. Every day.
           </h2>
           <p className="mt-6 text-xl text-muted-foreground">
-            At $14-17 per stop, that's $280-340 extra per month. Inspector Route AI is $17/month. The math is simple.
+            At $14-17 per stop, that's as much as $680 extra per month or more. Inspector Route AI is $17/month. The math is simple.
           </p>
           <div className="mt-10 flex flex-col items-center gap-4">
             <Button size="lg" asChild className="gap-2 text-base">
