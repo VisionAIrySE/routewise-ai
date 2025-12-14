@@ -29,7 +29,7 @@ const features = [
 const steps = [
   { icon: Upload, title: 'Upload', description: 'Upload your XLS or CSV exports from your company portals, we read them all!' },
   { icon: MessageSquare, title: 'Ask', description: '"I have 6 hours tomorrow, give me the nearest, highest priority inspections. And schedule around the appointment on my calendar."' },
-  { icon: Navigation, title: 'Go', description: 'Push to Google Maps. Hit the road.' },
+  { icon: Navigation, title: 'Go', description: 'Print your work tickets, pull up your route on Google Maps, and hit the road!' },
 ];
 
 const painPoints = [
