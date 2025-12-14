@@ -214,7 +214,7 @@ export default function Landing() {
 
             {/* Inspector Route AI */}
             <div className="rounded-2xl border border-primary/30 bg-primary/5 p-8 ring-2 ring-primary/20">
-              <h3 className="text-xl font-semibold text-primary mb-6 text-center">
+              <h3 className="text-xl font-extrabold text-primary mb-6 text-center drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]">
                 Inspector Route AI
               </h3>
               <ul className="space-y-4">
