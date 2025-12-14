@@ -51,48 +51,53 @@ export function AppLayout({ children }: AppLayoutProps) {
   return (
     <div className="min-h-screen bg-background">
       {/* Desktop Sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-50 hidden w-64 border-r border-border bg-card lg:block">
-        <div className="flex h-16 items-center gap-3 border-b border-border px-6">
+      <aside className="fixed inset-y-0 left-0 z-50 hidden w-64 flex-col border-r border-border bg-card lg:flex">
+        {/* Fixed Header */}
+        <div className="flex h-16 shrink-0 items-center gap-3 border-b border-border px-6">
           <img src="/favicon.png" alt="RouteWise-AI" className="h-9 w-9 rounded-lg" />
           <span className="text-lg font-semibold text-foreground">RouteWise-AI</span>
         </div>
-        <nav className="flex flex-col gap-1 p-4">
-          {navItems.map((item) => {
-            const isActive = location.pathname === item.href || 
-              (item.href === '/app' && location.pathname === '/app');
-            return (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-                  isActive
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                )}
-              >
-                <item.icon className="h-5 w-5" />
-                {item.name}
-              </Link>
-            );
-          })}
-          <Button
-            variant="outline"
-            className="mt-4 flex items-center gap-3 w-full justify-start"
-            onClick={() => setUploadModalOpen(true)}
-          >
-            <Upload className="h-5 w-5" />
-            Upload CSV/XLS
-          </Button>
-        </nav>
+        
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto">
+          <nav className="flex flex-col gap-1 p-4">
+            {navItems.map((item) => {
+              const isActive = location.pathname === item.href || 
+                (item.href === '/app' && location.pathname === '/app');
+              return (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                    isActive
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                  )}
+                >
+                  <item.icon className="h-5 w-5" />
+                  {item.name}
+                </Link>
+              );
+            })}
+            <Button
+              variant="outline"
+              className="mt-4 flex items-center gap-3 w-full justify-start"
+              onClick={() => setUploadModalOpen(true)}
+            >
+              <Upload className="h-5 w-5" />
+              Upload CSV/XLS
+            </Button>
+          </nav>
 
-        {/* Saved Routes Section */}
-        <div className="mt-4 border-t border-border pt-4 px-2">
-          <SavedRoutes />
+          {/* Saved Routes Section */}
+          <div className="border-t border-border pt-4 px-2 pb-4">
+            <SavedRoutes />
+          </div>
         </div>
 
-        {/* User Info & Sign Out - Desktop */}
-        <div className="absolute bottom-0 left-0 right-0 border-t border-border p-4">
+        {/* Fixed User Footer */}
+        <div className="shrink-0 border-t border-border p-4">
           <div className="flex items-center gap-3 mb-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
               <User className="h-5 w-5 text-primary" />
