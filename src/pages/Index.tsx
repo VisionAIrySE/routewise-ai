@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AlertTriangle, AlertCircle, Clock, ClipboardList } from 'lucide-react';
 import { StatCard } from '@/components/StatCard';
 import { UpcomingAppointments } from '@/components/UpcomingAppointments';
@@ -9,12 +9,34 @@ import { AIChatPanel } from '@/components/AIChatPanel';
 import { CSVUploadModal } from '@/components/CSVUploadModal';
 import { ReferralCodeCard } from '@/components/ReferralCodeCard';
 import { useInspectionStats } from '@/hooks/useInspections';
+import { toast } from 'sonner';
 
 const Dashboard = () => {
   const { stats, isLoading, error } = useInspectionStats();
   const [chatOpen, setChatOpen] = useState(false);
   const [initialPrompt, setInitialPrompt] = useState<string | undefined>();
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
+
+  // Check for edit route from calendar
+  useEffect(() => {
+    const editRouteData = sessionStorage.getItem('editRoute');
+    if (editRouteData) {
+      try {
+        const route = JSON.parse(editRouteData);
+        // Clear immediately to prevent re-triggering
+        sessionStorage.removeItem('editRoute');
+        
+        // Open chat with context about the route
+        setChatOpen(true);
+        toast.success('Route loaded', {
+          description: `${route.route_name || 'Route'} ready to edit. Tell me what changes you'd like to make.`,
+        });
+      } catch (e) {
+        console.error('Failed to parse editRoute:', e);
+        sessionStorage.removeItem('editRoute');
+      }
+    }
+  }, []);
 
   const handlePromptClick = (prompt: string) => {
     setInitialPrompt(prompt);

@@ -759,15 +759,34 @@ export function openInGoogleMaps(addresses: string[]): boolean {
   const url = generateGoogleMapsUrl(addresses);
   if (!url) return false;
 
-  // Use an anchor element click to avoid popup blockers
-  const link = document.createElement('a');
-  link.href = url;
-  link.target = '_blank';
-  link.rel = 'noopener noreferrer';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  return true;
+  // On mobile PWA, window.open can be blocked. Use multiple fallback approaches.
+  try {
+    // First try window.open - works on most browsers
+    const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+    
+    if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+      // Fallback: Create and click an anchor element
+      const link = document.createElement('a');
+      link.href = url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      // Important: Add to DOM before clicking for iOS Safari compatibility
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      
+      // Small delay before removing to ensure click processes
+      setTimeout(() => {
+        document.body.removeChild(link);
+      }, 100);
+    }
+    return true;
+  } catch (error) {
+    console.error('Failed to open Google Maps:', error);
+    // Last resort: try direct navigation (will leave current page)
+    // Only do this if explicitly needed
+    return false;
+  }
 }
 
 export function formatGeneratedTime(isoString: string): string {
