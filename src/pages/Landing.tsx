@@ -13,7 +13,7 @@ import {
   Building2,
 } from 'lucide-react';
 import heroInspector from '@/assets/hero-inspector.png';
-import appScreenshot from '@/assets/app-screenshot.png';
+import chatScreenshot from '@/assets/chat-screenshot.png';
 
 const genericRoutingIssues = [
   'Shortest route, period',
@@ -263,7 +263,7 @@ export default function Landing() {
           <div className="mt-16 text-center">
             <div className="inline-block rounded-2xl border border-border bg-card p-4 shadow-xl">
               <img 
-                src={appScreenshot} 
+                src={chatScreenshot} 
                 alt="Inspector Route AI app showing an optimized route" 
                 className="rounded-lg max-w-3xl w-full"
               />
