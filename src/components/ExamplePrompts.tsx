@@ -67,10 +67,10 @@ export function ExamplePrompts({ onPromptClick }: ExamplePromptsProps) {
       <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 via-card to-primary/10 p-6 lg:p-8">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           <div className="flex items-start gap-4">
-            <img src="/favicon.png" alt="RouteWise-AI" className="h-14 w-14 shrink-0 rounded-2xl" />
+            <img src="/favicon.png" alt="Inspector Route AI" className="h-14 w-14 shrink-0 rounded-2xl" />
             <div className="space-y-2">
               <h2 className="text-xl font-bold text-foreground lg:text-2xl">
-                RouteWise AI Assistant
+                Inspector Route AI Assistant
               </h2>
               <p className="text-muted-foreground max-w-xl">
                 Plan, review, prioritize, and adjust your inspection schedule based on your needs. 

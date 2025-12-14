@@ -60,11 +60,11 @@ export default function Login() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex items-center gap-3">
-            <img src="/favicon.png" alt="RouteWise-AI" className="h-12 w-12 rounded-xl" />
-            <span className="text-2xl font-bold text-foreground">RouteWise-AI</span>
+            <img src="/favicon.png" alt="Inspector Route AI" className="h-12 w-12 rounded-xl" />
+            <span className="text-2xl font-bold text-foreground">Inspector Route AI</span>
           </div>
           <CardTitle className="text-xl">Welcome back</CardTitle>
-          <CardDescription>Sign in to your account to continue</CardDescription>
+          <CardDescription>Sign in to your Inspector Route AI account</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">

@@ -61,7 +61,7 @@ export default function Install() {
           <div className="w-20 h-20 mx-auto bg-gradient-to-br from-primary to-teal-500 rounded-2xl flex items-center justify-center shadow-lg">
             <Smartphone className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-foreground">Install RouteWise-AI</h1>
+          <h1 className="text-3xl font-bold text-foreground">Install Inspector Route AI</h1>
           <p className="text-muted-foreground">
             Get quick access to your route planning from your home screen
           </p>
@@ -76,7 +76,7 @@ export default function Install() {
               <div>
                 <h3 className="font-semibold text-green-700 dark:text-green-300">Already Installed!</h3>
                 <p className="text-sm text-green-600 dark:text-green-400">
-                  RouteWise-AI is installed on your device
+                  Inspector Route AI is installed on your device
                 </p>
               </div>
             </CardContent>
@@ -86,7 +86,7 @@ export default function Install() {
             <CardHeader>
               <CardTitle>Ready to Install</CardTitle>
               <CardDescription>
-                Click the button below to add RouteWise-AI to your home screen
+                Click the button below to add Inspector Route AI to your home screen
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -101,7 +101,7 @@ export default function Install() {
             <CardHeader>
               <CardTitle>Install on iPhone/iPad</CardTitle>
               <CardDescription>
-                Follow these steps to install RouteWise-AI
+                Follow these steps to install Inspector Route AI
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -145,7 +145,7 @@ export default function Install() {
             <CardHeader>
               <CardTitle>Install on Android</CardTitle>
               <CardDescription>
-                Follow these steps to install RouteWise-AI
+                Follow these steps to install Inspector Route AI
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

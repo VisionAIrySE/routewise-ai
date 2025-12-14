@@ -257,7 +257,7 @@ export function AIChatPanel({ open, onOpenChange }: AIChatPanelProps) {
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
                 <Sparkles className="h-5 w-5 text-primary-foreground" />
               </div>
-              RouteWise AI Assistant
+              Inspector Route AI Assistant
             </DialogTitle>
             <div className="flex-1 flex justify-center">
               <Button variant="ghost" size="icon" onClick={handleNewSession} title="New Session">
