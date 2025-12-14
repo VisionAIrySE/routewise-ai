@@ -269,7 +269,7 @@ export default function Landing() {
               />
             </div>
             <p className="mt-4 text-muted-foreground italic">
-              A real 8-stop route, built in 22 seconds.
+              A real 9-stop route, built in 22 seconds.
             </p>
           </div>
         </div>
