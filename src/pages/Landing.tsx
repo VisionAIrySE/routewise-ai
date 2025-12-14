@@ -141,7 +141,7 @@ export default function Landing() {
             {/* Text content */}
             <div className="text-center lg:text-left">
               <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-                Stop Chasing Deadlines.
+                Stop Chasing Inspection Deadlines.
                 <span className="block text-primary">Start Crushing Them, and More Of Them!</span>
               </h1>
               <p className="mt-6 text-lg text-muted-foreground sm:text-xl">
