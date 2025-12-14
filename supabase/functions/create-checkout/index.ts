@@ -19,7 +19,7 @@ serve(async (req) => {
 
   const supabaseClient = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
   );
 
   try {
@@ -58,6 +58,74 @@ serve(async (req) => {
     const finalQuantity = isTeamPlan ? Math.max(quantity, 3) : 1;
     logStep("Quantity validated", { isTeamPlan, finalQuantity });
 
+    // Check if user has a valid referral code stored in their profile
+    const { data: profile } = await supabaseClient
+      .from('profiles')
+      .select('referral_code_used, referred_by')
+      .eq('id', user.id)
+      .maybeSingle();
+    
+    let trialDays = 14; // Default 2-week trial
+    let referrerId: string | null = null;
+    
+    if (profile?.referral_code_used && !profile?.referred_by) {
+      // Validate the referral code - find the user who owns it
+      const { data: referrerProfile } = await supabaseClient
+        .from('profiles')
+        .select('id, subscription_status, subscription_tier')
+        .eq('referral_code', profile.referral_code_used)
+        .maybeSingle();
+      
+      if (referrerProfile) {
+        // Check if referrer has an active subscription or lifetime tier
+        const referrerActive = 
+          referrerProfile.subscription_status === 'active' ||
+          ['lifetime', 'founder', 'owner'].includes(referrerProfile.subscription_tier || '');
+        
+        if (referrerActive) {
+          logStep("Valid referral code found", { 
+            referralCode: profile.referral_code_used, 
+            referrerId: referrerProfile.id 
+          });
+          
+          // Extend trial to 4 weeks (28 days) for referred user
+          trialDays = 28;
+          referrerId = referrerProfile.id;
+          
+          // Update profile with referred_by so we can credit the referrer later
+          await supabaseClient
+            .from('profiles')
+            .update({ referred_by: referrerId })
+            .eq('id', user.id);
+          
+          // Create a pending referral credit for the referrer (2 weeks free banked)
+          await supabaseClient
+            .from('referral_credits')
+            .insert({
+              user_id: referrerId,
+              referred_user_id: user.id,
+              credit_type: 'free_weeks',
+              credit_amount: 2, // 2 weeks
+              status: 'pending', // Will be applied when new user's subscription starts
+            });
+          
+          logStep("Referral credit created for referrer", { 
+            referrerId, 
+            creditAmount: 2,
+            creditType: 'free_weeks'
+          });
+        } else {
+          logStep("Referrer does not have active subscription", { 
+            referralCode: profile.referral_code_used 
+          });
+        }
+      } else {
+        logStep("Referral code not found in database", { 
+          referralCode: profile.referral_code_used 
+        });
+      }
+    }
+
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     
     // Check if customer already exists
@@ -70,7 +138,7 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "https://routewise-ai.lovable.app";
 
-    // Create checkout session with 14-day trial
+    // Create checkout session with trial period
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
@@ -82,12 +150,22 @@ serve(async (req) => {
       ],
       mode: "subscription",
       subscription_data: {
-        trial_period_days: 14,
+        trial_period_days: trialDays,
+        metadata: {
+          user_id: user.id,
+          referrer_id: referrerId || '',
+        },
       },
       success_url: `${origin}/app?checkout=success`,
       cancel_url: `${origin}/app?checkout=canceled`,
     });
-    logStep("Checkout session created", { sessionId: session.id, url: session.url });
+    
+    logStep("Checkout session created", { 
+      sessionId: session.id, 
+      url: session.url,
+      trialDays,
+      hasReferral: !!referrerId
+    });
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
