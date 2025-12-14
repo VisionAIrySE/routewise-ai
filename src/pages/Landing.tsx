@@ -134,7 +134,7 @@ export default function Landing() {
                 <span className="block text-primary">Start Crushing Them, and More Of Them!</span>
               </h1>
               <p className="mt-6 text-lg text-muted-foreground sm:text-xl">
-                Inspector Route AI doesn't just optimize your drive—it prioritizes which stops matter most. Expiring inspections first. Clustered by proximity. Built around YOUR schedule and Flexible on the Fly!
+                Inspector Route AI doesn't just optimize your drive—it prioritizes which stops matter most. Expiring inspections first. Clustered by proximity. Built around YOUR schedule and Flexible On The Go!
               </p>
               <div className="mt-8 flex flex-col items-center gap-3 lg:items-start">
                 <Button size="lg" asChild className="gap-2 text-base">
