@@ -48,7 +48,7 @@ export function generatePrintWindowHTML(
   return `<!DOCTYPE html>
 <html>
 <head>
-  <title>RouteWise AI - ${route.day} Route</title>
+  <title>Inspector Route AI - ${route.day} Route</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { 
@@ -206,7 +206,7 @@ export function generatePrintWindowHTML(
   </button>
   
   <div class="header">
-    <div class="brand">RouteWise AI</div>
+    <div class="brand">Inspector Route AI</div>
     <h1>Route Plan: ${route.day}</h1>
     <div class="date">${route.date}</div>
   </div>
@@ -271,7 +271,7 @@ export function generatePrintWindowHTML(
   </div>
   
   <div class="footer">
-    Generated on ${new Date().toLocaleString()} • RouteWise AI - Inspector Route Optimizer
+    Generated on ${new Date().toLocaleString()} • Inspector Route AI
   </div>
 </body>
 </html>`;

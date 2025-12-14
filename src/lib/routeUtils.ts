@@ -359,7 +359,7 @@ export function generatePrintableHTML(routeContent: string, queryDate?: string):
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RouteWise AI - Route Plan</title>
+  <title>Inspector Route AI - Route Plan</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { 
@@ -632,7 +632,7 @@ export function generatePrintableHTML(routeContent: string, queryDate?: string):
   </button>
   
   <div class="header">
-    <div class="brand">RouteWise AI</div>
+    <div class="brand">Inspector Route AI</div>
     <h1>Route Plan${queryDate ? ` - ${queryDate}` : ''}</h1>
     <div class="date">Generated ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} at ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
   </div>
@@ -726,7 +726,7 @@ export function generatePrintableHTML(routeContent: string, queryDate?: string):
   ` : ''}
 
   <div class="footer">
-    RouteWise AI • Inspector Route Optimizer
+    Inspector Route AI • Route Optimizer
   </div>
 </body>
 </html>`;

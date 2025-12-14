@@ -80,11 +80,11 @@ export default function Signup() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex items-center gap-3">
-            <img src="/favicon.png" alt="RouteWise-AI" className="h-12 w-12 rounded-xl" />
-            <span className="text-2xl font-bold text-foreground">RouteWise-AI</span>
+            <img src="/favicon.png" alt="Inspector Route AI" className="h-12 w-12 rounded-xl" />
+            <span className="text-2xl font-bold text-foreground">Inspector Route AI</span>
           </div>
           <CardTitle className="text-xl">Create an account</CardTitle>
-          <CardDescription>Get started with route optimization</CardDescription>
+          <CardDescription>Start your 2-week trial of Inspector Route AI</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">

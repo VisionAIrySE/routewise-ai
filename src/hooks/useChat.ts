@@ -15,7 +15,7 @@ export interface Message {
 const INITIAL_MESSAGE: Message = {
   id: 'initial',
   role: 'assistant',
-  content: `Welcome, I'm RouteWise! I'll help you optimize your planned routes to get the most out of your time and travel!
+  content: `Welcome, I'm Inspector Route AI! I'll help you optimize your planned routes to get the most out of your time and travel!
 
 Tell me your availability (e.g., "I have 4 hours tomorrow, starting at 9AM.") and I'll create the most efficient route considering:
 

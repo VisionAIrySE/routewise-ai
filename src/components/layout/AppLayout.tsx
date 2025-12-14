@@ -74,8 +74,8 @@ export function AppLayout({ children }: AppLayoutProps) {
       <aside className="fixed inset-y-0 left-0 z-50 hidden w-64 flex-col border-r border-border bg-card lg:flex">
         {/* Fixed Header */}
         <div className="flex h-16 shrink-0 items-center gap-3 border-b border-border px-6">
-          <img src="/favicon.png" alt="RouteWise-AI" className="h-9 w-9 rounded-lg" />
-          <span className="text-lg font-semibold text-foreground">RouteWise-AI</span>
+          <img src="/favicon.png" alt="Inspector Route AI" className="h-9 w-9 rounded-lg" />
+          <span className="text-lg font-semibold text-foreground">Inspector Route AI</span>
         </div>
         
         {/* Scrollable Content */}
@@ -150,8 +150,8 @@ export function AppLayout({ children }: AppLayoutProps) {
             <Menu className="h-5 w-5" />
           </Button>
           <div className="flex items-center gap-2">
-            <img src="/favicon.png" alt="RouteWise-AI" className="h-8 w-8 rounded-lg" />
-            <span className="font-semibold">RouteWise-AI</span>
+            <img src="/favicon.png" alt="Inspector Route AI" className="h-8 w-8 rounded-lg" />
+            <span className="font-semibold">Inspector Route AI</span>
           </div>
         </div>
         <Button
@@ -168,8 +168,8 @@ export function AppLayout({ children }: AppLayoutProps) {
       <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
         <SheetContent side="left" className="w-64 p-0">
           <div className="flex h-16 items-center gap-3 border-b border-border px-6">
-            <img src="/favicon.png" alt="RouteWise-AI" className="h-9 w-9 rounded-lg" />
-            <span className="text-lg font-semibold">RouteWise-AI</span>
+            <img src="/favicon.png" alt="Inspector Route AI" className="h-9 w-9 rounded-lg" />
+            <span className="text-lg font-semibold">Inspector Route AI</span>
           </div>
           <nav className="flex flex-col gap-1 p-4">
             {navItems.map((item) => {
