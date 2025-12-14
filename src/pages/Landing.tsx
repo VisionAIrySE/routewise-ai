@@ -261,7 +261,23 @@ export default function Landing() {
 
           {/* App Screenshot */}
           <div className="mt-16 text-center">
-            <div className="inline-block rounded-2xl border border-border bg-card p-4 shadow-xl">
+            <div className="inline-block rounded-2xl border border-border bg-card p-4 shadow-xl relative">
+              {/* Optimized label with arrow - pointing to map */}
+              <div className="absolute top-8 right-[15%] flex flex-col items-center z-10">
+                <span className="text-2xl sm:text-3xl font-bold text-green-700 dark:text-green-500">Optimized</span>
+                <svg className="w-8 h-12 text-green-700 dark:text-green-500 mt-1" viewBox="0 0 24 48" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 0 L12 40 M6 34 L12 40 L18 34" />
+                </svg>
+              </div>
+              
+              {/* Prioritized label with arrow - pointing to stop list */}
+              <div className="absolute top-8 left-[12%] flex flex-col items-center z-10">
+                <span className="text-2xl sm:text-3xl font-bold text-green-700 dark:text-green-500">Prioritized</span>
+                <svg className="w-8 h-12 text-green-700 dark:text-green-500 mt-1" viewBox="0 0 24 48" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 0 L12 40 M6 34 L12 40 L18 34" />
+                </svg>
+              </div>
+              
               <img 
                 src={appScreenshot} 
                 alt="Inspector Route AI app showing an optimized route" 
