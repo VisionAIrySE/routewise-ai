@@ -6,20 +6,22 @@ import { generatePrintWindowHTML } from './PrintableRoute';
 import { Button } from '@/components/ui/button';
 import { Copy, Printer, Map, List, Save, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { RouteDay } from '@/lib/routeUtils';
+import { RouteDay, RouteOptimizerResponse } from '@/lib/routeUtils';
+import { useSaveRoute } from '@/hooks/useSavedRoutes';
 
 interface RouteViewProps {
   routes: RouteDay[];
   homeBase: { lat: number; lng: number; address: string };
+  fullResponse?: RouteOptimizerResponse;
   onSaveRoute?: (route: RouteDay) => Promise<void>;
 }
 
-export function RouteView({ routes, homeBase, onSaveRoute }: RouteViewProps) {
+export function RouteView({ routes, homeBase, fullResponse, onSaveRoute }: RouteViewProps) {
   const [selectedDay, setSelectedDay] = useState(0);
   const [selectedStopId, setSelectedStopId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
-  const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
+  const { mutateAsync: saveRoute, isPending: isSaving } = useSaveRoute();
 
   const currentRoute = routes[selectedDay];
   const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
@@ -65,21 +67,16 @@ export function RouteView({ routes, homeBase, onSaveRoute }: RouteViewProps) {
   };
 
   const handleSaveRoute = async () => {
-    if (!onSaveRoute) {
-      toast({
-        title: 'Save Not Configured',
-        description: 'Route saving is not set up yet.',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    setIsSaving(true);
+    // Prefer using the mutation directly, fallback to callback for backwards compatibility
     try {
-      await onSaveRoute(currentRoute);
+      if (onSaveRoute) {
+        await onSaveRoute(currentRoute);
+      } else {
+        await saveRoute({ route: currentRoute, fullResponse });
+      }
       toast({
         title: 'Route Saved!',
-        description: `${currentRoute.day} route has been saved successfully.`
+        description: `${currentRoute.day} route saved to calendar`
       });
     } catch (error) {
       toast({
@@ -87,8 +84,6 @@ export function RouteView({ routes, homeBase, onSaveRoute }: RouteViewProps) {
         description: 'Could not save the route. Please try again.',
         variant: 'destructive'
       });
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -145,21 +140,19 @@ export function RouteView({ routes, homeBase, onSaveRoute }: RouteViewProps) {
             <Printer className="h-4 w-4 mr-2" />
             Print Route
           </Button>
-          {onSaveRoute && (
-            <Button 
-              variant="default" 
-              size="sm" 
-              onClick={handleSaveRoute}
-              disabled={isSaving}
-            >
-              {isSaving ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4 mr-2" />
-              )}
-              Save Route
-            </Button>
-          )}
+          <Button 
+            variant="default" 
+            size="sm" 
+            onClick={handleSaveRoute}
+            disabled={isSaving}
+          >
+            {isSaving ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4 mr-2" />
+            )}
+            Save Route
+          </Button>
           <div className="flex-1" />
           <div className="flex border border-border rounded-lg overflow-hidden">
             <Button
