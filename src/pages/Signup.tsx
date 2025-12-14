@@ -1,18 +1,20 @@
 import { useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Gift } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Signup() {
   const { signUp, user, loading: authLoading } = useAuth();
+  const [searchParams] = useSearchParams();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [referralCode, setReferralCode] = useState(searchParams.get('ref') || '');
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -51,7 +53,8 @@ export default function Signup() {
     }
 
     setLoading(true);
-    const { error } = await signUp(email, password, name);
+    // Pass referral code in user metadata
+    const { error } = await signUp(email, password, name, referralCode.trim().toUpperCase() || undefined);
     setLoading(false);
 
     if (error) {
@@ -122,6 +125,24 @@ export default function Signup() {
                 minLength={6}
               />
               <p className="text-xs text-muted-foreground">Minimum 6 characters</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="referralCode" className="flex items-center gap-2">
+                <Gift className="h-4 w-4 text-primary" />
+                Referral Code (optional)
+              </Label>
+              <Input
+                id="referralCode"
+                type="text"
+                placeholder="RW-XXXXXX"
+                value={referralCode}
+                onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                disabled={loading}
+                className="uppercase"
+              />
+              <p className="text-xs text-muted-foreground">
+                Have a referral code? Enter it for 2 extra weeks free!
+              </p>
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
