@@ -18,7 +18,11 @@ import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { AIChatPanel } from '@/components/AIChatPanel';
 import { CSVUploadModal } from '@/components/CSVUploadModal';
 import { SavedRoutes } from '@/components/route/SavedRoutes';
+import { RouteDetailModal } from '@/components/calendar/RouteDetailModal';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSavedRouteById } from '@/hooks/useSavedRoutes';
+import type { SavedRoute } from '@/lib/routeUtils';
+import type { SavedRouteDB } from '@/hooks/useSavedRoutes';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -32,6 +36,22 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [chatPanelOpen, setChatPanelOpen] = useState(false);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
+  const [routeDetailOpen, setRouteDetailOpen] = useState(false);
+  
+  // Fetch the full route data when a route is selected
+  const { data: selectedRoute } = useSavedRouteById(selectedRouteId);
+
+  const handleSelectRoute = (route: SavedRoute) => {
+    setSelectedRouteId(route.id);
+    setRouteDetailOpen(true);
+  };
+
+  const handleEditRoute = (route: SavedRouteDB) => {
+    // Navigate to dashboard with route context for editing
+    navigate('/app', { state: { editRoute: route } });
+    setRouteDetailOpen(false);
+  };
 
   const navItems = [
     { name: 'Dashboard', href: '/app', icon: LayoutDashboard },
@@ -92,7 +112,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
           {/* Saved Routes Section */}
           <div className="border-t border-border pt-4 px-2 pb-4">
-            <SavedRoutes />
+            <SavedRoutes onSelectRoute={handleSelectRoute} />
           </div>
         </div>
 
@@ -221,6 +241,14 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       {/* CSV Upload Modal */}
       <CSVUploadModal open={uploadModalOpen} onOpenChange={setUploadModalOpen} />
+
+      {/* Route Detail Modal */}
+      <RouteDetailModal
+        route={selectedRoute || null}
+        open={routeDetailOpen}
+        onOpenChange={setRouteDetailOpen}
+        onEditRoute={handleEditRoute}
+      />
     </div>
   );
 }

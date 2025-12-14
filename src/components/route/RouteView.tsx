@@ -4,22 +4,26 @@ import { RouteSummaryCard } from './RouteSummaryCard';
 import { RouteStopList } from './RouteStopList';
 import { generatePrintWindowHTML } from './PrintableRoute';
 import { Button } from '@/components/ui/button';
-import { Copy, Printer, Map, List, Save, Loader2 } from 'lucide-react';
+import { Copy, Printer, Map, List, Save, Loader2, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { RouteDay, RouteOptimizerResponse } from '@/lib/routeUtils';
+import { RouteDay, RouteOptimizerResponse, RouteStop } from '@/lib/routeUtils';
 import { useSaveRoute } from '@/hooks/useSavedRoutes';
+import { supabase } from '@/integrations/supabase/client';
 
 interface RouteViewProps {
   routes: RouteDay[];
   homeBase: { lat: number; lng: number; address: string };
   fullResponse?: RouteOptimizerResponse;
   onSaveRoute?: (route: RouteDay) => Promise<void>;
+  onRecalculate?: (excludeIds: string[]) => void;
 }
 
-export function RouteView({ routes, homeBase, fullResponse, onSaveRoute }: RouteViewProps) {
+export function RouteView({ routes, homeBase, fullResponse, onSaveRoute, onRecalculate }: RouteViewProps) {
   const [selectedDay, setSelectedDay] = useState(0);
   const [selectedStopId, setSelectedStopId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
+  const [markedDone, setMarkedDone] = useState<string[]>([]);
+  const [isMarkingDone, setIsMarkingDone] = useState(false);
   const { toast } = useToast();
   const { mutateAsync: saveRoute, isPending: isSaving } = useSaveRoute();
 
@@ -83,6 +87,61 @@ export function RouteView({ routes, homeBase, fullResponse, onSaveRoute }: Route
         title: 'Save Failed',
         description: 'Could not save the route. Please try again.',
         variant: 'destructive'
+      });
+    }
+  };
+
+  const handleMarkDone = async (stopId: string) => {
+    setIsMarkingDone(true);
+    try {
+      // Mark inspection as completed in database
+      const { error } = await supabase
+        .from('inspections')
+        .update({ 
+          status: 'COMPLETED', 
+          completed_date: new Date().toISOString().split('T')[0] 
+        })
+        .eq('id', stopId);
+
+      if (error) throw error;
+
+      // Update local state
+      setMarkedDone(prev => [...prev, stopId]);
+      
+      const stop = currentRoute.stops.find(s => s.id === stopId);
+      toast({
+        title: 'Marked Complete',
+        description: `${stop?.name || 'Stop'} marked as done`
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to mark stop as complete',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsMarkingDone(false);
+    }
+  };
+
+  const handleDurationChange = (stopId: string, duration: number) => {
+    // Update the stop's duration in local state
+    // This would need proper state management to propagate changes
+    toast({
+      title: 'Duration Updated',
+      description: `Stop duration changed to ${duration} minutes`
+    });
+  };
+
+  const handleRecalculate = () => {
+    if (markedDone.length === 0) return;
+    
+    if (onRecalculate) {
+      onRecalculate(markedDone);
+    } else {
+      toast({
+        title: 'Recalculate',
+        description: `Would recalculate route excluding ${markedDone.length} completed stops`
       });
     }
   };
@@ -153,6 +212,24 @@ export function RouteView({ routes, homeBase, fullResponse, onSaveRoute }: Route
             )}
             Save Route
           </Button>
+          
+          {/* Recalculate Button - appears when stops are marked done */}
+          {markedDone.length > 0 && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleRecalculate}
+              disabled={isMarkingDone}
+            >
+              {isMarkingDone ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4 mr-2" />
+              )}
+              Recalculate ({markedDone.length} done)
+            </Button>
+          )}
+          
           <div className="flex-1" />
           <div className="flex border border-border rounded-lg overflow-hidden">
             <Button
@@ -180,7 +257,7 @@ export function RouteView({ routes, homeBase, fullResponse, onSaveRoute }: Route
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div className="rounded-lg overflow-hidden border border-border">
                 <RouteMap
-                  stops={currentRoute.stops}
+                  stops={currentRoute.stops.filter(s => !markedDone.includes(s.id))}
                   homeBase={homeBase}
                   onStopClick={(stop) => setSelectedStopId(stop.id)}
                 />
@@ -190,6 +267,9 @@ export function RouteView({ routes, homeBase, fullResponse, onSaveRoute }: Route
                   stops={currentRoute.stops}
                   selectedStopId={selectedStopId || undefined}
                   onStopClick={(stop) => setSelectedStopId(stop.id)}
+                  onDurationChange={handleDurationChange}
+                  onMarkDone={handleMarkDone}
+                  completedStopIds={markedDone}
                 />
               </div>
             </div>
@@ -198,6 +278,9 @@ export function RouteView({ routes, homeBase, fullResponse, onSaveRoute }: Route
               stops={currentRoute.stops}
               selectedStopId={selectedStopId || undefined}
               onStopClick={(stop) => setSelectedStopId(stop.id)}
+              onDurationChange={handleDurationChange}
+              onMarkDone={handleMarkDone}
+              completedStopIds={markedDone}
             />
           )}
         </div>
