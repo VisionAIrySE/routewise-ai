@@ -4,50 +4,38 @@ import {
   Upload,
   MessageSquare,
   Navigation,
-  Smartphone,
   Bot,
   RefreshCw,
   Map,
   CalendarDays,
   Anchor,
-  BarChart3,
-  Save,
-  Clock,
-  Printer,
   Building2,
-  Shield,
   ChevronRight,
   Gift,
   Mail,
 } from 'lucide-react';
+import heroInspector from '@/assets/hero-inspector.png';
+import appScreenshot from '@/assets/app-screenshot.png';
 
 const features = [
-  { icon: Smartphone, title: 'Mobile App', description: 'Install on your phone, full platform access' },
-  { icon: Bot, title: 'Conversational AI', description: 'Just talk - no forms, no clicking through menus' },
-  { icon: RefreshCw, title: 'On-the-Fly Rerouting', description: 'Plans change? Adjust your route mid-day' },
-  { icon: Map, title: 'Push to Maps', description: 'One tap to Google Maps from your phone' },
-  { icon: CalendarDays, title: 'Multi-Day Planning', description: '"Mon/Wed/Fri, 5 hours each" - done' },
-  { icon: Anchor, title: 'Appointment Anchors', description: 'Build your route around fixed appointments' },
-  { icon: BarChart3, title: 'Track Completions', description: 'See your weekly, monthly, yearly stats' },
-  { icon: Save, title: 'Save Routes', description: 'Plan, save, and adjust daily routes weeks in advance' },
-  { icon: Clock, title: 'Duration Control', description: 'Adjust time per stop, route recalculates' },
-  { icon: Printer, title: 'Print-Ready', description: 'Professional route sheets for the field' },
-  { icon: Building2, title: 'Multi-Company', description: 'Combine stops from different sources' },
-  { icon: Shield, title: 'PII-Safe', description: 'We only store name, address, company, urgency' },
+  { icon: Bot, title: 'Talk, Don\'t Click', description: '"Give me 5 hours in Bend" beats 30 minutes of dragging pins.' },
+  { icon: RefreshCw, title: 'Plans Change', description: 'Lockout? No-show? Reroute mid-day in 10 seconds.' },
+  { icon: CalendarDays, title: 'Multi-Day Planning', description: '"Monday, Wednesday, Friday—6 hours each." Done.' },
+  { icon: Anchor, title: 'Fixed Appointments', description: '"I have a 2pm in Redmond." Route builds around it.' },
+  { icon: Building2, title: 'Any Company', description: 'MIL, IPI, SIG, whatever. Combine them all.' },
+  { icon: Map, title: 'One Tap to Maps', description: 'Push your route to Google Maps and drive.' },
 ];
 
 const steps = [
-  { icon: Upload, title: 'Upload', description: 'Drop your inspection CSVs from any company' },
-  { icon: MessageSquare, title: 'Ask', description: '"Plan tomorrow, 6 hours, skip downtown" - that\'s it' },
-  { icon: Navigation, title: 'Go', description: 'Push to Google Maps and hit the road' },
+  { icon: Upload, title: 'Upload', description: 'Upload your XLS or CSV exports from your company portals, we read them all!' },
+  { icon: MessageSquare, title: 'Ask', description: '"6 hours tomorrow, skip La Pine, I\'ve got a 2pm in Bend." That\'s it.' },
+  { icon: Navigation, title: 'Go', description: 'Push to Google Maps. Hit the road.' },
 ];
 
 const painPoints = [
-  'Juggling multiple company portals',
-  'Hours spent on manual route planning',
-  'Wasted drive time between stops',
-  'Missed deadlines and penalties',
-  'Cancels and no-shows mid-route',
+  '6 AM alarm. Coffee. Open three portals. Start figuring out which stops make sense together.',
+  '45 minutes later, you\'ve got a plan. Then someone no-shows. Gate\'s locked. Dog won\'t let you in the yard.',
+  'Now you\'re backtracking across town, burning gas, losing daylight.',
 ];
 
 export default function Landing() {
@@ -103,61 +91,67 @@ export default function Landing() {
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10" />
-        <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8 lg:py-36">
-          <div className="mx-auto max-w-3xl text-center">
-            <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-              Stop Planning.
-              <span className="block text-primary">Start Inspecting.</span>
-            </h1>
-            <p className="mt-6 text-lg text-muted-foreground sm:text-xl">
-              AI-powered route optimization for field inspectors. Plan your week in seconds. 
-              Adjust on the fly. Push directions to your phone.
-            </p>
-            <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-              <Button size="lg" asChild className="gap-2 text-base">
-                <Link to="/pricing">
-                  Get Started
-                  <ChevronRight className="h-4 w-4" />
-                </Link>
-              </Button>
+        <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
+          <div className="grid gap-12 lg:grid-cols-2 lg:gap-16 items-center">
+            {/* Mobile: Image first */}
+            <div className="lg:hidden flex justify-center">
+              <img 
+                src={heroInspector} 
+                alt="Field inspector using RouteWise AI" 
+                className="rounded-2xl shadow-2xl max-w-sm w-full object-cover"
+              />
             </div>
-            <p className="mt-4 text-sm text-muted-foreground">
-              Built for Inspectors, by Inspectors
-            </p>
+            
+            {/* Text content */}
+            <div className="text-center lg:text-left">
+              <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+                Stop Planning.
+                <span className="block text-primary">Start Inspecting.</span>
+              </h1>
+              <p className="mt-6 text-lg text-muted-foreground sm:text-xl">
+                One extra stop per day. That's $300+ more in your pocket every month. RouteWise plans your routes in seconds—for $17.
+              </p>
+              <div className="mt-8 flex flex-col items-center gap-3 lg:items-start">
+                <Button size="lg" asChild className="gap-2 text-base">
+                  <Link to="/pricing">
+                    Get Started
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+                <p className="text-sm text-muted-foreground">
+                  2 weeks included. Cancel anytime.
+                </p>
+              </div>
+            </div>
+
+            {/* Desktop: Image on right */}
+            <div className="hidden lg:flex justify-center">
+              <img 
+                src={heroInspector} 
+                alt="Field inspector using RouteWise AI" 
+                className="rounded-2xl shadow-2xl max-w-md w-full object-cover"
+              />
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Problem/Solution Section */}
+      {/* Pain Points Section */}
       <section className="border-y border-border bg-muted/30 py-16 sm:py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-12 lg:grid-cols-2 lg:gap-16">
-            <div>
-              <h2 className="text-2xl font-bold text-foreground sm:text-3xl">
-                Sound familiar?
-              </h2>
-              <ul className="mt-6 space-y-4">
-                {painPoints.map((point, index) => (
-                  <li key={index} className="flex items-start gap-3">
-                    <span className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-destructive/10 text-sm font-medium text-destructive">
-                      {index + 1}
-                    </span>
-                    <span className="text-muted-foreground">{point}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="flex items-center">
-              <div className="rounded-2xl border border-primary/20 bg-primary/5 p-8">
-                <h3 className="text-xl font-semibold text-foreground">
-                  RouteWise AI brings it all together.
-                </h3>
-                <p className="mt-3 text-lg text-muted-foreground">
-                  Just tell it what you need.
-                </p>
-              </div>
-            </div>
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl font-bold text-foreground sm:text-3xl text-center">
+            You Know The Drill
+          </h2>
+          <div className="mt-8 space-y-6">
+            {painPoints.map((point, index) => (
+              <p key={index} className="text-muted-foreground text-lg text-center">
+                {point}
+              </p>
+            ))}
           </div>
+          <p className="mt-10 text-xl font-medium text-foreground text-center">
+            What if your route just... handled all that?
+          </p>
         </div>
       </section>
 
@@ -189,11 +183,41 @@ export default function Landing() {
               </div>
             ))}
           </div>
+
+          {/* App Screenshot */}
+          <div className="mt-16 text-center">
+            <div className="inline-block rounded-2xl border border-border bg-card p-4 shadow-xl">
+              <img 
+                src={appScreenshot} 
+                alt="RouteWise AI app showing a 7-stop optimized route" 
+                className="rounded-lg max-w-3xl w-full"
+              />
+            </div>
+            <p className="mt-4 text-muted-foreground italic">
+              A real 7-stop route, built in 22 seconds.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Referral Section - Right after How It Works */}
+      <section className="border-y border-border bg-primary/5 py-16 sm:py-20">
+        <div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
+          <Gift className="mx-auto h-10 w-10 text-primary" />
+          <h2 className="mt-4 text-2xl font-bold text-foreground sm:text-3xl">
+            Know Other Inspectors?
+          </h2>
+          <p className="mt-4 text-lg text-muted-foreground">
+            Refer them. You both get 2 weeks free. No limit.
+          </p>
+          <Button asChild className="mt-6">
+            <Link to="/signup">Get Your Referral Link</Link>
+          </Button>
         </div>
       </section>
 
       {/* Features Grid */}
-      <section id="features" className="border-y border-border bg-muted/30 py-16 sm:py-24">
+      <section id="features" className="py-16 sm:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-3xl font-bold text-foreground sm:text-4xl">
@@ -203,7 +227,7 @@ export default function Landing() {
               Built for how inspectors actually work
             </p>
           </div>
-          <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {features.map((feature, index) => (
               <div
                 key={index}
@@ -220,38 +244,29 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* For Companies */}
-      <section className="py-16 sm:py-20">
+      {/* ROI Section */}
+      <section className="border-y border-border bg-muted/30 py-16 sm:py-20">
         <div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
-          <Building2 className="mx-auto h-10 w-10 text-muted-foreground" />
-          <h2 className="mt-4 text-2xl font-bold text-foreground sm:text-3xl">
-            Interested in RouteWise AI for your inspection company?
+          <h2 className="text-3xl font-bold text-foreground sm:text-4xl">
+            The Math
           </h2>
-          <p className="mt-4 text-muted-foreground">
-            Boost inspector productivity. Improve on-time completions. Attract top talent.
+          <div className="mt-10 grid gap-6 sm:grid-cols-3">
+            <div className="rounded-xl border border-border bg-card p-6">
+              <p className="text-3xl font-bold text-primary">$17</p>
+              <p className="mt-2 text-muted-foreground">RouteWise per month</p>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-6">
+              <p className="text-3xl font-bold text-foreground">$14-17</p>
+              <p className="mt-2 text-muted-foreground">Per inspection</p>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-6">
+              <p className="text-3xl font-bold text-green-600">$280-340</p>
+              <p className="mt-2 text-muted-foreground">1 extra stop × 20 days</p>
+            </div>
+          </div>
+          <p className="mt-10 text-xl font-medium text-foreground">
+            If RouteWise gets you ONE more stop per day, it pays for itself 16 times over.
           </p>
-          <Button variant="outline" asChild className="mt-6 gap-2">
-            <a href="mailto:Russ@VisionAIry.biz">
-              <Mail className="h-4 w-4" />
-              Drop us a line
-            </a>
-          </Button>
-        </div>
-      </section>
-
-      {/* Referral Bonus */}
-      <section className="border-y border-border bg-primary/5 py-16 sm:py-20">
-        <div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
-          <Gift className="mx-auto h-10 w-10 text-primary" />
-          <h2 className="mt-4 text-2xl font-bold text-foreground sm:text-3xl">
-            Share the Savings
-          </h2>
-          <p className="mt-4 text-muted-foreground">
-            Know other inspectors? Refer them to RouteWise AI and get 2 weeks free for each signup.
-          </p>
-          <Button asChild className="mt-6">
-            <Link to="/pricing">Get Started</Link>
-          </Button>
         </div>
       </section>
 
@@ -259,10 +274,10 @@ export default function Landing() {
       <section id="pricing" className="py-20 sm:py-28">
         <div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-foreground sm:text-4xl">
-            Get one more inspection done this month?
+            One More Stop Per Day
           </h2>
-          <p className="mt-2 text-xl text-primary font-medium">
-            It's already paid for itself.
+          <p className="mt-4 text-xl text-muted-foreground">
+            That's the difference. $17/month. First 2 weeks included.
           </p>
           <Button size="lg" asChild className="mt-8 gap-2 text-base">
             <Link to="/pricing">
@@ -270,9 +285,6 @@ export default function Landing() {
               <ChevronRight className="h-4 w-4" />
             </Link>
           </Button>
-          <p className="mt-4 text-sm text-muted-foreground">
-            2 weeks included with your subscription.
-          </p>
         </div>
       </section>
 
@@ -285,6 +297,10 @@ export default function Landing() {
               <span className="font-semibold text-foreground">RouteWise AI</span>
             </div>
             <div className="flex gap-6 text-sm text-muted-foreground">
+              <a href="mailto:Russ@VisionAIry.biz" className="hover:text-foreground transition-colors flex items-center gap-1">
+                <Mail className="h-4 w-4" />
+                For Companies
+              </a>
               <a href="#" className="hover:text-foreground transition-colors">Privacy Policy</a>
               <a href="#" className="hover:text-foreground transition-colors">Terms of Service</a>
             </div>
