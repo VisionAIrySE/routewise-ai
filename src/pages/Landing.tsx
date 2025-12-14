@@ -119,24 +119,13 @@ export default function Landing() {
         <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
           <div className="grid gap-12 lg:grid-cols-2 lg:gap-16 items-start">
             {/* Mobile: Image first */}
-            <div className="lg:hidden flex justify-center">
+            <div className="lg:hidden flex flex-col items-center gap-6">
               <img 
                 src={heroInspector} 
                 alt="Field inspector using Inspector Route AI" 
                 className="rounded-2xl shadow-2xl max-w-sm w-full object-cover"
               />
-            </div>
-            
-            {/* Text content */}
-            <div className="text-center lg:text-left">
-              <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-                Stop Chasing Deadlines.
-                <span className="block text-primary">Start Crushing Them, and More Of Them!</span>
-              </h1>
-              <p className="mt-6 text-lg text-muted-foreground sm:text-xl">
-                Inspector Route AI doesn't just optimize your drive—it prioritizes which stops matter most. Expiring inspections first. Clustered by proximity. Built around YOUR schedule and Flexible On The Go!
-              </p>
-              <div className="mt-8 flex flex-col items-center gap-3 lg:items-start">
+              <div className="flex flex-col items-center gap-3">
                 <Button size="lg" asChild className="gap-2 text-base">
                   <Link to="/pricing">
                     Start Your 2-Week Trial
@@ -148,14 +137,36 @@ export default function Landing() {
                 </p>
               </div>
             </div>
+            
+            {/* Text content */}
+            <div className="text-center lg:text-left">
+              <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+                Stop Chasing Deadlines.
+                <span className="block text-primary">Start Crushing Them, and More Of Them!</span>
+              </h1>
+              <p className="mt-6 text-lg text-muted-foreground sm:text-xl">
+                Inspector Route AI doesn't just optimize your drive—it prioritizes which stops matter most. Expiring inspections first. Clustered by proximity. Built around YOUR schedule and Flexible On The Go!
+              </p>
+            </div>
 
-            {/* Desktop: Image on right */}
-            <div className="hidden lg:flex justify-center">
+            {/* Desktop: Image on right with CTA below */}
+            <div className="hidden lg:flex flex-col items-center gap-6">
               <img 
                 src={heroInspector} 
                 alt="Field inspector using Inspector Route AI" 
                 className="rounded-2xl shadow-2xl max-w-md w-full object-cover"
               />
+              <div className="flex flex-col items-center gap-3">
+                <Button size="lg" asChild className="gap-2 text-base">
+                  <Link to="/pricing">
+                    Start Your 2-Week Trial
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+                <p className="text-sm text-muted-foreground">
+                  Cancel anytime. No hassle.
+                </p>
+              </div>
             </div>
           </div>
         </div>
