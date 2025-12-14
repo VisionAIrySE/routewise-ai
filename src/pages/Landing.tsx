@@ -117,7 +117,7 @@ export default function Landing() {
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10" />
         <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
-          <div className="grid gap-12 lg:grid-cols-2 lg:gap-16 items-center">
+          <div className="grid gap-12 lg:grid-cols-2 lg:gap-16 items-start">
             {/* Mobile: Image first */}
             <div className="lg:hidden flex justify-center">
               <img 
