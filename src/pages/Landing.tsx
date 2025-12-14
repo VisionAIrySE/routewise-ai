@@ -22,8 +22,8 @@ const features = [
   { icon: RefreshCw, title: 'Plans Change', description: 'Lockout? No-show? Reroute mid-day in 10 seconds.' },
   { icon: CalendarDays, title: 'Multi-Day Planning', description: '"Monday, Wednesday, Friday—6 hours each." Done.' },
   { icon: Anchor, title: 'Fixed Appointments', description: '"I have a 2pm in Redmond." Route builds around it.' },
-  { icon: Building2, title: 'Any Company', description: 'MIL, IPI, SIG, whatever. Combine them all.' },
-  { icon: Map, title: 'One Tap to Maps', description: 'Push your route to Google Maps and drive.' },
+  { icon: Building2, title: 'Any Company', description: 'Upload your CSV or XLS export with your inspections from any company, we combine them all!' },
+  { icon: Map, title: 'One Tap to Maps', description: 'One tap and you\'re following your routes on Maps!' },
 ];
 
 const steps = [
