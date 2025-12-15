@@ -11,6 +11,11 @@ import {
   X,
   Quote,
   Building2,
+  Car,
+  Smartphone,
+  Calendar,
+  MessageSquare,
+  Fuel,
 } from 'lucide-react';
 import heroInspector from '@/assets/hero-inspector.png';
 import chatScreenshot from '@/assets/chat-screenshot.png';
@@ -230,6 +235,117 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Feel the Pain Image Section */}
+      <section className="py-12 bg-background">
+        <div className="container mx-auto px-4 text-center">
+          <img
+            src="/images/inspector-planning-chaos.jpg"
+            alt="Inspector overwhelmed by manual route planning"
+            className="mx-auto rounded-xl shadow-lg max-w-3xl w-full"
+          />
+          <p className="mt-4 text-muted-foreground italic">
+            Sound familiar? There's a better way.
+          </p>
+        </div>
+      </section>
+
+      {/* More Power Under the Hood Section */}
+      <section className="py-16 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-4 text-foreground">
+            More Power Under the Hood
+          </h2>
+          <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
+            Features that make Inspector Route AI the complete solution for field inspectors
+          </p>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {/* Real-Time Traffic */}
+            <div className="bg-card p-6 rounded-xl border">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Car className="w-5 h-5 text-primary" />
+                </div>
+                <h3 className="font-semibold text-foreground">Real-Time Traffic</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Drive times based on current conditions—not guesses. Snow hits overnight?
+                Just tell Inspector Route AI to redo your route.
+              </p>
+            </div>
+
+            {/* Mobile PWA */}
+            <div className="bg-card p-6 rounded-xl border">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Smartphone className="w-5 h-5 text-primary" />
+                </div>
+                <h3 className="font-semibold text-foreground">Works on Your Phone</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Install as an app in 10 seconds. No app store required.
+                Full functionality in the field.
+              </p>
+            </div>
+
+            {/* Calendar View */}
+            <div className="bg-card p-6 rounded-xl border">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Calendar className="w-5 h-5 text-primary" />
+                </div>
+                <h3 className="font-semibold text-foreground">Calendar View</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                See your routes by day. Plan your week visually.
+                Click any date to view or edit that route.
+              </p>
+            </div>
+
+            {/* AI Q&A */}
+            <div className="bg-card p-6 rounded-xl border">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <MessageSquare className="w-5 h-5 text-primary" />
+                </div>
+                <h3 className="font-semibold text-foreground">Ask Your Pipeline</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                "How many in Bend?" "Any critical due tomorrow?"
+                Your AI actually knows your data.
+              </p>
+            </div>
+
+            {/* Fuel Estimates */}
+            <div className="bg-card p-6 rounded-xl border">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Fuel className="w-5 h-5 text-primary" />
+                </div>
+                <h3 className="font-semibold text-foreground">Fuel Cost Estimates</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Know what each route costs before you leave.
+                Set your MPG and fuel price in settings.
+              </p>
+            </div>
+
+            {/* Multi-Company */}
+            <div className="bg-card p-6 rounded-xl border">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Building2 className="w-5 h-5 text-primary" />
+                </div>
+                <h3 className="font-semibold text-foreground">Multi-Company Support</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Different companies, different inspections, different deadlines—One Platform.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* How It Works */}
       <section id="how-it-works" className="py-16 sm:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -374,7 +490,11 @@ export default function Landing() {
             One to two more inspections per day. Every day.
           </h2>
           <p className="mt-6 text-xl text-muted-foreground">
-            At $14-17 per stop, that's as much as $680 extra per month or more. Inspector Route AI is $17/month. The math is simple.
+            30 seconds to build a route vs 30 minutes of manual planning = 2 extra inspections per day.
+            At $14-17 per stop, that's $560-680 extra per month.
+          </p>
+          <p className="mt-4 text-lg text-muted-foreground">
+            Inspector Route AI is $24/month. One extra inspection completed pays for an entire month.
           </p>
           <div className="mt-10 flex flex-col items-center gap-4">
             <Button size="lg" asChild className="gap-2 text-base">
