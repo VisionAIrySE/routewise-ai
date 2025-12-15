@@ -97,10 +97,19 @@ export function RouteDetailModal({
   };
 
   const handleOpenInMaps = () => {
-    const addresses = route.stops_json.map((stop) => stop.address);
+    const stops = route.stops_json || [];
+    if (stops.length === 0) {
+      toast.error('No stops found in route');
+      return;
+    }
+    const addresses = stops.map((stop) => stop.address).filter(Boolean);
+    if (addresses.length === 0) {
+      toast.error('No addresses found in route stops');
+      return;
+    }
     const success = openInGoogleMaps(addresses);
     if (!success) {
-      toast.error('Could not generate maps link');
+      toast.error('Could not open Google Maps');
     }
   };
 
