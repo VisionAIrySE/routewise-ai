@@ -17,9 +17,9 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon.png", "robots.txt"],
       manifest: {
-        name: "RouteWise-AI",
-        short_name: "RouteWise",
-        description: "AI-powered field inspection route planning. Optimize routes, manage deadlines, track completion.",
+        name: "Inspector Route AI",
+        short_name: "Inspector Route",
+        description: "AI-powered field inspection route planning. Prioritize deadlines, optimize routes, adjust on the go.",
         theme_color: "#1e3a5f",
         background_color: "#ffffff",
         display: "standalone",
