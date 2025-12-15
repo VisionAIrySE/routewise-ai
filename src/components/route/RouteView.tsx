@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { RouteMap } from './RouteMap';
 import { RouteSummaryCard } from './RouteSummaryCard';
 import { RouteStopList } from './RouteStopList';
+import { DurationReviewModal } from './DurationReviewModal';
 import { generatePrintWindowHTML } from './PrintableRoute';
 import { Button } from '@/components/ui/button';
 import { Copy, Printer, Map, List, Save, Loader2, RefreshCw } from 'lucide-react';
@@ -24,6 +25,7 @@ export function RouteView({ routes: initialRoutes, homeBase, fullResponse, onSav
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
   const [markedDone, setMarkedDone] = useState<string[]>([]);
   const [isMarkingDone, setIsMarkingDone] = useState(false);
+  const [showDurationReview, setShowDurationReview] = useState(false);
   // Track duration overrides separately
   const [durationOverrides, setDurationOverrides] = useState<Record<string, number>>({});
   const { toast } = useToast();
@@ -83,17 +85,24 @@ export function RouteView({ routes: initialRoutes, homeBase, fullResponse, onSav
     }
   };
 
-  const handleSaveRoute = async () => {
-    // Prefer using the mutation directly, fallback to callback for backwards compatibility
+  // Opens the duration review modal before saving
+  const handleSaveClick = () => {
+    setShowDurationReview(true);
+  };
+
+  // Called when user confirms save in the duration review modal
+  const handleSaveConfirmed = async (updatedRoute: RouteDay) => {
+    setShowDurationReview(false);
+    
     try {
       if (onSaveRoute) {
-        await onSaveRoute(currentRoute);
+        await onSaveRoute(updatedRoute);
       } else {
-        await saveRoute({ route: currentRoute, fullResponse });
+        await saveRoute({ route: updatedRoute, fullResponse });
       }
       toast({
         title: 'Route Saved!',
-        description: `${currentRoute.day} route saved to calendar`
+        description: `${updatedRoute.day} route saved to calendar`
       });
     } catch (error) {
       toast({
@@ -102,6 +111,23 @@ export function RouteView({ routes: initialRoutes, homeBase, fullResponse, onSav
         variant: 'destructive'
       });
     }
+  };
+
+  // Called when user wants to recalculate with new durations
+  const handleDurationRecalculate = (updatedStops: RouteStop[]) => {
+    setShowDurationReview(false);
+    
+    // Update local duration overrides
+    const newOverrides: Record<string, number> = {};
+    updatedStops.forEach(stop => {
+      newOverrides[stop.id] = stop.duration_minutes;
+    });
+    setDurationOverrides(prev => ({ ...prev, ...newOverrides }));
+    
+    toast({
+      title: 'Durations Updated',
+      description: 'Route times have been updated. Save when ready.'
+    });
   };
 
   const handleMarkDone = async (stopId: string) => {
@@ -223,7 +249,7 @@ export function RouteView({ routes: initialRoutes, homeBase, fullResponse, onSav
           <Button 
             variant="default" 
             size="sm" 
-            onClick={handleSaveRoute}
+            onClick={handleSaveClick}
             disabled={isSaving}
           >
             {isSaving ? (
@@ -306,6 +332,15 @@ export function RouteView({ routes: initialRoutes, homeBase, fullResponse, onSav
           )}
         </div>
       </div>
+
+      {/* Duration Review Modal */}
+      <DurationReviewModal
+        isOpen={showDurationReview}
+        onClose={() => setShowDurationReview(false)}
+        route={currentRoute}
+        onSave={handleSaveConfirmed}
+        onRecalculate={handleDurationRecalculate}
+      />
     </div>
   );
 }
