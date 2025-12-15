@@ -1,4 +1,4 @@
-// Supabase client for RouteWise-AI
+// Supabase client for Inspector Route AI
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = "https://rsylbntdtflyoaxiwhvm.supabase.co";

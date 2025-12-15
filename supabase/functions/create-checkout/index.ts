@@ -136,7 +136,7 @@ serve(async (req) => {
       logStep("Found existing customer", { customerId });
     }
 
-    const origin = req.headers.get("origin") || "https://routewise-ai.lovable.app";
+    const origin = req.headers.get("origin") || "https://inspectorroute.com";
 
     // Create checkout session with trial period
     const session = await stripe.checkout.sessions.create({

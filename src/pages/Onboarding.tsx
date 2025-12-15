@@ -274,10 +274,10 @@ export default function Onboarding() {
           {step === 1 && (
             <div className="text-center space-y-6">
               <div className="w-20 h-20 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
-                <img src="/favicon.png" alt="RouteWise" className="w-12 h-12" />
+                <img src="/favicon.png" alt="Inspector Route AI" className="w-12 h-12" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-foreground">Welcome to RouteWise AI!</h1>
+                <h1 className="text-3xl font-bold text-foreground">Welcome to Inspector Route AI!</h1>
                 <p className="text-muted-foreground mt-3 text-lg">
                   Let's get you set up in about 2 minutes. We'll optimize your inspection routes so you can earn more with less driving.
                 </p>
@@ -526,7 +526,7 @@ export default function Onboarding() {
               <div>
                 <h1 className="text-3xl font-bold text-foreground">You're all set!</h1>
                 <p className="text-muted-foreground mt-3 text-lg">
-                  Welcome to RouteWise! Upload your first inspection CSV to see RouteWise in action.
+                  Welcome to Inspector Route AI! Upload your first inspection CSV to see it in action.
                 </p>
               </div>
               <div className="space-y-3">

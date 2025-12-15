@@ -49,8 +49,8 @@ export default function Pricing() {
       <header className="border-b border-border bg-background">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link to="/" className="flex items-center gap-3">
-            <img src="/favicon.png" alt="RouteWise AI" className="h-9 w-9 rounded-lg" />
-            <span className="text-xl font-bold text-foreground">RouteWise AI</span>
+            <img src="/favicon.png" alt="Inspector Route AI" className="h-9 w-9 rounded-lg" />
+            <span className="text-xl font-bold text-foreground">Inspector Route AI</span>
           </Link>
           
           <div className="flex items-center gap-3">
