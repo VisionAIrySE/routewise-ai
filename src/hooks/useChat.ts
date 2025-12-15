@@ -1,7 +1,8 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { RouteOptimizerResponse, isRouteOptimizerResponse } from '@/lib/routeUtils';
 import { supabase } from '@/integrations/supabase/client';
+import { format } from 'date-fns';
 
 export interface Message {
   id: string;
@@ -10,6 +11,21 @@ export interface Message {
   timestamp: Date;
   hasRouteAction?: boolean;
   routeResponse?: RouteOptimizerResponse;
+}
+
+export interface EditRouteContext {
+  action: string;
+  route_id: string;
+  route_date: string;
+  start_time?: string | null;
+  stops: any[];
+  total_hours?: number | null;
+  total_miles?: number | null;
+  zones?: string[] | null;
+  original_request?: string | null;
+  hours_requested?: number | null;
+  location_filter?: string | null;
+  exclusions?: string[] | null;
 }
 
 const INITIAL_MESSAGE: Message = {
@@ -32,6 +48,7 @@ export function useChat() {
   const [messages, setMessages] = useState<Message[]>([INITIAL_MESSAGE]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editContext, setEditContext] = useState<EditRouteContext | null>(null);
 
   // Persist session ID across page refreshes
   const sessionId = useMemo(() => {
@@ -40,6 +57,46 @@ export function useChat() {
     const newId = uuidv4();
     localStorage.setItem('route-session-id', newId);
     return newId;
+  }, []);
+
+  // Check for edit route context on mount
+  useEffect(() => {
+    const storedContext = sessionStorage.getItem('editRouteContext');
+    if (storedContext) {
+      try {
+        const context = JSON.parse(storedContext) as EditRouteContext;
+        sessionStorage.removeItem('editRouteContext');
+        setEditContext(context);
+
+        // Add edit context message to chat
+        const routeDate = format(new Date(context.route_date), 'EEEE, MMMM d, yyyy');
+        const stopsCount = context.stops?.length || 0;
+        const totalHours = context.total_hours?.toFixed(1) || '?';
+        const zones = context.zones?.join(', ') || 'N/A';
+
+        const editMessage: Message = {
+          id: uuidv4(),
+          role: 'assistant',
+          content: `**Editing Route for ${routeDate}**
+
+I've loaded your saved route with:
+• **${stopsCount} stops**
+• **${totalHours} hours** total time
+• **Zones:** ${zones}
+${context.start_time ? `• **Start time:** ${context.start_time}` : ''}
+
+What would you like to change? You can:
+- Add or remove stops
+- Change inspection durations
+- Adjust start time
+- Recalculate with current traffic`,
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, editMessage]);
+      } catch (e) {
+        console.error('Failed to parse edit route context:', e);
+      }
+    }
   }, []);
 
   const sendMessage = useCallback(async (content: string) => {
@@ -68,16 +125,24 @@ export function useChat() {
 
       const proxyUrl = 'https://rsylbntdtflyoaxiwhvm.supabase.co/functions/v1/n8n-proxy';
 
+      // Include edit context if present
+      const payload: any = {
+        message: content,
+        session_id: sessionId,
+      };
+
+      if (editContext) {
+        payload.editing_route = true;
+        payload.current_route = editContext;
+      }
+
       const response = await fetch(proxyUrl, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          message: content,
-          session_id: sessionId,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -126,14 +191,15 @@ export function useChat() {
     } finally {
       setIsLoading(false);
     }
-  }, [sessionId, isLoading]);
+  }, [sessionId, isLoading, editContext]);
 
   const clearSession = useCallback(() => {
     const newId = uuidv4();
     localStorage.setItem('route-session-id', newId);
     setMessages([INITIAL_MESSAGE]);
+    setEditContext(null);
     setError(null);
   }, []);
 
-  return { messages, isLoading, error, sendMessage, clearSession, sessionId };
+  return { messages, isLoading, error, sendMessage, clearSession, sessionId, editContext };
 }

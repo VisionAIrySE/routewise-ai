@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { Send, Bot, User, Sparkles, RotateCcw, Mic, MicOff } from 'lucide-react';
+import { Send, Bot, User, Sparkles, RotateCcw, Mic, MicOff, RefreshCw, Plus, Minus } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,7 +40,7 @@ interface SpeechRecognitionAlternative {
 }
 
 export function AIChatPanel({ open, onOpenChange }: AIChatPanelProps) {
-  const { messages, isLoading, sendMessage, clearSession } = useChat();
+  const { messages, isLoading, sendMessage, clearSession, editContext } = useChat();
   const [input, setInput] = useState('');
   const [isListening, setIsListening] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -350,6 +350,39 @@ export function AIChatPanel({ open, onOpenChange }: AIChatPanelProps) {
             )}
           </div>
         </ScrollArea>
+
+        {/* Quick Edit Actions - shown when editing a route */}
+        {editContext && (
+          <div className="flex gap-2 px-6 py-3 border-t border-border bg-muted/30 flex-wrap">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => sendMessage('Recalculate with current traffic')}
+              disabled={isLoading}
+            >
+              <RefreshCw className="h-4 w-4 mr-1" />
+              Refresh Times
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setInput('Add a stop near the existing route')}
+              disabled={isLoading}
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Add Stop
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setInput('Remove a stop from this route')}
+              disabled={isLoading}
+            >
+              <Minus className="h-4 w-4 mr-1" />
+              Remove Stop
+            </Button>
+          </div>
+        )}
 
         <div className="border-t border-border p-5 flex-shrink-0">
           <div className="flex gap-3">
