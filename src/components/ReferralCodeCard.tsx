@@ -26,13 +26,13 @@ export function ReferralCodeCard() {
   const handleShare = async () => {
     if (!profile?.referral_code) return;
     
-    const shareText = `Join RouteWise-AI and get 2 weeks free with my referral code: ${profile.referral_code}`;
+    const shareText = `Join Inspector Route AI and get 2 weeks free with my referral code: ${profile.referral_code}`;
     const shareUrl = `${window.location.origin}/signup?ref=${profile.referral_code}`;
     
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'RouteWise-AI Referral',
+          title: 'Inspector Route AI Referral',
           text: shareText,
           url: shareUrl,
         });
