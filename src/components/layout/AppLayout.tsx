@@ -13,6 +13,7 @@ import {
   Settings,
   Building2,
   MessageSquare,
+  Route,
 } from 'lucide-react';
 import { useAdmin } from '@/hooks/useAdmin';
 import { cn } from '@/lib/utils';
@@ -20,12 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { AIChatPanel } from '@/components/AIChatPanel';
 import { CSVUploadModal } from '@/components/CSVUploadModal';
-import { SavedRoutes } from '@/components/route/SavedRoutes';
-import { RouteDetailModal } from '@/components/calendar/RouteDetailModal';
 import { useAuth } from '@/contexts/AuthContext';
-import { useSavedRouteById } from '@/hooks/useSavedRoutes';
-import type { SavedRoute } from '@/lib/routeUtils';
-import type { SavedRouteDB } from '@/hooks/useSavedRoutes';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -39,27 +35,12 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [chatPanelOpen, setChatPanelOpen] = useState(false);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
-  const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
-  const [routeDetailOpen, setRouteDetailOpen] = useState(false);
-  
-  // Fetch the full route data when a route is selected
-  const { data: selectedRoute } = useSavedRouteById(selectedRouteId);
-
-  const handleSelectRoute = (route: SavedRoute) => {
-    setSelectedRouteId(route.id);
-    setRouteDetailOpen(true);
-  };
-
-  const handleEditRoute = (route: SavedRouteDB) => {
-    // Navigate to dashboard with route context for editing
-    navigate('/app', { state: { editRoute: route } });
-    setRouteDetailOpen(false);
-  };
 
   const navItems = [
     { name: 'Dashboard', href: '/app', icon: LayoutDashboard },
     { name: 'Calendar', href: '/app/calendar', icon: Calendar },
     { name: 'Inspections', href: '/app/inspections', icon: ClipboardList },
+    { name: 'Saved Routes', href: '/app/routes', icon: Route },
     { name: 'Team', href: '/app/team', icon: Users },
     { name: 'Settings', href: '/app/settings', icon: Settings },
     { name: 'Company Setup', href: '/app/company-setup', icon: Building2 },
@@ -83,7 +64,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           <span className="text-lg font-semibold text-foreground">Inspector Route AI</span>
         </div>
         
-        {/* Scrollable Content */}
+        {/* Navigation */}
         <div className="flex-1 overflow-y-auto">
           <nav className="flex flex-col gap-1 p-4">
             {navItems.map((item) => {
@@ -114,11 +95,6 @@ export function AppLayout({ children }: AppLayoutProps) {
               Upload CSV/XLS
             </Button>
           </nav>
-
-          {/* Saved Routes Section */}
-          <div className="border-t border-border pt-4 px-2 pb-4">
-            <SavedRoutes onSelectRoute={handleSelectRoute} />
-          </div>
         </div>
 
         {/* Fixed User Footer */}
@@ -255,14 +231,6 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       {/* CSV Upload Modal */}
       <CSVUploadModal open={uploadModalOpen} onOpenChange={setUploadModalOpen} />
-
-      {/* Route Detail Modal */}
-      <RouteDetailModal
-        route={selectedRoute || null}
-        open={routeDetailOpen}
-        onOpenChange={setRouteDetailOpen}
-        onEditRoute={handleEditRoute}
-      />
     </div>
   );
 }
