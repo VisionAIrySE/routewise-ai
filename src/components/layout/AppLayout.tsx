@@ -10,6 +10,7 @@ import {
   User,
   Users,
   Shield,
+  Settings,
 } from 'lucide-react';
 import { useAdmin } from '@/hooks/useAdmin';
 import { cn } from '@/lib/utils';
@@ -58,6 +59,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     { name: 'Calendar', href: '/app/calendar', icon: Calendar },
     { name: 'Inspections', href: '/app/inspections', icon: ClipboardList },
     { name: 'Team', href: '/app/team', icon: Users },
+    { name: 'Settings', href: '/app/settings', icon: Settings },
     ...(isAdmin ? [{ name: 'Admin', href: '/app/admin', icon: Shield }] : []),
   ];
 

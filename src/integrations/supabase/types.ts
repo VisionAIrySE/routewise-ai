@@ -82,6 +82,42 @@ export type Database = {
           },
         ]
       }
+      company_profiles: {
+        Row: {
+          appointment_type: string | null
+          code: string
+          column_mappings: Json | null
+          created_at: string | null
+          default_duration_minutes: number | null
+          high_value_duration_minutes: number | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          appointment_type?: string | null
+          code: string
+          column_mappings?: Json | null
+          created_at?: string | null
+          default_duration_minutes?: number | null
+          high_value_duration_minutes?: number | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          appointment_type?: string | null
+          code?: string
+          column_mappings?: Json | null
+          created_at?: string | null
+          default_duration_minutes?: number | null
+          high_value_duration_minutes?: number | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       csv_mappings: {
         Row: {
           column_mapping: Json
@@ -693,6 +729,93 @@ export type Database = {
           },
         ]
       }
+      user_company_settings: {
+        Row: {
+          company_code: string
+          created_at: string | null
+          duration_minutes: number | null
+          id: string
+          is_active: boolean | null
+          user_id: string | null
+        }
+        Insert: {
+          company_code: string
+          created_at?: string | null
+          duration_minutes?: number | null
+          id?: string
+          is_active?: boolean | null
+          user_id?: string | null
+        }
+        Update: {
+          company_code?: string
+          created_at?: string | null
+          duration_minutes?: number | null
+          id?: string
+          is_active?: boolean | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          created_at: string | null
+          default_available_hours: number | null
+          drive_time_buffer: number | null
+          fuel_cost_per_gallon: number | null
+          home_address: string
+          home_city: string | null
+          home_lat: number | null
+          home_lng: number | null
+          home_state: string | null
+          home_zip: string | null
+          id: string
+          max_drive_minutes: number | null
+          preferred_end_time: string | null
+          preferred_start_time: string | null
+          updated_at: string | null
+          user_id: string | null
+          vehicle_mpg: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          default_available_hours?: number | null
+          drive_time_buffer?: number | null
+          fuel_cost_per_gallon?: number | null
+          home_address: string
+          home_city?: string | null
+          home_lat?: number | null
+          home_lng?: number | null
+          home_state?: string | null
+          home_zip?: string | null
+          id?: string
+          max_drive_minutes?: number | null
+          preferred_end_time?: string | null
+          preferred_start_time?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          vehicle_mpg?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          default_available_hours?: number | null
+          drive_time_buffer?: number | null
+          fuel_cost_per_gallon?: number | null
+          home_address?: string
+          home_city?: string | null
+          home_lat?: number | null
+          home_lng?: number | null
+          home_state?: string | null
+          home_zip?: string | null
+          id?: string
+          max_drive_minutes?: number | null
+          preferred_end_time?: string | null
+          preferred_start_time?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          vehicle_mpg?: number | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -719,6 +842,42 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_inspection_duration: {
+        Args: {
+          p_company_code: string
+          p_is_high_value?: boolean
+          p_user_id: string
+        }
+        Returns: number
+      }
+      get_or_create_user_profile: {
+        Args: { p_user_id: string }
+        Returns: {
+          created_at: string | null
+          default_available_hours: number | null
+          drive_time_buffer: number | null
+          fuel_cost_per_gallon: number | null
+          home_address: string
+          home_city: string | null
+          home_lat: number | null
+          home_lng: number | null
+          home_state: string | null
+          home_zip: string | null
+          id: string
+          max_drive_minutes: number | null
+          preferred_end_time: string | null
+          preferred_start_time: string | null
+          updated_at: string | null
+          user_id: string | null
+          vehicle_mpg: number | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "user_profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       get_user_team: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
