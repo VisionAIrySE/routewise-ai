@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import type { UserProfileSettings } from '@/hooks/useSettings';
 
+const GOOGLE_MAPS_API_KEY = 'AIzaSyDFXzz7nGa1bbMky3aZVfvfwikdGhrRRTQ';
+
 interface Props {
   profile: UserProfileSettings | null | undefined;
   onSave: (data: Partial<UserProfileSettings>) => Promise<unknown>;
@@ -33,6 +35,29 @@ export function HomeBaseSection({ profile, onSave, isSaving }: Props) {
   const [zip, setZip] = useState('');
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [isGeocoding, setIsGeocoding] = useState(false);
+  const [isGoogleLoaded, setIsGoogleLoaded] = useState(false);
+
+  // Load Google Maps script
+  useEffect(() => {
+    if ((window as any).google?.maps?.Geocoder) {
+      setIsGoogleLoaded(true);
+      return;
+    }
+
+    const existingScript = document.querySelector(`script[src*="maps.googleapis.com"]`);
+    if (existingScript) {
+      existingScript.addEventListener('load', () => setIsGoogleLoaded(true));
+      if ((window as any).google?.maps) setIsGoogleLoaded(true);
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
+    script.async = true;
+    script.defer = true;
+    script.onload = () => setIsGoogleLoaded(true);
+    document.head.appendChild(script);
+  }, []);
 
   useEffect(() => {
     if (profile) {
@@ -52,31 +77,29 @@ export function HomeBaseSection({ profile, onSave, isSaving }: Props) {
       return;
     }
 
+    if (!isGoogleLoaded || !(window as any).google?.maps?.Geocoder) {
+      toast.error('Maps is still loading, please try again');
+      return;
+    }
+
     setIsGeocoding(true);
     try {
       const fullAddress = `${address}, ${city}, ${state} ${zip}`;
+      const geocoder = new (window as any).google.maps.Geocoder();
       
-      // Use Google Maps Geocoding API
-      const geocoder = new google.maps.Geocoder();
-      const result = await new Promise<google.maps.GeocoderResult[]>((resolve, reject) => {
-        geocoder.geocode({ address: fullAddress }, (results, status) => {
-          if (status === 'OK' && results) {
-            resolve(results);
-          } else {
-            reject(new Error(`Geocoding failed: ${status}`));
-          }
-        });
+      geocoder.geocode({ address: fullAddress }, (results: any[], status: string) => {
+        setIsGeocoding(false);
+        if (status === 'OK' && results && results[0]) {
+          const location = results[0].geometry.location;
+          setCoords({ lat: location.lat(), lng: location.lng() });
+          toast.success('Location found!');
+        } else {
+          toast.error('Could not find location. Please check the address.');
+        }
       });
-
-      if (result.length > 0) {
-        const location = result[0].geometry.location;
-        setCoords({ lat: location.lat(), lng: location.lng() });
-        toast.success('Location found!');
-      }
     } catch (error) {
       console.error('Geocoding error:', error);
       toast.error('Could not find location. Please check the address.');
-    } finally {
       setIsGeocoding(false);
     }
   };
