@@ -241,10 +241,10 @@ export default function Landing() {
           <img
             src="/images/inspector-planning-chaos.jpg"
             alt="Inspector overwhelmed by manual route planning"
-            className="mx-auto rounded-xl shadow-lg max-w-3xl w-full"
+            className="mx-auto rounded-xl shadow-2xl max-w-3xl w-full drop-shadow-[0_25px_50px_rgba(0,0,0,0.3)]"
           />
-          <p className="mt-4 text-muted-foreground italic">
-            Sound familiar? There's a better way.
+          <p className="mt-6 text-2xl font-bold text-foreground">
+            There's a better way.
           </p>
         </div>
       </section>
@@ -297,8 +297,8 @@ export default function Landing() {
                 <h3 className="font-semibold text-foreground">Calendar View</h3>
               </div>
               <p className="text-sm text-muted-foreground">
-                See your routes by day. Plan your week visually.
-                Click any date to view or edit that route.
+                See your routes by day. Plan your week visually around set appointments.
+                Click any date to view or edit that route while in the field.
               </p>
             </div>
 
@@ -311,7 +311,7 @@ export default function Landing() {
                 <h3 className="font-semibold text-foreground">Ask Your Pipeline</h3>
               </div>
               <p className="text-sm text-muted-foreground">
-                "How many in Bend?" "Any critical due tomorrow?"
+                "How many inspections in Cherry Creek do I have?" "Any critical due tomorrow?"
                 Your AI actually knows your data.
               </p>
             </div>
@@ -339,7 +339,7 @@ export default function Landing() {
                 <h3 className="font-semibold text-foreground">Multi-Company Support</h3>
               </div>
               <p className="text-sm text-muted-foreground">
-                Different companies, different inspections, different deadlines—One Platform.
+                Different companies, different inspections, different deadlines—<strong className="text-foreground">One Platform.</strong>
               </p>
             </div>
           </div>
@@ -490,11 +490,10 @@ export default function Landing() {
             One to two more inspections per day. Every day.
           </h2>
           <p className="mt-6 text-xl text-muted-foreground">
-            30 seconds to build a route vs 30 minutes of manual planning = 2 extra inspections per day.
-            At $14-17 per stop, that's $560-680 extra per month.
+            <strong className="text-foreground">30 seconds vs 30 minutes.</strong> That's the difference between manual planning and Inspector Route AI. The time you save means 2 extra inspections per day. That's $560-680 extra each month or more.
           </p>
-          <p className="mt-4 text-lg text-muted-foreground">
-            Inspector Route AI is $24/month. One extra inspection completed pays for an entire month.
+          <p className="mt-4 text-lg text-foreground font-medium">
+            The cost? $24/month. Paid for on Day 1.
           </p>
           <div className="mt-10 flex flex-col items-center gap-4">
             <Button size="lg" asChild className="gap-2 text-base">
