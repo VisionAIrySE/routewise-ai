@@ -1,0 +1,1 @@
+UPDATE company_profiles SET name = 'Information Providers, Inc.' WHERE code = 'IPI';
