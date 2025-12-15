@@ -4,7 +4,6 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { toast } from 'sonner';
 import type { UserProfileSettings } from '@/hooks/useSettings';
 
@@ -19,7 +18,6 @@ export function WorkPreferencesSection({ profile, onSave, isSaving }: Props) {
   const [startTime, setStartTime] = useState('08:00');
   const [endTime, setEndTime] = useState('17:00');
   const [maxDrive, setMaxDrive] = useState(90);
-  const [buffer, setBuffer] = useState(0);
 
   useEffect(() => {
     if (profile) {
@@ -27,7 +25,6 @@ export function WorkPreferencesSection({ profile, onSave, isSaving }: Props) {
       setStartTime(profile.preferred_start_time || '08:00');
       setEndTime(profile.preferred_end_time || '17:00');
       setMaxDrive(profile.max_drive_minutes || 90);
-      setBuffer((profile.drive_time_buffer || 0) * 100);
     }
   }, [profile]);
 
@@ -38,7 +35,6 @@ export function WorkPreferencesSection({ profile, onSave, isSaving }: Props) {
         preferred_start_time: startTime,
         preferred_end_time: endTime,
         max_drive_minutes: maxDrive,
-        drive_time_buffer: buffer / 100,
       });
       toast.success('Work preferences saved!');
     } catch (error) {
@@ -98,21 +94,9 @@ export function WorkPreferencesSection({ profile, onSave, isSaving }: Props) {
             onChange={(e) => setMaxDrive(parseInt(e.target.value) || 90)}
           />
         </div>
-        <div>
-          <Label>Weather/Road Buffer (%)</Label>
-          <div className="flex items-center gap-4 mt-2">
-            <Slider
-              value={[buffer]}
-              onValueChange={([v]) => setBuffer(v)}
-              min={0}
-              max={30}
-              step={5}
-              className="flex-1"
-            />
-            <span className="w-12 text-right text-sm font-medium">{buffer}%</span>
-          </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            Add 10-20% for rain, snow, or construction
+        <div className="p-3 bg-muted/50 rounded-lg">
+          <p className="text-sm text-muted-foreground">
+            <span className="font-medium text-foreground">Live Traffic Enabled:</span> Drive times now automatically include real-time traffic conditions from Google Maps.
           </p>
         </div>
       </CardContent>

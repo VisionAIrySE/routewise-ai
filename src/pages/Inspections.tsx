@@ -16,7 +16,7 @@ const Inspections = () => {
   const [search, setSearch] = useState('');
   const [companyFilter, setCompanyFilter] = useState<Company | 'ALL'>('ALL');
   const [urgencyFilter, setUrgencyFilter] = useState<UrgencyTier | 'ALL'>('ALL');
-  const [statusFilter, setStatusFilter] = useState<InspectionStatus | 'ALL'>('ALL');
+  const [statusFilter, setStatusFilter] = useState<InspectionStatus | 'ALL'>('PENDING');
 
   const { data: inspections, isLoading, error } = useInspections({
     company: companyFilter,
