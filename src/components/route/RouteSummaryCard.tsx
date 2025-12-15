@@ -1,5 +1,6 @@
-import { Clock, Car, MapPin, Fuel } from 'lucide-react';
+import { Clock, Car, MapPin, Fuel, Radio } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 interface RouteSummaryProps {
   day: string;
@@ -11,6 +12,7 @@ interface RouteSummaryProps {
   totalMiles: number;
   estimatedFuel: number;
   zones: string[];
+  warnings?: string[];
 }
 
 export function RouteSummaryCard({
@@ -22,13 +24,24 @@ export function RouteSummaryCard({
   inspectionHours,
   totalMiles,
   estimatedFuel,
-  zones
+  zones,
+  warnings = []
 }: RouteSummaryProps) {
+  const hasLiveTraffic = warnings.some(w => w.toLowerCase().includes('traffic'));
+
   return (
     <Card className="bg-card border border-border">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center justify-between">
-          <span className="text-lg font-semibold">{day}</span>
+          <div className="flex items-center gap-2">
+            <span className="text-lg font-semibold">{day}</span>
+            {hasLiveTraffic && (
+              <Badge variant="secondary" className="text-xs flex items-center gap-1">
+                <Radio className="h-3 w-3" />
+                Live Traffic
+              </Badge>
+            )}
+          </div>
           <span className="text-sm font-normal text-muted-foreground">{date}</span>
         </CardTitle>
       </CardHeader>
