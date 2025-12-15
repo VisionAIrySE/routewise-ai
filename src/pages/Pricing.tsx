@@ -7,7 +7,7 @@ const plans = [
   {
     name: 'Individual',
     icon: User,
-    price: 17,
+    price: 24,
     priceId: 'price_1RTJPjP4yLzxS46bqdJwbYSV',
     description: 'Perfect for solo field inspectors',
     features: [
@@ -24,7 +24,7 @@ const plans = [
   {
     name: 'Team',
     icon: Users,
-    price: 15,
+    price: 21,
     priceId: 'price_1RTJRgP4yLzxS46byVtdR7yg',
     perSeat: true,
     description: 'For inspection companies with multiple inspectors',
