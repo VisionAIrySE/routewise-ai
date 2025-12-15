@@ -12,6 +12,7 @@ import {
   Shield,
   Settings,
   Building2,
+  MessageSquare,
 } from 'lucide-react';
 import { useAdmin } from '@/hooks/useAdmin';
 import { cn } from '@/lib/utils';
@@ -239,6 +240,15 @@ export function AppLayout({ children }: AppLayoutProps) {
           {children}
         </div>
       </main>
+
+      {/* Mobile Floating AI Chat Button */}
+      <Button
+        className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg lg:hidden"
+        onClick={() => setChatPanelOpen(true)}
+        aria-label="Open AI Chat"
+      >
+        <MessageSquare className="h-6 w-6" />
+      </Button>
 
       {/* AI Chat Panel */}
       <AIChatPanel open={chatPanelOpen} onOpenChange={setChatPanelOpen} />
