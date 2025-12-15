@@ -11,6 +11,7 @@ import {
   Users,
   Shield,
   Settings,
+  Building2,
 } from 'lucide-react';
 import { useAdmin } from '@/hooks/useAdmin';
 import { cn } from '@/lib/utils';
@@ -60,6 +61,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     { name: 'Inspections', href: '/app/inspections', icon: ClipboardList },
     { name: 'Team', href: '/app/team', icon: Users },
     { name: 'Settings', href: '/app/settings', icon: Settings },
+    { name: 'Company Setup', href: '/app/company-setup', icon: Building2 },
     ...(isAdmin ? [{ name: 'Admin', href: '/app/admin', icon: Shield }] : []),
   ];
 

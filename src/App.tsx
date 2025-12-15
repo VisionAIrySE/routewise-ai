@@ -19,6 +19,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Pricing from "./pages/Pricing";
 import Onboarding from "./pages/Onboarding";
+import CompanySetup from "./pages/CompanySetup";
 import NotFound from "./pages/NotFound";
 import AdminOverview from "./pages/admin/AdminOverview";
 import AdminUsers from "./pages/admin/AdminUsers";
@@ -80,6 +81,11 @@ const App = () => (
             <Route path="/app/settings" element={
               <ProtectedRoute>
                 <AppLayout><Settings /></AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/app/company-setup" element={
+              <ProtectedRoute>
+                <AppLayout><CompanySetup /></AppLayout>
               </ProtectedRoute>
             } />
             
