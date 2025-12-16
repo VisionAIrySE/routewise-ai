@@ -16,7 +16,7 @@ function mapDbToInspection(row: any): Inspection {
   const dueDate = row.due_date;
   const daysRemaining = dueDate 
     ? differenceInDays(parseISO(dueDate), new Date()) 
-    : 0;
+    : 999;
   
   return {
     id: row.id,

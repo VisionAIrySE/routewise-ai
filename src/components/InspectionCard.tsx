@@ -13,6 +13,7 @@ export function InspectionCard({ inspection, onClick }: InspectionCardProps) {
   const urgencyColor = getUrgencyColor(inspection.urgencyTier);
   
   const formatDueDate = () => {
+    if (inspection.daysRemaining === 999) return 'No due date';
     if (inspection.daysRemaining === 0) return 'Due TODAY';
     if (inspection.daysRemaining < 0) return `${Math.abs(inspection.daysRemaining)} days overdue`;
     if (!inspection.dueDate) return 'No due date';
@@ -74,10 +75,11 @@ export function InspectionCard({ inspection, onClick }: InspectionCardProps) {
           </div>
           <p className={cn(
             'text-xs font-medium',
-            inspection.daysRemaining <= 0 && 'text-critical',
-            inspection.daysRemaining > 0 && inspection.daysRemaining <= 3 && 'text-urgent',
-            inspection.daysRemaining > 3 && inspection.daysRemaining <= 7 && 'text-soon',
-            inspection.daysRemaining > 7 && 'text-normal'
+            inspection.daysRemaining === 999 && 'text-muted-foreground',
+            inspection.daysRemaining !== 999 && inspection.daysRemaining <= 0 && 'text-critical',
+            inspection.daysRemaining !== 999 && inspection.daysRemaining > 0 && inspection.daysRemaining <= 3 && 'text-urgent',
+            inspection.daysRemaining !== 999 && inspection.daysRemaining > 3 && inspection.daysRemaining <= 7 && 'text-soon',
+            inspection.daysRemaining !== 999 && inspection.daysRemaining > 7 && 'text-normal'
           )}>
             {formatDueDate()}
           </p>
