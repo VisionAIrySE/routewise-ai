@@ -40,6 +40,7 @@ const inspectorRouteFeatures = [
   'Expiring inspections surfaced first',
   'Stops clustered by neighborhood',
   'Your anchored appointments respected',
+  'Call ahead reminders for routing',
   'Route adapts to YOUR available hours and individual inspection times',
   'Adjust your route on the fly in the field',
 ];
