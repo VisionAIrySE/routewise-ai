@@ -124,9 +124,25 @@ export function CSVUploadModal({ open, onOpenChange, onUploadComplete }: CSVUplo
 
       // Check if reconciliation is needed
       if (uploadResult.needs_reconciliation && uploadResult.missing_inspections && uploadResult.missing_inspections.length > 0) {
-        setMissingInspections(uploadResult.missing_inspections);
-        setReconciliationCompany(companyDetected);
-        setShowReconciliation(true);
+        // Filter out inspections that are already marked as COMPLETED in the database
+        const missingIds = uploadResult.missing_inspections.map(i => i.id);
+        const { data: completedInDb } = await supabase
+          .from('inspections')
+          .select('id')
+          .in('id', missingIds)
+          .eq('status', 'COMPLETED');
+        
+        const completedIds = new Set(completedInDb?.map(i => i.id) || []);
+        const filteredMissing = uploadResult.missing_inspections.filter(i => !completedIds.has(i.id));
+        
+        if (filteredMissing.length > 0) {
+          setMissingInspections(filteredMissing);
+          setReconciliationCompany(companyDetected);
+          setShowReconciliation(true);
+        } else {
+          onOpenChange(false);
+          onUploadComplete?.();
+        }
       } else {
         onOpenChange(false);
         onUploadComplete?.();
