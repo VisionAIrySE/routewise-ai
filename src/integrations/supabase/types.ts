@@ -86,6 +86,7 @@ export type Database = {
         Row: {
           appointment_type: string | null
           code: string
+          column_fingerprint: string[] | null
           column_mappings: Json | null
           created_at: string | null
           default_duration_minutes: number | null
@@ -97,6 +98,7 @@ export type Database = {
         Insert: {
           appointment_type?: string | null
           code: string
+          column_fingerprint?: string[] | null
           column_mappings?: Json | null
           created_at?: string | null
           default_duration_minutes?: number | null
@@ -108,6 +110,7 @@ export type Database = {
         Update: {
           appointment_type?: string | null
           code?: string
+          column_fingerprint?: string[] | null
           column_mappings?: Json | null
           created_at?: string | null
           default_duration_minutes?: number | null
