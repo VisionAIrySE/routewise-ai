@@ -115,6 +115,9 @@ export default function Login() {
                 Sign up
               </Link>
             </p>
+            <Link to="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              ← Back to Website
+            </Link>
           </CardFooter>
         </form>
       </Card>

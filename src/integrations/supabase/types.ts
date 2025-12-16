@@ -164,6 +164,7 @@ export type Database = {
       }
       inspections: {
         Row: {
+          appointment_time: string | null
           city: string
           claim_number: string | null
           company_name: string
@@ -171,6 +172,7 @@ export type Database = {
           created_at: string | null
           days_remaining: number | null
           due_date: string | null
+          duration_min: number | null
           fixed_appointment: string | null
           full_address: string | null
           geocode_status: string | null
@@ -181,6 +183,7 @@ export type Database = {
           lat: number | null
           lng: number | null
           needs_call_ahead: boolean | null
+          notes: string | null
           state: string | null
           status: string | null
           street: string
@@ -191,6 +194,7 @@ export type Database = {
           zip: string
         }
         Insert: {
+          appointment_time?: string | null
           city: string
           claim_number?: string | null
           company_name: string
@@ -198,6 +202,7 @@ export type Database = {
           created_at?: string | null
           days_remaining?: number | null
           due_date?: string | null
+          duration_min?: number | null
           fixed_appointment?: string | null
           full_address?: string | null
           geocode_status?: string | null
@@ -208,6 +213,7 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           needs_call_ahead?: boolean | null
+          notes?: string | null
           state?: string | null
           status?: string | null
           street: string
@@ -218,6 +224,7 @@ export type Database = {
           zip: string
         }
         Update: {
+          appointment_time?: string | null
           city?: string
           claim_number?: string | null
           company_name?: string
@@ -225,6 +232,7 @@ export type Database = {
           created_at?: string | null
           days_remaining?: number | null
           due_date?: string | null
+          duration_min?: number | null
           fixed_appointment?: string | null
           full_address?: string | null
           geocode_status?: string | null
@@ -235,6 +243,7 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           needs_call_ahead?: boolean | null
+          notes?: string | null
           state?: string | null
           status?: string | null
           street?: string
