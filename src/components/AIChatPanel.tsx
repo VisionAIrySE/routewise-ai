@@ -44,9 +44,11 @@ export function AIChatPanel({ open, onOpenChange }: AIChatPanelProps) {
   const [input, setInput] = useState('');
   const [isListening, setIsListening] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const lastAssistantRef = useRef<HTMLDivElement>(null);
+  const lastUserMessageRef = useRef<HTMLDivElement>(null);
+  const thinkingDotsRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const lastAssistantIdRef = useRef<string | null>(null);
+  const prevIsLoadingRef = useRef<boolean>(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -62,16 +64,35 @@ export function AIChatPanel({ open, onOpenChange }: AIChatPanelProps) {
     [messages]
   );
 
-  // Scroll to show the top of the latest assistant message only when a NEW one arrives
+  // Find the last user message
+  const lastUserMessage = useMemo(() => 
+    [...messages].reverse().find(m => m.role === 'user'),
+    [messages]
+  );
+
+  // Scroll to show thinking dots when loading starts
+  useEffect(() => {
+    if (isLoading && !prevIsLoadingRef.current) {
+      // Just started loading - scroll to show thinking dots
+      setTimeout(() => {
+        if (thinkingDotsRef.current) {
+          thinkingDotsRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
+      }, 50);
+    }
+    prevIsLoadingRef.current = isLoading;
+  }, [isLoading]);
+
+  // Scroll to show last user message at top when a NEW assistant response arrives
   useEffect(() => {
     if (lastAssistantMessage && lastAssistantMessage.id !== lastAssistantIdRef.current) {
       lastAssistantIdRef.current = lastAssistantMessage.id;
       // Small delay to ensure DOM is updated
       setTimeout(() => {
-        if (lastAssistantRef.current) {
-          lastAssistantRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (lastUserMessageRef.current) {
+          lastUserMessageRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
-      }, 50);
+      }, 100);
     }
   }, [lastAssistantMessage]);
 
@@ -278,14 +299,14 @@ export function AIChatPanel({ open, onOpenChange }: AIChatPanelProps) {
               </div>
             )}
             {messages.map((message, index) => {
-              // Find if this is the last assistant message
-              const isLastAssistant = message.role === 'assistant' && 
-                !messages.slice(index + 1).some(m => m.role === 'assistant');
+              // Find if this is the last user message
+              const isLastUser = message.role === 'user' && 
+                !messages.slice(index + 1).some(m => m.role === 'user');
               
               return (
               <div
                 key={message.id}
-                ref={isLastAssistant ? lastAssistantRef : null}
+                ref={isLastUser ? lastUserMessageRef : null}
                 className={cn(
                   'flex gap-4',
                   message.role === 'user' ? 'flex-row-reverse' : 'flex-row',
@@ -337,7 +358,7 @@ export function AIChatPanel({ open, onOpenChange }: AIChatPanelProps) {
               );
             })}
             {isLoading && (
-              <div className="flex gap-4">
+              <div className="flex gap-4" ref={thinkingDotsRef}>
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
                   <Bot className="h-5 w-5 text-muted-foreground" />
                 </div>
