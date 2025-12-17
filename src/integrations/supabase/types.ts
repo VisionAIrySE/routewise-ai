@@ -746,6 +746,7 @@ export type Database = {
           company_code: string
           created_at: string | null
           duration_minutes: number | null
+          high_value_duration_minutes: number | null
           id: string
           is_active: boolean | null
           user_id: string | null
@@ -754,6 +755,7 @@ export type Database = {
           company_code: string
           created_at?: string | null
           duration_minutes?: number | null
+          high_value_duration_minutes?: number | null
           id?: string
           is_active?: boolean | null
           user_id?: string | null
@@ -762,6 +764,7 @@ export type Database = {
           company_code?: string
           created_at?: string | null
           duration_minutes?: number | null
+          high_value_duration_minutes?: number | null
           id?: string
           is_active?: boolean | null
           user_id?: string | null
@@ -772,7 +775,6 @@ export type Database = {
         Row: {
           created_at: string | null
           default_available_hours: number | null
-          drive_time_buffer: number | null
           fuel_cost_per_gallon: number | null
           home_address: string
           home_city: string | null
@@ -791,7 +793,6 @@ export type Database = {
         Insert: {
           created_at?: string | null
           default_available_hours?: number | null
-          drive_time_buffer?: number | null
           fuel_cost_per_gallon?: number | null
           home_address: string
           home_city?: string | null
@@ -810,7 +811,6 @@ export type Database = {
         Update: {
           created_at?: string | null
           default_available_hours?: number | null
-          drive_time_buffer?: number | null
           fuel_cost_per_gallon?: number | null
           home_address?: string
           home_city?: string | null
@@ -854,6 +854,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      enable_company_for_user: {
+        Args: {
+          p_company_code: string
+          p_custom_duration?: number
+          p_custom_high_value?: number
+          p_user_id: string
+        }
+        Returns: {
+          company_code: string
+          created_at: string | null
+          duration_minutes: number | null
+          high_value_duration_minutes: number | null
+          id: string
+          is_active: boolean | null
+          user_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "user_company_settings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       get_inspection_duration: {
         Args: {
           p_company_code: string
@@ -867,7 +890,6 @@ export type Database = {
         Returns: {
           created_at: string | null
           default_available_hours: number | null
-          drive_time_buffer: number | null
           fuel_cost_per_gallon: number | null
           home_address: string
           home_city: string | null
