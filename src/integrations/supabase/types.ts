@@ -165,12 +165,14 @@ export type Database = {
       inspections: {
         Row: {
           appointment_time: string | null
+          appointment_type: string | null
           city: string
           claim_number: string | null
           company_name: string
           completed_date: string | null
           created_at: string | null
           days_remaining: number | null
+          description: string | null
           due_date: string | null
           duration_min: number | null
           fixed_appointment: string | null
@@ -180,6 +182,7 @@ export type Database = {
           id: string
           inspection_type: string | null
           insured_name: string | null
+          is_manual: boolean | null
           lat: number | null
           lng: number | null
           needs_call_ahead: boolean | null
@@ -195,12 +198,14 @@ export type Database = {
         }
         Insert: {
           appointment_time?: string | null
+          appointment_type?: string | null
           city: string
           claim_number?: string | null
           company_name: string
           completed_date?: string | null
           created_at?: string | null
           days_remaining?: number | null
+          description?: string | null
           due_date?: string | null
           duration_min?: number | null
           fixed_appointment?: string | null
@@ -210,6 +215,7 @@ export type Database = {
           id?: string
           inspection_type?: string | null
           insured_name?: string | null
+          is_manual?: boolean | null
           lat?: number | null
           lng?: number | null
           needs_call_ahead?: boolean | null
@@ -225,12 +231,14 @@ export type Database = {
         }
         Update: {
           appointment_time?: string | null
+          appointment_type?: string | null
           city?: string
           claim_number?: string | null
           company_name?: string
           completed_date?: string | null
           created_at?: string | null
           days_remaining?: number | null
+          description?: string | null
           due_date?: string | null
           duration_min?: number | null
           fixed_appointment?: string | null
@@ -240,6 +248,7 @@ export type Database = {
           id?: string
           inspection_type?: string | null
           insured_name?: string | null
+          is_manual?: boolean | null
           lat?: number | null
           lng?: number | null
           needs_call_ahead?: boolean | null
