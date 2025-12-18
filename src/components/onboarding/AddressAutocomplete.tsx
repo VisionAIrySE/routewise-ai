@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MapPin, Loader2 } from 'lucide-react';
 
-const GOOGLE_MAPS_API_KEY = 'AIzaSyDFXzz7nGa1bbMky3aZVfvfwikdGhrRRTQ';
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 
 interface AddressResult {
   address: string;
