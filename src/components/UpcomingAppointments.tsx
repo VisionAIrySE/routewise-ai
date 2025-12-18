@@ -1,7 +1,8 @@
-import { Calendar, Clock, MapPin, Building2, Loader2 } from 'lucide-react';
+import { Calendar, Clock, MapPin, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useUpcomingAppointments } from '@/hooks/useInspections';
 import { format, isToday, isTomorrow, differenceInDays } from 'date-fns';
+import { parseLocalDate, isUpcomingDate } from '@/lib/dateUtils';
 
 export function UpcomingAppointments() {
   const { data: appointments, isLoading } = useUpcomingAppointments();
@@ -16,20 +17,39 @@ export function UpcomingAppointments() {
     );
   }
 
+  // Filter to only show upcoming appointments (not past ones)
+  const upcomingAppointments = (appointments || []).filter(appt => 
+    appt.fixedAppointment && isUpcomingDate(appt.fixedAppointment)
+  );
+
   const formatAppointmentDate = (dateStr: string) => {
-    const date = new Date(dateStr);
+    // Parse the date safely in local timezone
+    const date = parseLocalDate(dateStr);
+    if (!date) return 'Unknown';
+    
     if (isToday(date)) return 'Today';
     if (isTomorrow(date)) return 'Tomorrow';
-    const days = differenceInDays(date, new Date());
-    if (days < 7) return format(date, 'EEEE');
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const days = differenceInDays(date, today);
+    if (days < 7 && days >= 0) return format(date, 'EEEE');
     return format(date, 'MMM d');
   };
 
   const getDateBadgeColor = (dateStr: string) => {
-    const date = new Date(dateStr);
+    const date = parseLocalDate(dateStr);
+    if (!date) return 'bg-muted text-muted-foreground';
+    
     if (isToday(date)) return 'bg-critical/10 text-critical border-critical/20';
     if (isTomorrow(date)) return 'bg-urgent/10 text-urgent border-urgent/20';
     return 'bg-muted text-muted-foreground';
+  };
+
+  const formatAppointmentTime = (dateStr: string) => {
+    const date = parseLocalDate(dateStr);
+    if (!date) return '';
+    return format(date, 'h:mm a');
   };
 
   return (
@@ -41,19 +61,19 @@ export function UpcomingAppointments() {
         <div>
           <h3 className="font-semibold text-foreground">Scheduled Appointments</h3>
           <p className="text-sm text-muted-foreground">
-            {appointments?.length || 0} upcoming
+            {upcomingAppointments.length} upcoming
           </p>
         </div>
       </div>
 
-      {!appointments || appointments.length === 0 ? (
+      {upcomingAppointments.length === 0 ? (
         <div className="text-center py-6 text-muted-foreground">
           <Calendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
           <p className="text-sm">No scheduled appointments</p>
         </div>
       ) : (
         <div className="space-y-3">
-          {appointments.slice(0, 4).map((appt) => (
+          {upcomingAppointments.slice(0, 4).map((appt) => (
             <div
               key={appt.id}
               className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 border border-border/50"
@@ -68,7 +88,7 @@ export function UpcomingAppointments() {
                   </Badge>
                   <span className="flex items-center gap-1 text-xs font-medium text-fixed">
                     <Clock className="h-3 w-3" />
-                    {format(new Date(appt.fixedAppointment!), 'h:mm a')}
+                    {formatAppointmentTime(appt.fixedAppointment!)}
                   </span>
                 </div>
                 <p className="text-sm font-medium text-foreground truncate">
@@ -86,9 +106,9 @@ export function UpcomingAppointments() {
               </div>
             </div>
           ))}
-          {appointments.length > 4 && (
+          {upcomingAppointments.length > 4 && (
             <p className="text-xs text-muted-foreground text-center pt-1">
-              +{appointments.length - 4} more appointments
+              +{upcomingAppointments.length - 4} more appointments
             </p>
           )}
         </div>

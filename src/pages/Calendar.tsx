@@ -10,6 +10,7 @@ import { RouteDetailModal } from '@/components/calendar/RouteDetailModal';
 import { DuplicateRouteModal } from '@/components/calendar/DuplicateRouteModal';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { parseLocalDate, isSameDayLocal } from '@/lib/dateUtils';
 import {
   format,
   startOfMonth,
@@ -17,7 +18,6 @@ import {
   startOfWeek,
   endOfWeek,
   eachDayOfInterval,
-  isSameDay,
   isSameMonth,
   addMonths,
   subMonths,
@@ -61,13 +61,13 @@ const Calendar = () => {
 
   const getRoutesForDay = (day: Date | null) => {
     if (!day) return [];
-    return savedRoutes.filter((route) => isSameDay(new Date(route.route_date), day));
+    return savedRoutes.filter((route) => isSameDayLocal(route.route_date, day));
   };
 
   const getAppointmentsForDay = (day: Date | null) => {
     if (!day) return [];
     return fixedAppointments.filter((apt) =>
-      apt.fixedAppointment && isSameDay(new Date(apt.fixedAppointment), day)
+      apt.fixedAppointment && isSameDayLocal(apt.fixedAppointment, day)
     );
   };
 
@@ -86,6 +86,20 @@ const Calendar = () => {
   const handleDuplicateRoute = (route: SavedRouteDB) => {
     setRouteToDuplicate(route);
     setDuplicateModalOpen(true);
+  };
+
+  // Helper to format appointment time correctly from the timestamp
+  const formatAppointmentTime = (dateStr: string) => {
+    const date = parseLocalDate(dateStr);
+    if (!date) return '';
+    return format(date, 'h:mm a');
+  };
+
+  // Helper to format appointment date for display
+  const formatAppointmentDateTime = (dateStr: string) => {
+    const date = parseLocalDate(dateStr);
+    if (!date) return '';
+    return format(date, 'MMM d, h:mm a');
   };
 
   return (
@@ -226,7 +240,7 @@ const Calendar = () => {
                         >
                           <div className="flex items-center gap-2 text-fixed font-medium">
                             <Timer className="h-4 w-4" />
-                            {format(new Date(apt.fixedAppointment!), 'h:mm a')}
+                            {formatAppointmentTime(apt.fixedAppointment!)}
                             <Badge variant="fixed" className="ml-auto">SIG</Badge>
                           </div>
                           <p className="text-sm text-foreground mt-1">
@@ -307,7 +321,7 @@ const Calendar = () => {
                           >
                             <div className="flex items-center gap-1 text-fixed font-medium">
                               <Timer className="h-3 w-3" />
-                              {format(new Date(apt.fixedAppointment!), 'h:mm a')}
+                              {formatAppointmentTime(apt.fixedAppointment!)}
                             </div>
                             <p className="text-[10px] text-muted-foreground truncate mt-0.5">
                               {apt.street}
@@ -351,7 +365,7 @@ const Calendar = () => {
                   </div>
                   <div className="text-right">
                     <Badge variant="fixed">
-                      {format(new Date(apt.fixedAppointment!), 'MMM d, h:mm a')}
+                      {formatAppointmentDateTime(apt.fixedAppointment!)}
                     </Badge>
                   </div>
                 </div>

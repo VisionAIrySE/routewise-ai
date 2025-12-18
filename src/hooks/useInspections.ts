@@ -2,7 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Inspection, Company, UrgencyTier, InspectionStatus } from '@/lib/mockData';
-import { startOfWeek, startOfMonth, startOfYear, differenceInDays, parseISO } from 'date-fns';
+import { startOfWeek, startOfMonth, startOfYear, differenceInDays } from 'date-fns';
+import { parseLocalDate, getTodayLocal } from '@/lib/dateUtils';
 
 export interface InspectionFilters {
   company?: Company | 'ALL';
@@ -14,8 +15,11 @@ export interface InspectionFilters {
 // Map database row to frontend Inspection type
 function mapDbToInspection(row: any): Inspection {
   const dueDate = row.due_date;
-  const daysRemaining = dueDate 
-    ? differenceInDays(parseISO(dueDate), new Date()) 
+  // Use timezone-safe date parsing
+  const dueDateParsed = dueDate ? parseLocalDate(dueDate) : null;
+  const today = getTodayLocal();
+  const daysRemaining = dueDateParsed 
+    ? differenceInDays(dueDateParsed, today) 
     : 999;
   
   return {
@@ -292,14 +296,20 @@ export function useUpcomingAppointments() {
     queryFn: async (): Promise<Inspection[]> => {
       if (!user) return [];
 
+      // Get today's date at midnight in ISO format for database comparison
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayISO = today.toISOString();
+
       const { data, error } = await supabase
         .from('inspections')
         .select('*')
         .eq('user_id', user.id)
         .eq('status', 'PENDING')
         .not('fixed_appointment', 'is', null)
+        .gte('fixed_appointment', todayISO) // Only get today and future appointments
         .order('fixed_appointment', { ascending: true })
-        .limit(5);
+        .limit(10);
 
       if (error) {
         console.error('Error fetching upcoming appointments:', error);
