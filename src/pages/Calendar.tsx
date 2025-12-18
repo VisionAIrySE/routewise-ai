@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Timer, Loader2, Calendar as CalendarIcon, List } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Timer, Loader2, Calendar as CalendarIcon, List, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useFixedAppointments } from '@/hooks/useRoutes';
@@ -8,6 +8,7 @@ import { useMonthSavedRoutes, type SavedRouteDB } from '@/hooks/useSavedRoutes';
 import { CalendarRouteCard } from '@/components/calendar/CalendarRouteCard';
 import { RouteDetailModal } from '@/components/calendar/RouteDetailModal';
 import { DuplicateRouteModal } from '@/components/calendar/DuplicateRouteModal';
+import { AddAppointmentModal } from '@/components/calendar/AddAppointmentModal';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { parseLocalDate, isSameDayLocal } from '@/lib/dateUtils';
@@ -36,6 +37,7 @@ const Calendar = () => {
   const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
   const [routeToDuplicate, setRouteToDuplicate] = useState<SavedRouteDB | null>(null);
   const [viewMode, setViewMode] = useState<'week' | 'month'>('week');
+  const [addAppointmentOpen, setAddAppointmentOpen] = useState(false);
 
   // Use week view on mobile by default
   const effectiveViewMode = isMobile ? 'week' : viewMode;
@@ -166,6 +168,13 @@ const Calendar = () => {
             onClick={() => setCurrentDate(new Date())}
           >
             Today
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => setAddAppointmentOpen(true)}
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Add
           </Button>
         </div>
       </div>
@@ -393,6 +402,12 @@ const Calendar = () => {
         route={routeToDuplicate}
         open={duplicateModalOpen}
         onOpenChange={setDuplicateModalOpen}
+      />
+
+      {/* Add Appointment Modal */}
+      <AddAppointmentModal
+        open={addAppointmentOpen}
+        onOpenChange={setAddAppointmentOpen}
       />
     </div>
   );

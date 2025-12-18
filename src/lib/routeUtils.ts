@@ -938,6 +938,40 @@ export interface UploadResponse {
   missing_inspections?: MissingInspection[];
   missing_count?: number;
   reconciliation_message?: string;
+  // Conflict detection fields
+  has_conflicts?: boolean;
+  conflicts?: Array<{
+    type: 'duplicate' | 'time_overlap' | 'address_match';
+    existing_id: string;
+    existing_address?: string;
+    existing_date?: string;
+    existing_time?: string;
+    existing_company?: string;
+    existing_insured_name?: string;
+    incoming_id?: string;
+    incoming_address?: string;
+    incoming_date?: string;
+    incoming_time?: string;
+    incoming_company?: string;
+    incoming_insured_name?: string;
+    existing?: {
+      id: string;
+      address?: string;
+      date?: string;
+      time?: string;
+      company?: string;
+      insured_name?: string;
+    };
+    incoming?: {
+      id?: string;
+      address?: string;
+      date?: string;
+      time?: string;
+      company?: string;
+      insured_name?: string;
+    };
+    suggested_action: 'keep_existing' | 'use_new' | 'keep_both';
+  }>;
 }
 
 export interface ReconciliationResult {
