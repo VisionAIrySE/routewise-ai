@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import type { UserProfileSettings } from '@/hooks/useSettings';
 
-const GOOGLE_MAPS_API_KEY = 'AIzaSyDFXzz7nGa1bbMky3aZVfvfwikdGhrRRTQ';
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 
 interface Props {
   profile: UserProfileSettings | null | undefined;
