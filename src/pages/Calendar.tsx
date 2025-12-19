@@ -1,17 +1,28 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Timer, Loader2, Calendar as CalendarIcon, List, Plus, User, CalendarCheck } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Timer, Loader2, Calendar as CalendarIcon, List, Plus, User, CalendarCheck, Pencil, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useFixedAppointments } from '@/hooks/useRoutes';
 import { useMonthSavedRoutes, type SavedRouteDB } from '@/hooks/useSavedRoutes';
-import { useMonthAppointments } from '@/hooks/useAppointments';
+import { useMonthAppointments, useCancelAppointment } from '@/hooks/useAppointments';
 import { CalendarRouteCard } from '@/components/calendar/CalendarRouteCard';
 import { RouteDetailModal } from '@/components/calendar/RouteDetailModal';
 import { DuplicateRouteModal } from '@/components/calendar/DuplicateRouteModal';
 import { AddAppointmentModal } from '@/components/calendar/AddAppointmentModal';
 import { AppointmentsList } from '@/components/calendar/AppointmentsList';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { parseLocalDate, isSameDayLocal } from '@/lib/dateUtils';
 import type { Appointment } from '@/types/appointment';
@@ -44,10 +55,40 @@ const Calendar = () => {
   const [addAppointmentOpen, setAddAppointmentOpen] = useState(false);
   const [addAppointmentDate, setAddAppointmentDate] = useState<Date | undefined>();
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [appointmentToCancel, setAppointmentToCancel] = useState<Appointment | null>(null);
+  
+  const { toast } = useToast();
+  const cancelAppointment = useCancelAppointment();
 
   const handleEditAppointment = (appointment: Appointment) => {
     setEditingAppointment(appointment);
     setAddAppointmentOpen(true);
+  };
+
+  const handleCancelAppointment = (appointment: Appointment) => {
+    setAppointmentToCancel(appointment);
+    setCancelDialogOpen(true);
+  };
+
+  const handleConfirmCancel = async () => {
+    if (!appointmentToCancel) return;
+    try {
+      await cancelAppointment.mutateAsync(appointmentToCancel.id);
+      toast({
+        title: 'Appointment cancelled',
+        description: 'The appointment has been cancelled.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to cancel appointment.',
+        variant: 'destructive',
+      });
+    } finally {
+      setCancelDialogOpen(false);
+      setAppointmentToCancel(null);
+    }
   };
 
   // Use week view on mobile by default
@@ -282,6 +323,26 @@ const Calendar = () => {
                           <p className="text-xs text-muted-foreground">
                             {apt.inspection?.city || apt.city || ''}
                           </p>
+                          <div className="flex items-center gap-1 mt-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 px-2 text-xs"
+                              onClick={() => handleEditAppointment(apt)}
+                            >
+                              <Pencil className="h-3 w-3 mr-1" />
+                              Reschedule
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 px-2 text-xs text-destructive hover:text-destructive"
+                              onClick={() => handleCancelAppointment(apt)}
+                            >
+                              <X className="h-3 w-3 mr-1" />
+                              Cancel
+                            </Button>
+                          </div>
                         </div>
                       ))}
                       {/* Saved Routes */}
@@ -479,6 +540,48 @@ const Calendar = () => {
         defaultDate={addAppointmentDate || (editingAppointment ? new Date(editingAppointment.appointment_date) : undefined)}
         editAppointment={editingAppointment}
       />
+
+      {/* Cancel Appointment Dialog */}
+      <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel Appointment</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to cancel this appointment?
+              {appointmentToCancel && (
+                <div className="mt-2 p-3 bg-muted rounded-lg">
+                  <p className="font-medium text-foreground">
+                    {appointmentToCancel.inspection?.insured_name || appointmentToCancel.title || 'Appointment'}
+                  </p>
+                  <p className="text-sm">
+                    {format(new Date(appointmentToCancel.appointment_date), 'EEE, MMM d')}
+                    {appointmentToCancel.appointment_time && ` @ ${appointmentToCancel.appointment_time}`}
+                  </p>
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={cancelAppointment.isPending}>
+              Keep Appointment
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmCancel}
+              disabled={cancelAppointment.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {cancelAppointment.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Cancelling...
+                </>
+              ) : (
+                'Cancel Appointment'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
