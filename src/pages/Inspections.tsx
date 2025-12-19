@@ -10,13 +10,21 @@ import {
 } from '@/components/ui/select';
 import { InspectionCard } from '@/components/InspectionCard';
 import { useInspections } from '@/hooks/useInspections';
-import type { Company, UrgencyTier, InspectionStatus } from '@/lib/mockData';
+import { AddAppointmentModal } from '@/components/calendar/AddAppointmentModal';
+import type { Company, UrgencyTier, InspectionStatus, Inspection } from '@/lib/mockData';
 
 const Inspections = () => {
   const [search, setSearch] = useState('');
   const [companyFilter, setCompanyFilter] = useState<Company | 'ALL'>('ALL');
   const [urgencyFilter, setUrgencyFilter] = useState<UrgencyTier | 'ALL'>('ALL');
   const [statusFilter, setStatusFilter] = useState<InspectionStatus | 'ALL'>('PENDING');
+  const [appointmentModalOpen, setAppointmentModalOpen] = useState(false);
+  const [selectedInspection, setSelectedInspection] = useState<Inspection | null>(null);
+
+  const handleScheduleAppointment = (inspection: Inspection) => {
+    setSelectedInspection(inspection);
+    setAppointmentModalOpen(true);
+  };
 
   const { data: inspections, isLoading, error } = useInspections({
     company: companyFilter,
@@ -135,7 +143,10 @@ const Inspections = () => {
         <div className="space-y-3">
           {sortedInspections.map((inspection, index) => (
             <div key={inspection.id} style={{ animationDelay: `${index * 50}ms` }}>
-              <InspectionCard inspection={inspection} />
+              <InspectionCard 
+                inspection={inspection} 
+                onScheduleAppointment={handleScheduleAppointment}
+              />
             </div>
           ))}
         </div>
@@ -152,6 +163,13 @@ const Inspections = () => {
           </p>
         </div>
       )}
+
+      {/* Appointment Modal */}
+      <AddAppointmentModal
+        open={appointmentModalOpen}
+        onOpenChange={setAppointmentModalOpen}
+        inspection={selectedInspection}
+      />
     </div>
   );
 };
