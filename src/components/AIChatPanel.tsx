@@ -335,13 +335,13 @@ export function AIChatPanel({ open, onOpenChange }: AIChatPanelProps) {
                 ) : (
                   <div
                     className={cn(
-                      'max-w-[80%] rounded-xl px-5 py-4 text-base overflow-hidden',
+                      'max-w-[80%] rounded-xl px-5 py-4 text-base',
                       message.role === 'user'
                         ? 'bg-primary text-primary-foreground'
                         : 'bg-muted text-foreground'
                     )}
                   >
-                    <div className="whitespace-pre-wrap break-words">{message.content}</div>
+                    <div className="whitespace-pre-wrap break-words overflow-wrap-anywhere">{message.content}</div>
                     {message.hasRouteAction && (
                       <div className="mt-4 flex gap-2">
                         <Button size="sm" variant="secondary" onClick={handleSaveRoute}>
