@@ -13,11 +13,12 @@ export interface InspectionFilters {
 }
 
 // Calculate urgency tier based on days remaining
+// Critical: 0-3 days or overdue, Urgent: 4-7 days, Soon: 8-15 days, Normal: >15 days
 function calculateUrgencyTier(daysRemaining: number): UrgencyTier {
-  if (daysRemaining < 0) return 'CRITICAL';  // Overdue
-  if (daysRemaining <= 3) return 'URGENT';
-  if (daysRemaining <= 7) return 'SOON';
-  return 'NORMAL';
+  if (daysRemaining <= 3) return 'CRITICAL';  // 0-3 days or overdue (negative)
+  if (daysRemaining <= 7) return 'URGENT';     // 4-7 days
+  if (daysRemaining <= 15) return 'SOON';      // 8-15 days
+  return 'NORMAL';                              // >15 days
 }
 
 // Map database row to frontend Inspection type
