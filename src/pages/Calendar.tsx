@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Timer, Loader2, Calendar as CalendarIcon, List, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Timer, Loader2, Calendar as CalendarIcon, List, Plus, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useFixedAppointments } from '@/hooks/useRoutes';
 import { useMonthSavedRoutes, type SavedRouteDB } from '@/hooks/useSavedRoutes';
+import { useMonthAppointments } from '@/hooks/useAppointments';
 import { CalendarRouteCard } from '@/components/calendar/CalendarRouteCard';
 import { RouteDetailModal } from '@/components/calendar/RouteDetailModal';
 import { DuplicateRouteModal } from '@/components/calendar/DuplicateRouteModal';
@@ -12,6 +13,7 @@ import { AddAppointmentModal } from '@/components/calendar/AddAppointmentModal';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { parseLocalDate, isSameDayLocal } from '@/lib/dateUtils';
+import type { Appointment } from '@/types/appointment';
 import {
   format,
   startOfMonth,
@@ -26,6 +28,7 @@ import {
   subWeeks,
   getDay,
   isToday,
+  isSameDay,
 } from 'date-fns';
 
 const Calendar = () => {
@@ -38,6 +41,7 @@ const Calendar = () => {
   const [routeToDuplicate, setRouteToDuplicate] = useState<SavedRouteDB | null>(null);
   const [viewMode, setViewMode] = useState<'week' | 'month'>('week');
   const [addAppointmentOpen, setAddAppointmentOpen] = useState(false);
+  const [addAppointmentDate, setAddAppointmentDate] = useState<Date | undefined>();
 
   // Use week view on mobile by default
   const effectiveViewMode = isMobile ? 'week' : viewMode;
@@ -57,9 +61,10 @@ const Calendar = () => {
 
   // Fetch routes and appointments
   const { data: savedRoutes = [], isLoading: routesLoading } = useMonthSavedRoutes(currentDate);
-  const { data: fixedAppointments = [], isLoading: appointmentsLoading } = useFixedAppointments();
+  const { data: fixedAppointments = [], isLoading: fixedAppointmentsLoading } = useFixedAppointments();
+  const { data: newAppointments = [], isLoading: newAppointmentsLoading } = useMonthAppointments(currentDate);
 
-  const isLoading = routesLoading || appointmentsLoading;
+  const isLoading = routesLoading || fixedAppointmentsLoading || newAppointmentsLoading;
 
   const getRoutesForDay = (day: Date | null) => {
     if (!day) return [];
@@ -71,6 +76,18 @@ const Calendar = () => {
     return fixedAppointments.filter((apt) =>
       apt.fixedAppointment && isSameDayLocal(apt.fixedAppointment, day)
     );
+  };
+
+  // Get new appointments for a specific day
+  const getNewAppointmentsForDay = (day: Date | null): Appointment[] => {
+    if (!day) return [];
+    const dayStr = format(day, 'yyyy-MM-dd');
+    return newAppointments.filter((apt) => apt.appointment_date === dayStr);
+  };
+
+  const handleAddAppointmentForDate = (date: Date) => {
+    setAddAppointmentDate(date);
+    setAddAppointmentOpen(true);
   };
 
   const handleRouteClick = (route: SavedRouteDB) => {
@@ -227,10 +244,39 @@ const Calendar = () => {
                     </div>
                   </div>
 
-                  {dayRoutes.length === 0 && appointments.length === 0 ? (
+                  {dayRoutes.length === 0 && appointments.length === 0 && getNewAppointmentsForDay(day).length === 0 ? (
                     <p className="text-sm text-muted-foreground pl-13">No routes or appointments</p>
                   ) : (
                     <div className="space-y-2 pl-13">
+                      {/* New Appointments (from appointments table) */}
+                      {getNewAppointmentsForDay(day).map((apt) => (
+                        <div
+                          key={apt.id}
+                          className={cn(
+                            "rounded-lg p-3 border",
+                            apt.appointment_type === 'inspection' 
+                              ? "bg-blue-50 border-blue-200" 
+                              : "bg-purple-50 border-purple-200"
+                          )}
+                        >
+                          <div className={cn(
+                            "flex items-center gap-2 font-medium",
+                            apt.appointment_type === 'inspection' ? "text-blue-600" : "text-purple-600"
+                          )}>
+                            {apt.appointment_type === 'inspection' ? <Timer className="h-4 w-4" /> : <User className="h-4 w-4" />}
+                            {apt.appointment_time || 'All day'}
+                            <Badge variant={apt.appointment_type === 'inspection' ? 'default' : 'secondary'} className="ml-auto">
+                              {apt.appointment_type === 'inspection' ? 'Inspection' : 'Personal'}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-foreground mt-1">
+                            {apt.inspection?.street || apt.title || 'Appointment'}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {apt.inspection?.city || apt.city || ''}
+                          </p>
+                        </div>
+                      ))}
                       {/* Saved Routes */}
                       {dayRoutes.map((route) => (
                         <CalendarRouteCard
@@ -353,7 +399,7 @@ const Calendar = () => {
           <Timer className="h-5 w-5 text-fixed" />
           Fixed Appointments (SIG)
         </h3>
-        {appointmentsLoading ? (
+        {fixedAppointmentsLoading ? (
           <div className="flex items-center gap-2 text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
             Loading appointments...
@@ -407,7 +453,11 @@ const Calendar = () => {
       {/* Add Appointment Modal */}
       <AddAppointmentModal
         open={addAppointmentOpen}
-        onOpenChange={setAddAppointmentOpen}
+        onOpenChange={(open) => {
+          setAddAppointmentOpen(open);
+          if (!open) setAddAppointmentDate(undefined);
+        }}
+        defaultDate={addAppointmentDate}
       />
     </div>
   );

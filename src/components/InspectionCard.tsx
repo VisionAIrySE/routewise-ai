@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { MapPin, Clock, Building2, FileText, CheckCircle, MoreVertical } from 'lucide-react';
+import { MapPin, Clock, Building2, FileText, CheckCircle, MoreVertical, Calendar, Phone } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -24,17 +25,22 @@ import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { useInspectionAppointment } from '@/hooks/useAppointments';
 
 interface InspectionCardProps {
   inspection: Inspection;
   onClick?: () => void;
+  onScheduleAppointment?: (inspection: Inspection) => void;
 }
 
-export function InspectionCard({ inspection, onClick }: InspectionCardProps) {
+export function InspectionCard({ inspection, onClick, onScheduleAppointment }: InspectionCardProps) {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [isMarking, setIsMarking] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Fetch appointment for this inspection from the new appointments table
+  const { data: appointment } = useInspectionAppointment(inspection.id);
   
   const urgencyColor = getUrgencyColor(inspection.urgencyTier);
   
@@ -126,13 +132,43 @@ export function InspectionCard({ inspection, onClick }: InspectionCardProps) {
               <Badge variant={urgencyColor as any}>
                 {inspection.urgencyTier}
               </Badge>
-              {inspection.fixedAppointment && !isNaN(new Date(inspection.fixedAppointment).getTime()) && (
+              
+              {/* Show appointment from new appointments table */}
+              {appointment && (
+                <Badge variant="outline" className="gap-1 text-blue-600 border-blue-200 bg-blue-50">
+                  <Calendar className="h-3 w-3" />
+                  {format(new Date(appointment.appointment_date), 'MMM d')}
+                  {appointment.appointment_time && ` @ ${appointment.appointment_time}`}
+                </Badge>
+              )}
+              
+              {/* Legacy: Show fixed_appointment from inspections table if no new appointment */}
+              {!appointment && inspection.fixedAppointment && !isNaN(new Date(inspection.fixedAppointment).getTime()) && (
                 <Badge variant="outline" className="gap-1">
                   <Clock className="h-3 w-3" />
                   {format(new Date(inspection.fixedAppointment), 'MMM d, h:mm a')}
                 </Badge>
               )}
             </div>
+
+            {/* Call ahead warning - show schedule button if no appointment */}
+            {!appointment && !inspection.fixedAppointment && inspection.company === 'SIG' && onScheduleAppointment && (
+              <div className="flex items-center gap-2 mt-2 text-orange-600 bg-orange-50 px-2 py-1 rounded" data-no-click>
+                <Phone className="h-3.5 w-3.5" />
+                <span className="text-xs">Appointment required</span>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="h-6 px-2 text-xs"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onScheduleAppointment(inspection);
+                  }}
+                >
+                  Schedule
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className="flex items-start gap-2">
@@ -163,6 +199,15 @@ export function InspectionCard({ inspection, onClick }: InspectionCardProps) {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="bg-popover z-50">
+                    {onScheduleAppointment && (
+                      <>
+                        <DropdownMenuItem onClick={() => onScheduleAppointment(inspection)}>
+                          <Calendar className="h-4 w-4 mr-2 text-blue-600" />
+                          {appointment ? 'Reschedule' : 'Schedule Appointment'}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                      </>
+                    )}
                     <DropdownMenuItem onClick={() => setShowConfirmDialog(true)}>
                       <CheckCircle className="h-4 w-4 mr-2 text-green-600" />
                       Mark Complete

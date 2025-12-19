@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   Select,
   SelectContent,
@@ -28,37 +29,41 @@ import {
 } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
-import { useQueryClient } from '@tanstack/react-query';
 import { usePendingInspections } from '@/hooks/useInspections';
+import { useCreateAppointment } from '@/hooks/useAppointments';
 import { cn } from '@/lib/utils';
+import type { Inspection } from '@/lib/mockData';
 
 const appointmentSchema = z.object({
-  date: z.date({ required_error: 'Date is required' }),
-  time: z.string().min(1, 'Time is required'),
-  duration_min: z.number().min(5).max(480),
-  appointment_type: z.enum(['inspection', 'personal', 'meeting', 'other']),
+  appointment_type: z.enum(['inspection', 'adhoc']),
+  appointment_date: z.date({ required_error: 'Date is required' }),
+  appointment_time: z.string().min(1, 'Time is required'),
+  duration_minutes: z.number().min(5).max(480),
   inspection_id: z.string().optional(),
+  title: z.string().optional(),
   address: z.string().optional(),
-  description: z.string().optional(),
+  city: z.string().optional(),
   notes: z.string().optional(),
 });
 
-type AppointmentFormData = z.infer<typeof appointmentSchema>;
+type FormData = z.infer<typeof appointmentSchema>;
 
 interface AddAppointmentModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   defaultDate?: Date;
+  inspection?: Inspection;
 }
 
-export function AddAppointmentModal({ open, onOpenChange, defaultDate }: AddAppointmentModalProps) {
-  const { user } = useAuth();
+export function AddAppointmentModal({ 
+  open, 
+  onOpenChange, 
+  defaultDate,
+  inspection 
+}: AddAppointmentModalProps) {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const { data: pendingInspections = [] } = usePendingInspections();
+  const createAppointment = useCreateAppointment();
 
   const {
     register,
@@ -67,106 +72,62 @@ export function AddAppointmentModal({ open, onOpenChange, defaultDate }: AddAppo
     setValue,
     reset,
     formState: { errors },
-  } = useForm<AppointmentFormData>({
+  } = useForm<FormData>({
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
-      date: defaultDate || new Date(),
-      time: '09:00',
-      duration_min: 30,
-      appointment_type: 'personal',
+      appointment_type: inspection ? 'inspection' : 'adhoc',
+      appointment_date: defaultDate || new Date(),
+      appointment_time: '09:00',
+      duration_minutes: 30,
+      inspection_id: inspection?.id,
+      title: '',
       address: '',
-      description: '',
+      city: '',
       notes: '',
     },
   });
 
+  // Reset form when modal opens with new props
+  useEffect(() => {
+    if (open) {
+      reset({
+        appointment_type: inspection ? 'inspection' : 'adhoc',
+        appointment_date: defaultDate || new Date(),
+        appointment_time: '09:00',
+        duration_minutes: 30,
+        inspection_id: inspection?.id,
+        title: '',
+        address: '',
+        city: '',
+        notes: '',
+      });
+    }
+  }, [open, inspection, defaultDate, reset]);
+
   const appointmentType = watch('appointment_type');
   const selectedInspectionId = watch('inspection_id');
 
-  // When linking to an existing inspection, auto-fill address
-  const handleInspectionSelect = (inspectionId: string) => {
-    setValue('inspection_id', inspectionId);
-    const inspection = pendingInspections.find(i => i.id === inspectionId);
-    if (inspection) {
-      setValue('address', inspection.fullAddress);
-    }
-  };
-
-  const onSubmit = async (data: AppointmentFormData) => {
-    if (!user) return;
-
-    setIsSubmitting(true);
+  const onSubmit = async (data: FormData) => {
     try {
-      // Build the fixed_appointment timestamp
-      const [hours, minutes] = data.time.split(':').map(Number);
-      const appointmentDate = new Date(data.date);
-      appointmentDate.setHours(hours, minutes, 0, 0);
-      const fixedAppointment = appointmentDate.toISOString();
+      await createAppointment.mutateAsync({
+        appointment_type: data.appointment_type,
+        appointment_date: data.appointment_date,
+        appointment_time: data.appointment_time,
+        duration_minutes: data.duration_minutes,
+        inspection_id: data.appointment_type === 'inspection' ? data.inspection_id : undefined,
+        title: data.appointment_type === 'adhoc' ? data.title : undefined,
+        address: data.appointment_type === 'adhoc' ? data.address : undefined,
+        city: data.appointment_type === 'adhoc' ? data.city : undefined,
+        notes: data.notes,
+      });
 
-      // Format appointment_time as "12:00 PM" style
-      const formattedTime = format(appointmentDate, 'h:mm a');
+      toast({
+        title: 'Appointment Created',
+        description: data.appointment_type === 'inspection' 
+          ? 'Inspection appointment has been scheduled.'
+          : 'Personal appointment has been added.',
+      });
 
-      if (data.appointment_type === 'inspection' && data.inspection_id) {
-        // Update existing inspection with appointment time
-        const { error } = await supabase
-          .from('inspections')
-          .update({
-            fixed_appointment: fixedAppointment,
-            appointment_time: formattedTime,
-            duration_min: data.duration_min,
-            notes: data.notes || null,
-          })
-          .eq('id', data.inspection_id)
-          .eq('user_id', user.id);
-
-        if (error) throw error;
-
-        toast({
-          title: 'Appointment Scheduled',
-          description: 'Inspection appointment has been set.',
-        });
-      } else {
-        // Create a new manual appointment entry
-        const addressParts = (data.address || 'Personal Appointment').split(',');
-        const street = addressParts[0]?.trim() || 'Personal Appointment';
-        const city = addressParts[1]?.trim() || 'N/A';
-        const stateZip = addressParts[2]?.trim().split(' ') || ['OR', '00000'];
-        const state = stateZip[0] || 'OR';
-        const zip = stateZip[1] || '00000';
-
-        const { error } = await supabase
-          .from('inspections')
-          .insert({
-            user_id: user.id,
-            is_manual: true,
-            appointment_type: data.appointment_type,
-            fixed_appointment: fixedAppointment,
-            appointment_time: formattedTime,
-            duration_min: data.duration_min,
-            street,
-            city,
-            state,
-            zip,
-            full_address: data.address || 'Personal Appointment',
-            description: data.description || null,
-            notes: data.notes || null,
-            company_name: 'MANUAL',
-            status: 'PLANNED',
-            urgency_tier: 'NORMAL',
-          });
-
-        if (error) throw error;
-
-        toast({
-          title: 'Appointment Added',
-          description: `${data.appointment_type.charAt(0).toUpperCase() + data.appointment_type.slice(1)} appointment created.`,
-        });
-      }
-
-      // Refresh data
-      queryClient.invalidateQueries({ queryKey: ['inspections'] });
-      
-      // Reset form and close
       reset();
       onOpenChange(false);
     } catch (error) {
@@ -176,8 +137,6 @@ export function AddAppointmentModal({ open, onOpenChange, defaultDate }: AddAppo
         description: 'Failed to create appointment. Please try again.',
         variant: 'destructive',
       });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -192,41 +151,48 @@ export function AddAppointmentModal({ open, onOpenChange, defaultDate }: AddAppo
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* Appointment Type */}
-          <div className="space-y-2">
-            <Label>Type</Label>
-            <Select
-              value={appointmentType}
-              onValueChange={(value) => setValue('appointment_type', value as any)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="inspection">Inspection</SelectItem>
-                <SelectItem value="personal">Personal</SelectItem>
-                <SelectItem value="meeting">Meeting</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* For Inspection type - link to existing */}
-          {appointmentType === 'inspection' && (
+          {/* Type Selector - only show if not pre-linked to inspection */}
+          {!inspection && (
             <div className="space-y-2">
-              <Label>Link to Inspection</Label>
+              <Label>Appointment Type</Label>
+              <RadioGroup
+                value={appointmentType}
+                onValueChange={(value) => setValue('appointment_type', value as 'inspection' | 'adhoc')}
+                className="flex gap-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="inspection" id="type-inspection" />
+                  <Label htmlFor="type-inspection" className="font-normal cursor-pointer">
+                    Inspection
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="adhoc" id="type-adhoc" />
+                  <Label htmlFor="type-adhoc" className="font-normal cursor-pointer">
+                    Personal / Ad-hoc
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+          )}
+
+          {/* Inspection Selector */}
+          {appointmentType === 'inspection' && !inspection && (
+            <div className="space-y-2">
+              <Label>Select Inspection</Label>
               <Select
                 value={selectedInspectionId}
-                onValueChange={handleInspectionSelect}
+                onValueChange={(value) => setValue('inspection_id', value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select inspection..." />
+                  <SelectValue placeholder="Select an inspection..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {pendingInspections.map((inspection) => (
-                    <SelectItem key={inspection.id} value={inspection.id}>
+                  {pendingInspections.map((insp) => (
+                    <SelectItem key={insp.id} value={insp.id}>
                       <span className="truncate">
-                        {inspection.street}, {inspection.city}
+                        {insp.claimNumber ? `${insp.claimNumber} - ` : ''}
+                        {insp.street}, {insp.city}
                       </span>
                     </SelectItem>
                   ))}
@@ -238,6 +204,41 @@ export function AddAppointmentModal({ open, onOpenChange, defaultDate }: AddAppo
             </div>
           )}
 
+          {/* Pre-linked inspection display */}
+          {inspection && (
+            <div className="p-3 bg-muted rounded-lg">
+              <p className="font-medium text-foreground">{inspection.street}</p>
+              <p className="text-sm text-muted-foreground">{inspection.city}, {inspection.state}</p>
+            </div>
+          )}
+
+          {/* Ad-hoc fields */}
+          {appointmentType === 'adhoc' && (
+            <>
+              <div className="space-y-2">
+                <Label>Title</Label>
+                <Input
+                  placeholder="Doctor appointment, Lunch, etc."
+                  {...register('title')}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Address (optional for routing)</Label>
+                <Input
+                  placeholder="123 Main St"
+                  {...register('address')}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>City (optional)</Label>
+                <Input
+                  placeholder="Portland"
+                  {...register('city')}
+                />
+              </div>
+            </>
+          )}
+
           {/* Date Picker */}
           <div className="space-y-2">
             <Label>Date</Label>
@@ -247,24 +248,25 @@ export function AddAppointmentModal({ open, onOpenChange, defaultDate }: AddAppo
                   variant="outline"
                   className={cn(
                     'w-full justify-start text-left font-normal',
-                    !watch('date') && 'text-muted-foreground'
+                    !watch('appointment_date') && 'text-muted-foreground'
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {watch('date') ? format(watch('date'), 'PPP') : 'Pick a date'}
+                  {watch('appointment_date') ? format(watch('appointment_date'), 'PPP') : 'Pick a date'}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="single"
-                  selected={watch('date')}
-                  onSelect={(date) => date && setValue('date', date)}
+                  selected={watch('appointment_date')}
+                  onSelect={(date) => date && setValue('appointment_date', date)}
                   initialFocus
+                  className="pointer-events-auto"
                 />
               </PopoverContent>
             </Popover>
-            {errors.date && (
-              <p className="text-xs text-destructive">{errors.date.message}</p>
+            {errors.appointment_date && (
+              <p className="text-xs text-destructive">{errors.appointment_date.message}</p>
             )}
           </div>
 
@@ -273,56 +275,33 @@ export function AddAppointmentModal({ open, onOpenChange, defaultDate }: AddAppo
             <Label>Time</Label>
             <Input
               type="time"
-              {...register('time')}
+              {...register('appointment_time')}
               className="w-full"
             />
-            {errors.time && (
-              <p className="text-xs text-destructive">{errors.time.message}</p>
+            {errors.appointment_time && (
+              <p className="text-xs text-destructive">{errors.appointment_time.message}</p>
             )}
           </div>
 
           {/* Duration */}
           <div className="space-y-2">
-            <Label>Duration (minutes)</Label>
+            <Label>Duration</Label>
             <Select
-              value={String(watch('duration_min'))}
-              onValueChange={(value) => setValue('duration_min', Number(value))}
+              value={String(watch('duration_minutes'))}
+              onValueChange={(value) => setValue('duration_minutes', Number(value))}
             >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="15">15 min</SelectItem>
-                <SelectItem value="30">30 min</SelectItem>
-                <SelectItem value="45">45 min</SelectItem>
+                <SelectItem value="15">15 minutes</SelectItem>
+                <SelectItem value="30">30 minutes</SelectItem>
                 <SelectItem value="60">1 hour</SelectItem>
                 <SelectItem value="90">1.5 hours</SelectItem>
                 <SelectItem value="120">2 hours</SelectItem>
               </SelectContent>
             </Select>
           </div>
-
-          {/* Address (for non-inspection types) */}
-          {appointmentType !== 'inspection' && (
-            <div className="space-y-2">
-              <Label>Location (optional)</Label>
-              <Input
-                placeholder="123 Main St, City, ST 12345"
-                {...register('address')}
-              />
-            </div>
-          )}
-
-          {/* Description */}
-          {appointmentType !== 'inspection' && (
-            <div className="space-y-2">
-              <Label>Description</Label>
-              <Input
-                placeholder="What is this appointment for?"
-                {...register('description')}
-              />
-            </div>
-          )}
 
           {/* Notes */}
           <div className="space-y-2">
@@ -344,8 +323,12 @@ export function AddAppointmentModal({ open, onOpenChange, defaultDate }: AddAppo
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting} className="flex-1">
-              {isSubmitting ? (
+            <Button 
+              type="submit" 
+              disabled={createAppointment.isPending} 
+              className="flex-1"
+            >
+              {createAppointment.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Adding...
