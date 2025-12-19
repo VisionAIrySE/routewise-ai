@@ -46,6 +46,7 @@ function mapDbToInspection(row: any): Inspection {
     daysRemaining,
     urgencyTier,
     fixedAppointment: row.fixed_appointment || undefined,
+    appointmentTime: row.appointment_time || undefined,
     status: row.status as InspectionStatus,
     claimNumber: row.insured_name || '',
     uploadBatchId: row.upload_batch_id || undefined,

@@ -17,6 +17,7 @@ export interface Inspection {
   daysRemaining: number;
   urgencyTier: UrgencyTier;
   fixedAppointment?: string;
+  appointmentTime?: string;
   status: InspectionStatus;
   claimNumber: string;
   uploadBatchId?: string;
