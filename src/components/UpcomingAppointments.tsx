@@ -1,11 +1,10 @@
 import { Calendar, Clock, MapPin, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { useUpcomingAppointments } from '@/hooks/useInspections';
-import { format, isToday, isTomorrow, differenceInDays } from 'date-fns';
-import { parseLocalDate, isUpcomingDate } from '@/lib/dateUtils';
+import { useUpcomingNewAppointments } from '@/hooks/useAppointments';
+import { format, isToday, isTomorrow, differenceInDays, parse } from 'date-fns';
 
 export function UpcomingAppointments() {
-  const { data: appointments, isLoading } = useUpcomingAppointments();
+  const { data: appointments, isLoading } = useUpcomingNewAppointments(10);
 
   if (isLoading) {
     return (
@@ -17,15 +16,8 @@ export function UpcomingAppointments() {
     );
   }
 
-  // Filter to only show upcoming appointments (not past ones)
-  const upcomingAppointments = (appointments || []).filter(appt => 
-    appt.fixedAppointment && isUpcomingDate(appt.fixedAppointment)
-  );
-
   const formatAppointmentDate = (dateStr: string) => {
-    // Parse the date safely in local timezone
-    const date = parseLocalDate(dateStr);
-    if (!date) return 'Unknown';
+    const date = new Date(dateStr + 'T00:00:00');
     
     if (isToday(date)) return 'Today';
     if (isTomorrow(date)) return 'Tomorrow';
@@ -38,18 +30,38 @@ export function UpcomingAppointments() {
   };
 
   const getDateBadgeColor = (dateStr: string) => {
-    const date = parseLocalDate(dateStr);
-    if (!date) return 'bg-muted text-muted-foreground';
+    const date = new Date(dateStr + 'T00:00:00');
     
     if (isToday(date)) return 'bg-critical/10 text-critical border-critical/20';
     if (isTomorrow(date)) return 'bg-urgent/10 text-urgent border-urgent/20';
     return 'bg-muted text-muted-foreground';
   };
 
-  const formatAppointmentTime = (dateStr: string) => {
-    const date = parseLocalDate(dateStr);
-    if (!date) return '';
-    return format(date, 'h:mm a');
+  const formatAppointmentTime = (timeStr: string | null) => {
+    if (!timeStr) return '';
+    try {
+      const date = parse(timeStr, 'HH:mm:ss', new Date());
+      return format(date, 'h:mm a');
+    } catch {
+      return timeStr;
+    }
+  };
+
+  const getDisplayInfo = (appt: typeof appointments[0]) => {
+    if (appt.inspection) {
+      return {
+        title: appt.inspection.insured_name || appt.inspection.street,
+        address: appt.inspection.street,
+        city: appt.inspection.city,
+        company: appt.inspection.company_name,
+      };
+    }
+    return {
+      title: appt.title || 'Appointment',
+      address: appt.address || '',
+      city: appt.city || '',
+      company: appt.appointment_type,
+    };
   };
 
   return (
@@ -61,54 +73,63 @@ export function UpcomingAppointments() {
         <div>
           <h3 className="font-semibold text-foreground">Scheduled Appointments</h3>
           <p className="text-sm text-muted-foreground">
-            {upcomingAppointments.length} upcoming
+            {appointments?.length || 0} upcoming
           </p>
         </div>
       </div>
 
-      {upcomingAppointments.length === 0 ? (
+      {!appointments || appointments.length === 0 ? (
         <div className="text-center py-6 text-muted-foreground">
           <Calendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
           <p className="text-sm">No scheduled appointments</p>
         </div>
       ) : (
         <div className="space-y-3">
-          {upcomingAppointments.slice(0, 4).map((appt) => (
-            <div
-              key={appt.id}
-              className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 border border-border/50"
-            >
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <Badge
-                    variant="outline"
-                    className={`text-xs ${getDateBadgeColor(appt.fixedAppointment!)}`}
-                  >
-                    {formatAppointmentDate(appt.fixedAppointment!)}
-                  </Badge>
-                  <span className="flex items-center gap-1 text-xs font-medium text-fixed">
-                    <Clock className="h-3 w-3" />
-                    {formatAppointmentTime(appt.fixedAppointment!)}
-                  </span>
-                </div>
-                <p className="text-sm font-medium text-foreground truncate">
-                  {appt.street}
-                </p>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <MapPin className="h-3 w-3" />
-                    {appt.city}
-                  </span>
-                  <Badge variant="fixed" className="text-[10px] px-1.5 py-0">
-                    {appt.company}
-                  </Badge>
+          {appointments.slice(0, 4).map((appt) => {
+            const info = getDisplayInfo(appt);
+            return (
+              <div
+                key={appt.id}
+                className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 border border-border/50"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Badge
+                      variant="outline"
+                      className={`text-xs ${getDateBadgeColor(appt.appointment_date)}`}
+                    >
+                      {formatAppointmentDate(appt.appointment_date)}
+                    </Badge>
+                    {appt.appointment_time && (
+                      <span className="flex items-center gap-1 text-xs font-medium text-fixed">
+                        <Clock className="h-3 w-3" />
+                        {formatAppointmentTime(appt.appointment_time)}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm font-medium text-foreground truncate">
+                    {info.title}
+                  </p>
+                  <div className="flex items-center gap-2 mt-1">
+                    {info.city && (
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <MapPin className="h-3 w-3" />
+                        {info.city}
+                      </span>
+                    )}
+                    {info.company && (
+                      <Badge variant="fixed" className="text-[10px] px-1.5 py-0">
+                        {info.company}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-          {upcomingAppointments.length > 4 && (
+            );
+          })}
+          {appointments.length > 4 && (
             <p className="text-xs text-muted-foreground text-center pt-1">
-              +{upcomingAppointments.length - 4} more appointments
+              +{appointments.length - 4} more appointments
             </p>
           )}
         </div>
