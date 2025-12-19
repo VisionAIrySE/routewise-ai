@@ -143,10 +143,11 @@ export function InspectionCard({ inspection, onClick, onScheduleAppointment }: I
               )}
               
               {/* Legacy: Show fixed_appointment from inspections table if no new appointment */}
-              {!appointment && inspection.fixedAppointment && !isNaN(new Date(inspection.fixedAppointment).getTime()) && (
+              {!appointment && inspection.fixedAppointment && (
                 <Badge variant="outline" className="gap-1">
                   <Clock className="h-3 w-3" />
-                  {format(new Date(inspection.fixedAppointment), 'MMM d, h:mm a')}
+                  {format(new Date(inspection.fixedAppointment.split('T')[0] + 'T12:00:00'), 'MMM d')}
+                  {inspection.appointmentTime && ` @ ${inspection.appointmentTime}`}
                 </Badge>
               )}
             </div>
