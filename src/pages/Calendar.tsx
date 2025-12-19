@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Timer, Loader2, Calendar as CalendarIcon, List, Plus, User } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Timer, Loader2, Calendar as CalendarIcon, List, Plus, User, CalendarCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useFixedAppointments } from '@/hooks/useRoutes';
@@ -10,6 +10,7 @@ import { CalendarRouteCard } from '@/components/calendar/CalendarRouteCard';
 import { RouteDetailModal } from '@/components/calendar/RouteDetailModal';
 import { DuplicateRouteModal } from '@/components/calendar/DuplicateRouteModal';
 import { AddAppointmentModal } from '@/components/calendar/AddAppointmentModal';
+import { AppointmentsList } from '@/components/calendar/AppointmentsList';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { parseLocalDate, isSameDayLocal } from '@/lib/dateUtils';
@@ -42,6 +43,12 @@ const Calendar = () => {
   const [viewMode, setViewMode] = useState<'week' | 'month'>('week');
   const [addAppointmentOpen, setAddAppointmentOpen] = useState(false);
   const [addAppointmentDate, setAddAppointmentDate] = useState<Date | undefined>();
+  const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
+
+  const handleEditAppointment = (appointment: Appointment) => {
+    setEditingAppointment(appointment);
+    setAddAppointmentOpen(true);
+  };
 
   // Use week view on mobile by default
   const effectiveViewMode = isMobile ? 'week' : viewMode;
@@ -393,6 +400,15 @@ const Calendar = () => {
         )}
       </div>
 
+      {/* Upcoming Appointments Section */}
+      <div className="rounded-xl border border-border bg-card p-6 mb-8">
+        <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+          <CalendarCheck className="h-5 w-5 text-primary" />
+          Upcoming Appointments
+        </h3>
+        <AppointmentsList onEditAppointment={handleEditAppointment} />
+      </div>
+
       {/* Fixed Appointments Section */}
       <div className="rounded-xl border border-border bg-card p-6">
         <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
@@ -450,14 +466,18 @@ const Calendar = () => {
         onOpenChange={setDuplicateModalOpen}
       />
 
-      {/* Add Appointment Modal */}
+      {/* Add/Edit Appointment Modal */}
       <AddAppointmentModal
         open={addAppointmentOpen}
         onOpenChange={(open) => {
           setAddAppointmentOpen(open);
-          if (!open) setAddAppointmentDate(undefined);
+          if (!open) {
+            setAddAppointmentDate(undefined);
+            setEditingAppointment(null);
+          }
         }}
-        defaultDate={addAppointmentDate}
+        defaultDate={addAppointmentDate || (editingAppointment ? new Date(editingAppointment.appointment_date) : undefined)}
+        editAppointment={editingAppointment}
       />
     </div>
   );
