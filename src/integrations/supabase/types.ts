@@ -192,6 +192,7 @@ export type Database = {
           street: string
           updated_at: string | null
           upload_batch_id: string | null
+          urgency: string | null
           urgency_tier: string | null
           user_id: string
           zip: string
@@ -225,6 +226,7 @@ export type Database = {
           street: string
           updated_at?: string | null
           upload_batch_id?: string | null
+          urgency?: string | null
           urgency_tier?: string | null
           user_id: string
           zip: string
@@ -258,6 +260,7 @@ export type Database = {
           street?: string
           updated_at?: string | null
           upload_batch_id?: string | null
+          urgency?: string | null
           urgency_tier?: string | null
           user_id?: string
           zip?: string
