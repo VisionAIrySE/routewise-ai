@@ -176,7 +176,7 @@ export function InspectionCard({ inspection, onClick, onScheduleAppointment }: I
             <div className="text-right shrink-0">
               <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
                 <FileText className="h-3.5 w-3.5" />
-                <span>#{inspection.claimNumber.split('-').pop()}</span>
+                <span className="font-bold text-foreground">{inspection.claimNumber}</span>
               </div>
               <p className={cn(
                 'text-xs font-medium',
