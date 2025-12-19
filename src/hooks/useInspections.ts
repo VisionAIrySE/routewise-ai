@@ -12,6 +12,14 @@ export interface InspectionFilters {
   search?: string;
 }
 
+// Calculate urgency tier based on days remaining
+function calculateUrgencyTier(daysRemaining: number): UrgencyTier {
+  if (daysRemaining < 0) return 'CRITICAL';  // Overdue
+  if (daysRemaining <= 3) return 'URGENT';
+  if (daysRemaining <= 7) return 'SOON';
+  return 'NORMAL';
+}
+
 // Map database row to frontend Inspection type
 function mapDbToInspection(row: any): Inspection {
   const dueDate = row.due_date;
@@ -21,6 +29,9 @@ function mapDbToInspection(row: any): Inspection {
   const daysRemaining = dueDateParsed 
     ? differenceInDays(dueDateParsed, today) 
     : 999;
+  
+  // Calculate urgency tier client-side based on actual days remaining
+  const urgencyTier = daysRemaining === 999 ? 'NORMAL' : calculateUrgencyTier(daysRemaining);
   
   return {
     id: row.id,
@@ -33,7 +44,7 @@ function mapDbToInspection(row: any): Inspection {
     company: row.company_name as Company,
     dueDate: dueDate || '',
     daysRemaining,
-    urgencyTier: row.urgency_tier as UrgencyTier,
+    urgencyTier,
     fixedAppointment: row.fixed_appointment || undefined,
     status: row.status as InspectionStatus,
     claimNumber: row.insured_name || '',
