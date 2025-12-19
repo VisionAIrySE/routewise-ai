@@ -129,7 +129,7 @@ export function InspectionCard({ inspection, onClick }: InspectionCardProps) {
               {inspection.fixedAppointment && !isNaN(new Date(inspection.fixedAppointment).getTime()) && (
                 <Badge variant="outline" className="gap-1">
                   <Clock className="h-3 w-3" />
-                  {format(new Date(inspection.fixedAppointment), 'h:mm a')}
+                  {format(new Date(inspection.fixedAppointment), 'MMM d, h:mm a')}
                 </Badge>
               )}
             </div>
