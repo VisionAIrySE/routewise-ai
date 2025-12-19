@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { format } from 'date-fns';
-import { CalendarIcon, Loader2, Plus } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
+import { CalendarIcon, Loader2, Plus, Pencil } from 'lucide-react';
+import type { Appointment } from '@/types/appointment';
 import {
   Dialog,
   DialogContent,
@@ -30,7 +31,7 @@ import {
 import { Calendar } from '@/components/ui/calendar';
 import { useToast } from '@/hooks/use-toast';
 import { usePendingInspections } from '@/hooks/useInspections';
-import { useCreateAppointment } from '@/hooks/useAppointments';
+import { useCreateAppointment, useUpdateAppointment } from '@/hooks/useAppointments';
 import { cn } from '@/lib/utils';
 import type { Inspection } from '@/lib/mockData';
 
@@ -53,17 +54,37 @@ interface AddAppointmentModalProps {
   onOpenChange: (open: boolean) => void;
   defaultDate?: Date;
   inspection?: Inspection;
+  editAppointment?: Appointment | null;
 }
 
 export function AddAppointmentModal({ 
   open, 
   onOpenChange, 
   defaultDate,
-  inspection 
+  inspection,
+  editAppointment,
 }: AddAppointmentModalProps) {
+  const isEditing = !!editAppointment;
   const { toast } = useToast();
   const { data: pendingInspections = [] } = usePendingInspections();
   const createAppointment = useCreateAppointment();
+  const updateAppointment = useUpdateAppointment();
+
+  // Helper to convert time string like "12:00 PM" to 24h format "12:00"
+  const convertTo24h = (time12h: string | undefined): string => {
+    if (!time12h) return '09:00';
+    // If already in 24h format, return as-is
+    if (!time12h.includes('AM') && !time12h.includes('PM')) return time12h;
+    
+    const [time, modifier] = time12h.split(' ');
+    let [hours, minutes] = time.split(':');
+    if (hours === '12') {
+      hours = modifier === 'AM' ? '00' : '12';
+    } else if (modifier === 'PM') {
+      hours = String(parseInt(hours, 10) + 12);
+    }
+    return `${hours.padStart(2, '0')}:${minutes}`;
+  };
 
   const {
     register,
@@ -90,63 +111,106 @@ export function AddAppointmentModal({
   // Reset form when modal opens with new props
   useEffect(() => {
     if (open) {
-      reset({
-        appointment_type: inspection ? 'inspection' : 'adhoc',
-        appointment_date: defaultDate || new Date(),
-        appointment_time: '09:00',
-        duration_minutes: 30,
-        inspection_id: inspection?.id,
-        title: '',
-        address: '',
-        city: '',
-        notes: '',
-      });
+      if (editAppointment) {
+        // Editing existing appointment
+        reset({
+          appointment_type: editAppointment.appointment_type as 'inspection' | 'adhoc',
+          appointment_date: parseISO(editAppointment.appointment_date),
+          appointment_time: convertTo24h(editAppointment.appointment_time || undefined),
+          duration_minutes: editAppointment.duration_minutes || 30,
+          inspection_id: editAppointment.inspection_id || undefined,
+          title: editAppointment.title || '',
+          address: editAppointment.address || '',
+          city: editAppointment.city || '',
+          notes: editAppointment.notes || '',
+        });
+      } else {
+        // Creating new appointment
+        reset({
+          appointment_type: inspection ? 'inspection' : 'adhoc',
+          appointment_date: defaultDate || new Date(),
+          appointment_time: '09:00',
+          duration_minutes: 30,
+          inspection_id: inspection?.id,
+          title: '',
+          address: '',
+          city: '',
+          notes: '',
+        });
+      }
     }
-  }, [open, inspection, defaultDate, reset]);
+  }, [open, inspection, defaultDate, editAppointment, reset]);
 
   const appointmentType = watch('appointment_type');
   const selectedInspectionId = watch('inspection_id');
 
   const onSubmit = async (data: FormData) => {
     try {
-      await createAppointment.mutateAsync({
-        appointment_type: data.appointment_type,
-        appointment_date: data.appointment_date,
-        appointment_time: data.appointment_time,
-        duration_minutes: data.duration_minutes,
-        inspection_id: data.appointment_type === 'inspection' ? data.inspection_id : undefined,
-        title: data.appointment_type === 'adhoc' ? data.title : undefined,
-        address: data.appointment_type === 'adhoc' ? data.address : undefined,
-        city: data.appointment_type === 'adhoc' ? data.city : undefined,
-        notes: data.notes,
-      });
+      if (isEditing && editAppointment) {
+        // Update existing appointment
+        await updateAppointment.mutateAsync({
+          id: editAppointment.id,
+          data: {
+            appointment_date: data.appointment_date,
+            appointment_time: data.appointment_time,
+            duration_minutes: data.duration_minutes,
+            title: data.appointment_type === 'adhoc' ? data.title : undefined,
+            address: data.appointment_type === 'adhoc' ? data.address : undefined,
+            notes: data.notes,
+          },
+        });
 
-      toast({
-        title: 'Appointment Created',
-        description: data.appointment_type === 'inspection' 
-          ? 'Inspection appointment has been scheduled.'
-          : 'Personal appointment has been added.',
-      });
+        toast({
+          title: 'Appointment Updated',
+          description: 'The appointment has been updated.',
+        });
+      } else {
+        // Create new appointment
+        await createAppointment.mutateAsync({
+          appointment_type: data.appointment_type,
+          appointment_date: data.appointment_date,
+          appointment_time: data.appointment_time,
+          duration_minutes: data.duration_minutes,
+          inspection_id: data.appointment_type === 'inspection' ? data.inspection_id : undefined,
+          title: data.appointment_type === 'adhoc' ? data.title : undefined,
+          address: data.appointment_type === 'adhoc' ? data.address : undefined,
+          city: data.appointment_type === 'adhoc' ? data.city : undefined,
+          notes: data.notes,
+        });
+
+        toast({
+          title: 'Appointment Created',
+          description: data.appointment_type === 'inspection' 
+            ? 'Inspection appointment has been scheduled.'
+            : 'Personal appointment has been added.',
+        });
+      }
 
       reset();
       onOpenChange(false);
     } catch (error) {
-      console.error('Error creating appointment:', error);
+      console.error('Error saving appointment:', error);
       toast({
         title: 'Error',
-        description: 'Failed to create appointment. Please try again.',
+        description: `Failed to ${isEditing ? 'update' : 'create'} appointment. Please try again.`,
         variant: 'destructive',
       });
     }
   };
+
+  const isSaving = createAppointment.isPending || updateAppointment.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Plus className="h-5 w-5 text-primary" />
-            Add Appointment
+            {isEditing ? (
+              <Pencil className="h-5 w-5 text-primary" />
+            ) : (
+              <Plus className="h-5 w-5 text-primary" />
+            )}
+            {isEditing ? 'Edit Appointment' : 'Add Appointment'}
           </DialogTitle>
         </DialogHeader>
 
@@ -325,16 +389,16 @@ export function AddAppointmentModal({
             </Button>
             <Button 
               type="submit" 
-              disabled={createAppointment.isPending} 
+              disabled={isSaving} 
               className="flex-1"
             >
-              {createAppointment.isPending ? (
+              {isSaving ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Adding...
+                  {isEditing ? 'Saving...' : 'Adding...'}
                 </>
               ) : (
-                'Add Appointment'
+                isEditing ? 'Save Changes' : 'Add Appointment'
               )}
             </Button>
           </div>
