@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { Send, Bot, User, Sparkles, RotateCcw, Mic, MicOff, RefreshCw, Plus, Minus } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { useChat } from '@/hooks/useChat';
@@ -46,6 +46,7 @@ export function AIChatPanel({ open, onOpenChange }: AIChatPanelProps) {
   const [input, setInput] = useState('');
   const [isListening, setIsListening] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const lastUserMessageRef = useRef<HTMLDivElement>(null);
   const thinkingDotsRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
@@ -181,6 +182,17 @@ export function AIChatPanel({ open, onOpenChange }: AIChatPanelProps) {
     };
   }, [toast]);
 
+  // Make the composer wrap while typing (textarea + auto-resize)
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+
+    // Reset then grow to content (capped)
+    el.style.height = '0px';
+    const next = Math.min(el.scrollHeight, 160);
+    el.style.height = `${Math.max(next, 48)}px`;
+  }, [input, open]);
+
   const toggleListening = async () => {
     if (!recognitionRef.current) {
       toast({
@@ -243,7 +255,7 @@ export function AIChatPanel({ open, onOpenChange }: AIChatPanelProps) {
     await sendMessage(message);
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -439,7 +451,7 @@ export function AIChatPanel({ open, onOpenChange }: AIChatPanelProps) {
         )}
 
         <div className="border-t border-border p-5 flex-shrink-0">
-          <div className="flex gap-3">
+          <div className="flex gap-3 items-end">
             <Button
               variant={isListening ? "destructive" : "default"}
               size="lg"
@@ -454,14 +466,18 @@ export function AIChatPanel({ open, onOpenChange }: AIChatPanelProps) {
             >
               {isListening ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
             </Button>
-            <Input
+
+            <Textarea
+              ref={textareaRef}
               placeholder={isListening ? "Listening..." : "Type your message..."}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyDown}
               disabled={isLoading}
-              className="flex-1 text-base h-12"
+              rows={1}
+              className="flex-1 text-base min-h-12 max-h-40 resize-none overflow-y-auto break-words [overflow-wrap:anywhere]"
             />
+
             <Button
               size="lg"
               onClick={handleSend}
