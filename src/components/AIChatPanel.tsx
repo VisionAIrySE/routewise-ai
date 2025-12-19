@@ -310,7 +310,7 @@ export function AIChatPanel({ open, onOpenChange }: AIChatPanelProps) {
                 key={message.id}
                 ref={isLastUser ? lastUserMessageRef : null}
                 className={cn(
-                  'flex gap-4',
+                  'flex gap-4 min-w-0',
                   message.role === 'user' ? 'flex-row-reverse' : 'flex-row',
                   message.routeResponse && 'flex-col items-start'
                 )}
@@ -337,18 +337,20 @@ export function AIChatPanel({ open, onOpenChange }: AIChatPanelProps) {
                 ) : (
                   <div
                     className={cn(
-                      'max-w-[80%] rounded-xl px-5 py-4 text-base',
+                      'max-w-[80%] min-w-0 rounded-xl px-5 py-4 text-base',
                       message.role === 'user'
                         ? 'bg-primary text-primary-foreground'
                         : 'bg-muted text-foreground'
                     )}
                   >
                     {message.role === 'assistant' ? (
-                      <div className="prose prose-sm dark:prose-invert max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+                      <div className="prose prose-sm dark:prose-invert max-w-none break-words [overflow-wrap:anywhere] [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
                         <ReactMarkdown
                           remarkPlugins={[remarkGfm]}
                           components={{
-                            p: ({ children }) => <p className="my-2 whitespace-pre-wrap break-words">{children}</p>,
+                            p: ({ children }) => (
+                              <p className="my-2 whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{children}</p>
+                            ),
                             ul: ({ children }) => <ul className="list-disc pl-5 my-2 space-y-1">{children}</ul>,
                             ol: ({ children }) => <ol className="list-decimal pl-5 my-2 space-y-1">{children}</ol>,
                             li: ({ children }) => <li className="text-inherit">{children}</li>,
@@ -356,14 +358,20 @@ export function AIChatPanel({ open, onOpenChange }: AIChatPanelProps) {
                             h1: ({ children }) => <h1 className="text-lg font-bold mt-4 mb-2">{children}</h1>,
                             h2: ({ children }) => <h2 className="text-base font-semibold mt-3 mb-2">{children}</h2>,
                             h3: ({ children }) => <h3 className="text-sm font-medium mt-2 mb-1">{children}</h3>,
-                            code: ({ children }) => <code className="bg-background/50 px-1 py-0.5 rounded text-sm">{children}</code>,
+                            code: ({ children }) => (
+                              <code className="bg-background/50 px-1 py-0.5 rounded text-sm break-words [overflow-wrap:anywhere]">
+                                {children}
+                              </code>
+                            ),
                           }}
                         >
                           {message.content}
                         </ReactMarkdown>
                       </div>
                     ) : (
-                      <div className="whitespace-pre-wrap break-words overflow-wrap-anywhere">{message.content}</div>
+                      <div className="whitespace-pre-wrap break-words [overflow-wrap:anywhere] max-w-full">
+                        {message.content}
+                      </div>
                     )}
                     {message.hasRouteAction && (
                       <div className="mt-4 flex gap-2">
