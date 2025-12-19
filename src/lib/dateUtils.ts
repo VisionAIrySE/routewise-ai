@@ -18,19 +18,23 @@
 export function parseLocalDate(dateStr: string | null | undefined): Date | null {
   if (!dateStr) return null;
   
-  // If it's a full ISO datetime with time info, parse normally
-  // These typically come from timestamp fields and are already correct
-  if (dateStr.includes('T') || dateStr.includes(' ') && dateStr.includes(':')) {
-    return new Date(dateStr);
+  // CRITICAL: Always extract just the date portion (YYYY-MM-DD) and interpret as local time.
+  // This prevents timezone issues where "2025-12-29 00:00:00+00" (UTC midnight)
+  // becomes "2025-12-28 16:00:00" in Pacific time.
+  
+  // Extract the date portion: handles "2025-12-29", "2025-12-29T00:00:00", "2025-12-29 00:00:00+00"
+  const datePart = dateStr.split('T')[0].split(' ')[0];
+  
+  // Validate format
+  const match = datePart.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) {
+    console.warn('parseLocalDate: Invalid date format:', dateStr);
+    return new Date(dateStr); // Fallback to native parsing
   }
   
-  // For date-only strings (YYYY-MM-DD), append T00:00:00 to force local interpretation
-  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-    return new Date(dateStr + 'T00:00:00');
-  }
-  
-  // Fallback to normal parsing
-  return new Date(dateStr);
+  const [, year, month, day] = match;
+  // Create date in local timezone using date parts (month is 0-indexed)
+  return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
 }
 
 /**
