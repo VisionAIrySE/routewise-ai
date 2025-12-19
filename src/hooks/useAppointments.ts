@@ -237,7 +237,8 @@ export function useCreateAppointment() {
       return result;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      // Invalidate all appointment queries to ensure UI updates everywhere
+      queryClient.invalidateQueries({ queryKey: ['appointments'], refetchType: 'all' });
     },
   });
 }
@@ -283,7 +284,8 @@ export function useUpdateAppointment() {
       return result;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      // Invalidate all appointment queries to ensure UI updates everywhere
+      queryClient.invalidateQueries({ queryKey: ['appointments'], refetchType: 'all' });
     },
   });
 }
