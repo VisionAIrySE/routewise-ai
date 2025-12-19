@@ -174,7 +174,7 @@ export function useInspectionAppointment(inspectionId: string | undefined) {
   });
 }
 
-// Create a new appointment
+// Create a new appointment (or update existing if inspection already has one)
 export function useCreateAppointment() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -182,6 +182,36 @@ export function useCreateAppointment() {
   return useMutation({
     mutationFn: async (data: AppointmentFormData) => {
       if (!user) throw new Error('Not authenticated');
+
+      // If this is an inspection appointment, check if one already exists
+      if (data.appointment_type === 'inspection' && data.inspection_id) {
+        const { data: existing } = await supabase
+          .from('appointments')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('inspection_id', data.inspection_id)
+          .eq('status', 'scheduled')
+          .maybeSingle();
+
+        // If appointment exists, update it instead of creating duplicate
+        if (existing) {
+          const { data: result, error } = await supabase
+            .from('appointments')
+            .update({
+              appointment_date: format(data.appointment_date, 'yyyy-MM-dd'),
+              appointment_time: data.appointment_time || null,
+              duration_minutes: data.duration_minutes,
+              notes: data.notes || null,
+            })
+            .eq('id', existing.id)
+            .eq('user_id', user.id)
+            .select()
+            .single();
+
+          if (error) throw error;
+          return result;
+        }
+      }
 
       const appointmentData = {
         user_id: user.id,
