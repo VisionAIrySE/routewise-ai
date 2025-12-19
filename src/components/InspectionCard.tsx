@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Inspection, getUrgencyColor } from '@/lib/mockData';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
@@ -137,7 +137,7 @@ export function InspectionCard({ inspection, onClick, onScheduleAppointment }: I
               {appointment && (
                 <Badge variant="outline" className="gap-1 text-blue-600 border-blue-200 bg-blue-50">
                   <Calendar className="h-3 w-3" />
-                  {format(new Date(appointment.appointment_date), 'MMM d')}
+                  {format(parseISO(appointment.appointment_date), 'MMM d')}
                   {appointment.appointment_time && ` @ ${appointment.appointment_time}`}
                 </Badge>
               )}
