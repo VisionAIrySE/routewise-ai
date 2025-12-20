@@ -5,6 +5,7 @@ export interface RouteStop {
   lng: number;
   name: string;
   address: string;
+  city?: string;
   company: string;
   urgency: string;
   duration_minutes: number;
@@ -12,6 +13,7 @@ export interface RouteStop {
   drive_miles_to_next: number | null;
   needs_call_ahead: boolean;
   scheduled_time?: string;
+  appointment_time?: string;
   days_remaining?: number;
 }
 
