@@ -57,7 +57,8 @@ export function InspectionCard({ inspection, onClick, onScheduleAppointment }: I
   const handleMarkComplete = async () => {
     setIsMarking(true);
     try {
-      const { error } = await supabase
+      // Update the inspection status
+      const { error: inspectionError } = await supabase
         .from('inspections')
         .update({
           status: 'COMPLETED',
@@ -65,15 +66,24 @@ export function InspectionCard({ inspection, onClick, onScheduleAppointment }: I
         })
         .eq('id', inspection.id);
 
-      if (error) throw error;
+      if (inspectionError) throw inspectionError;
+
+      // Also mark any associated appointment as completed
+      if (appointment) {
+        await supabase
+          .from('appointments')
+          .update({ status: 'completed' })
+          .eq('id', appointment.id);
+      }
 
       toast({
         title: 'Inspection Completed',
         description: `${inspection.street} marked as complete`,
       });
 
-      // Invalidate inspection queries to refresh the list
+      // Invalidate both inspection and appointment queries to refresh everywhere
       queryClient.invalidateQueries({ queryKey: ['inspections'] });
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
     } catch (error) {
       console.error('Error marking inspection complete:', error);
       toast({
