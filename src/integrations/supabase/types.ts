@@ -48,16 +48,19 @@ export type Database = {
           appointment_time: string | null
           appointment_type: string
           city: string | null
+          company_name: string | null
           created_at: string | null
           duration_minutes: number | null
           id: string
           inspection_id: string | null
+          insured_name: string | null
           lat: number | null
           lng: number | null
           notes: string | null
           status: string | null
           title: string | null
           updated_at: string | null
+          urgency: string | null
           user_id: string
         }
         Insert: {
@@ -66,16 +69,19 @@ export type Database = {
           appointment_time?: string | null
           appointment_type: string
           city?: string | null
+          company_name?: string | null
           created_at?: string | null
           duration_minutes?: number | null
           id?: string
           inspection_id?: string | null
+          insured_name?: string | null
           lat?: number | null
           lng?: number | null
           notes?: string | null
           status?: string | null
           title?: string | null
           updated_at?: string | null
+          urgency?: string | null
           user_id: string
         }
         Update: {
@@ -84,27 +90,22 @@ export type Database = {
           appointment_time?: string | null
           appointment_type?: string
           city?: string | null
+          company_name?: string | null
           created_at?: string | null
           duration_minutes?: number | null
           id?: string
           inspection_id?: string | null
+          insured_name?: string | null
           lat?: number | null
           lng?: number | null
           notes?: string | null
           status?: string | null
           title?: string | null
           updated_at?: string | null
+          urgency?: string | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "appointments_inspection_id_fkey"
-            columns: ["inspection_id"]
-            isOneToOne: false
-            referencedRelation: "inspections"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       companies: {
         Row: {
