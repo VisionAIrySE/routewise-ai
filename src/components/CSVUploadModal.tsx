@@ -103,9 +103,21 @@ export function CSVUploadModal({ open, onOpenChange, onUploadComplete }: CSVUplo
       }
 
       const uploadResult = result as UploadResponse;
+      
+      // Log the full response to help debug
+      console.log('Upload response:', JSON.stringify(uploadResult));
 
-      // Extract records count from response
-      const recordsCount = uploadResult.inserted_to_airtable || uploadResult.valid_inspections || uploadResult.total_rows_in_file || 0;
+      // Extract records count from response - check various possible field names
+      const recordsCount = 
+        uploadResult.inserted_to_airtable || 
+        uploadResult.valid_inspections || 
+        uploadResult.total_rows_in_file || 
+        (uploadResult as any).records_added ||
+        (uploadResult as any).added ||
+        (uploadResult as any).inserted ||
+        (uploadResult as any).count ||
+        (uploadResult as any).inspections_added ||
+        0;
       const companyDetected = uploadResult.company || 'Unknown';
 
       // Check for conflicts in the response

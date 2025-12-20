@@ -91,6 +91,7 @@ serve(async (req) => {
     const responseData = await n8nResponse.text();
     
     console.log(`n8n response status: ${n8nResponse.status}`);
+    console.log(`n8n response data: ${responseData.substring(0, 500)}`);
 
     // Return the n8n response to the client
     return new Response(responseData, {
