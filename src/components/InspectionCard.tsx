@@ -143,7 +143,7 @@ export function InspectionCard({ inspection, onClick, onScheduleAppointment }: I
                 {inspection.urgencyTier}
               </Badge>
               
-              {/* Show appointment from new appointments table */}
+              {/* Show appointment from appointments table (single source of truth) */}
               {appointment && (
                 <Badge variant="outline" className="gap-1 text-blue-600 border-blue-200 bg-blue-50">
                   <Calendar className="h-3 w-3" />
@@ -151,19 +151,10 @@ export function InspectionCard({ inspection, onClick, onScheduleAppointment }: I
                   {appointment.appointment_time && ` @ ${appointment.appointment_time}`}
                 </Badge>
               )}
-              
-              {/* Legacy: Show fixed_appointment from inspections table if no new appointment */}
-              {!appointment && inspection.fixedAppointment && (
-                <Badge variant="outline" className="gap-1">
-                  <Clock className="h-3 w-3" />
-                  {format(new Date(inspection.fixedAppointment.split('T')[0] + 'T12:00:00'), 'MMM d')}
-                  {inspection.appointmentTime && ` @ ${inspection.appointmentTime}`}
-                </Badge>
-              )}
             </div>
 
             {/* Call ahead warning - show schedule button if no appointment */}
-            {!appointment && !inspection.fixedAppointment && inspection.company === 'SIG' && onScheduleAppointment && (
+            {!appointment && inspection.company === 'SIG' && onScheduleAppointment && (
               <div className="flex items-center gap-2 mt-2 text-orange-600 bg-orange-50 px-2 py-1 rounded" data-no-click>
                 <Phone className="h-3.5 w-3.5" />
                 <span className="text-xs">Appointment required</span>

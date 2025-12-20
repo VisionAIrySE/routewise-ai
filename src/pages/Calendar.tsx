@@ -13,7 +13,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { useFixedAppointments } from '@/hooks/useRoutes';
 import { useMonthSavedRoutes, type SavedRouteDB } from '@/hooks/useSavedRoutes';
 import { useMonthAppointments, useCancelAppointment } from '@/hooks/useAppointments';
 import { CalendarRouteCard } from '@/components/calendar/CalendarRouteCard';
@@ -26,7 +25,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
-import { parseLocalDate, isSameDayLocal } from '@/lib/dateUtils';
+import { isSameDayLocal } from '@/lib/dateUtils';
 import type { Appointment } from '@/types/appointment';
 import {
   format,
@@ -42,7 +41,6 @@ import {
   subWeeks,
   getDay,
   isToday,
-  isSameDay,
 } from 'date-fns';
 
 const Calendar = () => {
@@ -162,30 +160,22 @@ const Calendar = () => {
   const startPadding = getDay(monthStart);
   const paddedDays = Array(startPadding).fill(null).concat(monthDays);
 
-  // Fetch routes and appointments
+  // Fetch routes and appointments (single source of truth: appointments table)
   const { data: savedRoutes = [], isLoading: routesLoading } = useMonthSavedRoutes(currentDate);
-  const { data: fixedAppointments = [], isLoading: fixedAppointmentsLoading } = useFixedAppointments();
-  const { data: newAppointments = [], isLoading: newAppointmentsLoading } = useMonthAppointments(currentDate);
+  const { data: appointments = [], isLoading: appointmentsLoading } = useMonthAppointments(currentDate);
 
-  const isLoading = routesLoading || fixedAppointmentsLoading || newAppointmentsLoading;
+  const isLoading = routesLoading || appointmentsLoading;
 
   const getRoutesForDay = (day: Date | null) => {
     if (!day) return [];
     return savedRoutes.filter((route) => isSameDayLocal(route.route_date, day));
   };
 
-  const getAppointmentsForDay = (day: Date | null) => {
-    if (!day) return [];
-    return fixedAppointments.filter((apt) =>
-      apt.fixedAppointment && isSameDayLocal(apt.fixedAppointment, day)
-    );
-  };
-
-  // Get new appointments for a specific day
-  const getNewAppointmentsForDay = (day: Date | null): Appointment[] => {
+  // Get appointments for a specific day (from appointments table - single source of truth)
+  const getAppointmentsForDay = (day: Date | null): Appointment[] => {
     if (!day) return [];
     const dayStr = format(day, 'yyyy-MM-dd');
-    return newAppointments.filter((apt) => apt.appointment_date === dayStr);
+    return appointments.filter((apt) => apt.appointment_date === dayStr);
   };
 
   const handleAddAppointmentForDate = (date: Date) => {
@@ -210,18 +200,25 @@ const Calendar = () => {
     setDuplicateModalOpen(true);
   };
 
-  // Helper to format appointment time correctly from the timestamp
-  const formatAppointmentTime = (dateStr: string) => {
-    const date = parseLocalDate(dateStr);
-    if (!date) return '';
+  // Helper to format appointment time correctly (HH:MM:SS -> h:mm a)
+  const formatAppointmentTime = (time: string | null | undefined) => {
+    if (!time) return '';
+    const [hours, minutes] = time.split(':').map(Number);
+    const date = new Date();
+    date.setHours(hours, minutes, 0, 0);
     return format(date, 'h:mm a');
   };
 
-  // Helper to format appointment date for display
-  const formatAppointmentDateTime = (dateStr: string) => {
-    const date = parseLocalDate(dateStr);
-    if (!date) return '';
-    return format(date, 'MMM d, h:mm a');
+  // Helper to get display name for appointment
+  const getAppointmentTitle = (apt: Appointment) => {
+    return apt.inspection?.insured_name || apt.title || 'Appointment';
+  };
+
+  // Helper to get address info for appointment
+  const getAppointmentAddress = (apt: Appointment) => {
+    const street = apt.inspection?.street || apt.address || '';
+    const city = apt.inspection?.city || apt.city || '';
+    return { street, city };
   };
 
   return (
@@ -347,70 +344,73 @@ const Calendar = () => {
                     </div>
                   </div>
 
-                  {dayRoutes.length === 0 && appointments.length === 0 && getNewAppointmentsForDay(day).length === 0 ? (
+                  {dayRoutes.length === 0 && getAppointmentsForDay(day).length === 0 ? (
                     <p className="text-sm text-muted-foreground pl-13">No routes or appointments</p>
                   ) : (
                     <div className="space-y-2 pl-13">
-                      {/* New Appointments (from appointments table) */}
-                      {getNewAppointmentsForDay(day).map((apt) => (
-                        <div
-                          key={apt.id}
-                          className={cn(
-                            "rounded-lg p-3 border",
-                            apt.appointment_type === 'inspection' 
-                              ? "bg-blue-50 border-blue-200" 
-                              : "bg-purple-50 border-purple-200"
-                          )}
-                        >
-                          <div className={cn(
-                            "flex items-center gap-2 font-medium",
-                            apt.appointment_type === 'inspection' ? "text-blue-600" : "text-purple-600"
-                          )}>
-                            {apt.appointment_type === 'inspection' ? <Timer className="h-4 w-4" /> : <User className="h-4 w-4" />}
-                            {apt.appointment_time || 'All day'}
-                            <Badge variant={apt.appointment_type === 'inspection' ? 'default' : 'secondary'} className="ml-auto">
-                              {apt.appointment_type === 'inspection' ? 'Inspection' : 'Personal'}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-foreground mt-1">
-                            {apt.inspection?.street || apt.title || 'Appointment'}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {apt.inspection?.city || apt.city || ''}
-                          </p>
-                          <div className="flex items-center gap-1 mt-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 px-2 text-xs"
-                              onClick={() => handleEditAppointment(apt)}
-                            >
-                              <Pencil className="h-3 w-3 mr-1" />
-                              Reschedule
-                            </Button>
-                            {apt.appointment_type === 'inspection' && (
+                      {/* Appointments (from appointments table - single source of truth) */}
+                      {getAppointmentsForDay(day).map((apt) => {
+                        const address = getAppointmentAddress(apt);
+                        return (
+                          <div
+                            key={apt.id}
+                            className={cn(
+                              "rounded-lg p-3 border",
+                              apt.appointment_type === 'inspection' 
+                                ? "bg-blue-50 dark:bg-blue-950/50 border-blue-200 dark:border-blue-800" 
+                                : "bg-purple-50 dark:bg-purple-950/50 border-purple-200 dark:border-purple-800"
+                            )}
+                          >
+                            <div className={cn(
+                              "flex items-center gap-2 font-medium",
+                              apt.appointment_type === 'inspection' ? "text-blue-600 dark:text-blue-400" : "text-purple-600 dark:text-purple-400"
+                            )}>
+                              {apt.appointment_type === 'inspection' ? <Timer className="h-4 w-4" /> : <User className="h-4 w-4" />}
+                              {formatAppointmentTime(apt.appointment_time) || 'All day'}
+                              <Badge variant={apt.appointment_type === 'inspection' ? 'default' : 'secondary'} className="ml-auto">
+                                {apt.inspection?.company_name || (apt.appointment_type === 'inspection' ? 'Inspection' : 'Personal')}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-foreground mt-1 font-medium">
+                              {getAppointmentTitle(apt)}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {address.street}{address.city && `, ${address.city}`}
+                            </p>
+                            <div className="flex items-center gap-1 mt-2">
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-7 px-2 text-xs text-green-600 hover:text-green-600"
-                                onClick={() => handleCompleteAppointment(apt)}
+                                className="h-7 px-2 text-xs"
+                                onClick={() => handleEditAppointment(apt)}
                               >
-                                <CheckCircle className="h-3 w-3 mr-1" />
-                                Complete
+                                <Pencil className="h-3 w-3 mr-1" />
+                                Reschedule
                               </Button>
-                            )}
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 px-2 text-xs text-destructive hover:text-destructive"
-                              onClick={() => handleCancelAppointment(apt)}
-                            >
-                              <X className="h-3 w-3 mr-1" />
-                              Cancel
-                            </Button>
+                              {apt.appointment_type === 'inspection' && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 px-2 text-xs text-green-600 hover:text-green-600"
+                                  onClick={() => handleCompleteAppointment(apt)}
+                                >
+                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                  Complete
+                                </Button>
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 px-2 text-xs text-destructive hover:text-destructive"
+                                onClick={() => handleCancelAppointment(apt)}
+                              >
+                                <X className="h-3 w-3 mr-1" />
+                                Cancel
+                              </Button>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                       {/* Saved Routes */}
                       {dayRoutes.map((route) => (
                         <CalendarRouteCard
@@ -419,26 +419,6 @@ const Calendar = () => {
                           onClick={() => handleRouteClick(route)}
                           expanded
                         />
-                      ))}
-
-                      {/* Fixed Appointments */}
-                      {appointments.map((apt) => (
-                        <div
-                          key={apt.id}
-                          className="rounded-lg bg-fixed/10 border border-fixed/20 p-3"
-                        >
-                          <div className="flex items-center gap-2 text-fixed font-medium">
-                            <Timer className="h-4 w-4" />
-                            {formatAppointmentTime(apt.fixedAppointment!)}
-                            <Badge variant="fixed" className="ml-auto">SIG</Badge>
-                          </div>
-                          <p className="text-sm text-foreground mt-1">
-                            {apt.street}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {apt.city}, {apt.state}
-                          </p>
-                        </div>
                       ))}
                     </div>
                   )}
@@ -502,21 +482,35 @@ const Calendar = () => {
                           ))}
                         </div>
 
-                        {/* Fixed Appointments */}
-                        {appointments.map((apt) => (
-                          <div
-                            key={apt.id}
-                            className="rounded-md bg-fixed/10 border border-fixed/20 px-2 py-1 text-xs mt-1"
-                          >
-                            <div className="flex items-center gap-1 text-fixed font-medium">
-                              <Timer className="h-3 w-3" />
-                              {formatAppointmentTime(apt.fixedAppointment!)}
+                        {/* Appointments (from appointments table) */}
+                        {getAppointmentsForDay(day).map((apt) => {
+                          const address = getAppointmentAddress(apt);
+                          return (
+                            <div
+                              key={apt.id}
+                              className={cn(
+                                "rounded-md px-2 py-1 text-xs mt-1",
+                                apt.appointment_type === 'inspection' 
+                                  ? "bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800" 
+                                  : "bg-purple-50 dark:bg-purple-950/50 border border-purple-200 dark:border-purple-800"
+                              )}
+                            >
+                              <div className={cn(
+                                "flex items-center gap-1 font-medium",
+                                apt.appointment_type === 'inspection' ? "text-blue-600 dark:text-blue-400" : "text-purple-600 dark:text-purple-400"
+                              )}>
+                                <Timer className="h-3 w-3" />
+                                {formatAppointmentTime(apt.appointment_time) || 'All day'}
+                              </div>
+                              <p className="text-[10px] text-foreground font-medium truncate mt-0.5">
+                                {getAppointmentTitle(apt)}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground truncate">
+                                {address.street}
+                              </p>
                             </div>
-                            <p className="text-[10px] text-muted-foreground truncate mt-0.5">
-                              {apt.street}
-                            </p>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </>
                     )}
                   </div>
@@ -536,46 +530,6 @@ const Calendar = () => {
         <AppointmentsList onEditAppointment={handleEditAppointment} />
       </div>
 
-      {/* Fixed Appointments Section */}
-      <div className="rounded-xl border border-border bg-card p-6">
-        <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-          <Timer className="h-5 w-5 text-fixed" />
-          Fixed Appointments (SIG)
-        </h3>
-        {fixedAppointmentsLoading ? (
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Loading appointments...
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {fixedAppointments.length > 0 ? (
-              fixedAppointments.map((apt) => (
-                <div
-                  key={apt.id}
-                  className="flex items-center justify-between rounded-lg bg-muted/50 px-4 py-3"
-                >
-                  <div>
-                    <p className="font-medium text-foreground">{apt.street}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {apt.city}, {apt.state}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <Badge variant="fixed">
-                      {formatAppointmentDateTime(apt.fixedAppointment!)}
-                    </Badge>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-muted-foreground text-sm">
-                No fixed appointments scheduled
-              </p>
-            )}
-          </div>
-        )}
-      </div>
 
       {/* Route Detail Modal */}
       <RouteDetailModal

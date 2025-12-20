@@ -172,45 +172,5 @@ export function useRouteStops(routeId: string) {
   });
 }
 
-export function useFixedAppointments() {
-  const { user } = useAuth();
-
-  return useQuery({
-    queryKey: ['inspections', 'fixed-appointments', user?.id],
-    queryFn: async (): Promise<Inspection[]> => {
-      if (!user) return [];
-
-      const { data, error } = await supabase
-        .from('inspections')
-        .select('*')
-        .eq('user_id', user.id)
-        .not('fixed_appointment', 'is', null)
-        .order('fixed_appointment', { ascending: true });
-
-      if (error) {
-        console.error('Error fetching fixed appointments:', error);
-        throw error;
-      }
-
-      // Map to Inspection type
-      return (data || []).map((row: any) => ({
-        id: row.id,
-        address_key: row.id,
-        street: row.street || '',
-        city: row.city || '',
-        state: row.state || '',
-        zip: row.zip || '',
-        fullAddress: row.full_address || `${row.street}, ${row.city}, ${row.state} ${row.zip}`,
-        company: row.company_name,
-        dueDate: row.due_date || '',
-        daysRemaining: 0,
-        urgencyTier: row.urgency_tier,
-        fixedAppointment: row.fixed_appointment,
-        status: row.status,
-        claimNumber: row.insured_name || '',
-      }));
-    },
-    enabled: !!user,
-    refetchInterval: 60000,
-  });
-}
+// DEPRECATED: useFixedAppointments removed - all appointments now come from appointments table
+// See useMonthAppointments in useAppointments.ts

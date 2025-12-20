@@ -315,37 +315,5 @@ export function useCompletionStats() {
   });
 }
 
-export function useUpcomingAppointments() {
-  const { user } = useAuth();
-
-  return useQuery({
-    queryKey: ['inspections', 'upcoming-appointments', user?.id],
-    queryFn: async (): Promise<Inspection[]> => {
-      if (!user) return [];
-
-      // Get today's date at midnight in ISO format for database comparison
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const todayISO = today.toISOString();
-
-      const { data, error } = await supabase
-        .from('inspections')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('status', 'PENDING')
-        .not('fixed_appointment', 'is', null)
-        .gte('fixed_appointment', todayISO) // Only get today and future appointments
-        .order('fixed_appointment', { ascending: true })
-        .limit(10);
-
-      if (error) {
-        console.error('Error fetching upcoming appointments:', error);
-        throw error;
-      }
-
-      return (data || []).map(mapDbToInspection);
-    },
-    enabled: !!user,
-    refetchInterval: 60000,
-  });
-}
+// DEPRECATED: useUpcomingAppointments removed - all appointments now come from appointments table
+// See useUpcomingNewAppointments in useAppointments.ts
