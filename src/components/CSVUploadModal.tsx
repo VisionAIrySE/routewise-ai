@@ -109,16 +109,21 @@ export function CSVUploadModal({ open, onOpenChange, onUploadComplete }: CSVUplo
 
       // Extract records count from response - check various possible field names
       const recordsCount = 
+        (uploadResult as any).inspection_count ||
         uploadResult.inserted_to_airtable || 
         uploadResult.valid_inspections || 
         uploadResult.total_rows_in_file || 
-        (uploadResult as any).records_added ||
-        (uploadResult as any).added ||
-        (uploadResult as any).inserted ||
-        (uploadResult as any).count ||
-        (uploadResult as any).inspections_added ||
         0;
-      const companyDetected = uploadResult.company || 'Unknown';
+      
+      // Extract company from response - try company field or parse from message
+      let companyDetected = uploadResult.company || 'Unknown';
+      if (companyDetected === 'Unknown' && uploadResult.message) {
+        // Try to extract company from message like "Successfully processed 15 IPI inspections"
+        const messageMatch = uploadResult.message.match(/(\d+)\s+(\w+)\s+inspections/i);
+        if (messageMatch && messageMatch[2]) {
+          companyDetected = messageMatch[2].toUpperCase();
+        }
+      }
 
       // Check for conflicts in the response
       if (uploadResult.has_conflicts && uploadResult.conflicts && uploadResult.conflicts.length > 0) {
