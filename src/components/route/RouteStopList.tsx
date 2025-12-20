@@ -1,4 +1,4 @@
-import { ChevronRight, Phone, Clock, AlertTriangle, Calendar, CheckCircle } from 'lucide-react';
+import { ChevronRight, Phone, Clock, Calendar, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -9,6 +9,7 @@ interface RouteStop {
   order: number;
   name: string;
   address: string;
+  city?: string;
   company: string;
   urgency: string;
   duration_minutes: number;
@@ -16,6 +17,7 @@ interface RouteStop {
   drive_miles_to_next: number | null;
   needs_call_ahead: boolean;
   scheduled_time?: string;
+  appointment_time?: string;
 }
 
 interface RouteStopListProps {
@@ -67,9 +69,11 @@ export function RouteStopList({
                 "p-3 rounded-lg border cursor-pointer transition-all relative",
                 isCompleted 
                   ? "opacity-50 bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800"
-                  : selectedStopId === stop.id
-                    ? 'border-primary bg-primary/5'
-                    : 'border-border bg-card hover:border-primary/50'
+                  : stop.appointment_time || stop.scheduled_time
+                    ? "border-blue-300 bg-blue-50 dark:bg-blue-950/50 dark:border-blue-800"
+                    : selectedStopId === stop.id
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border bg-card hover:border-primary/50'
               )}
               onClick={() => onStopClick?.(stop)}
             >
@@ -99,7 +103,9 @@ export function RouteStopList({
                       {stop.company}
                     </span>
                   </div>
-                  <p className="text-sm text-muted-foreground truncate">{stop.address}</p>
+                  <p className="text-sm text-muted-foreground truncate">
+                    {stop.address}{stop.city && <span>, {stop.city}</span>}
+                  </p>
 
                   <div className="flex items-center gap-3 mt-1 flex-wrap">
                     <span className="text-xs text-muted-foreground flex items-center gap-1">
@@ -114,17 +120,18 @@ export function RouteStopList({
                       </span>
                     )}
 
-                    {stop.company === 'SIG' && (
+                    {stop.company === 'SIG' && !stop.appointment_time && !stop.scheduled_time && (
                       <span className="text-xs text-purple-600 flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
                         Appt req'd
                       </span>
                     )}
 
-                    {stop.scheduled_time && (
-                      <span className="text-xs text-blue-600 flex items-center gap-1">
-                        <AlertTriangle className="h-3 w-3" />
-                        {stop.scheduled_time}
+                    {/* Appointment Time Badge */}
+                    {(stop.appointment_time || stop.scheduled_time) && (
+                      <span className="text-xs text-blue-600 font-medium flex items-center gap-1 bg-blue-100 dark:bg-blue-900/50 px-2 py-0.5 rounded-full">
+                        <Calendar className="h-3 w-3" />
+                        APPT {stop.appointment_time || stop.scheduled_time}
                       </span>
                     )}
 
