@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Timer, Loader2, Calendar as CalendarIcon, List, Plus, User, CalendarCheck, Pencil, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Timer, Loader2, Calendar as CalendarIcon, List, Plus, User, CalendarCheck, Pencil, X, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -23,6 +23,8 @@ import { AddAppointmentModal } from '@/components/calendar/AddAppointmentModal';
 import { AppointmentsList } from '@/components/calendar/AppointmentsList';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { parseLocalDate, isSameDayLocal } from '@/lib/dateUtils';
 import type { Appointment } from '@/types/appointment';
@@ -46,6 +48,7 @@ import {
 const Calendar = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedRoute, setSelectedRoute] = useState<SavedRouteDB | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
@@ -56,7 +59,10 @@ const Calendar = () => {
   const [addAppointmentDate, setAddAppointmentDate] = useState<Date | undefined>();
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
   const [appointmentToCancel, setAppointmentToCancel] = useState<Appointment | null>(null);
+  const [appointmentToComplete, setAppointmentToComplete] = useState<Appointment | null>(null);
+  const [isMarking, setIsMarking] = useState(false);
   
   const { toast } = useToast();
   const cancelAppointment = useCancelAppointment();
@@ -69,6 +75,11 @@ const Calendar = () => {
   const handleCancelAppointment = (appointment: Appointment) => {
     setAppointmentToCancel(appointment);
     setCancelDialogOpen(true);
+  };
+
+  const handleCompleteAppointment = (appointment: Appointment) => {
+    setAppointmentToComplete(appointment);
+    setCompleteDialogOpen(true);
   };
 
   const handleConfirmCancel = async () => {
@@ -88,6 +99,50 @@ const Calendar = () => {
     } finally {
       setCancelDialogOpen(false);
       setAppointmentToCancel(null);
+    }
+  };
+
+  const handleConfirmComplete = async () => {
+    if (!appointmentToComplete) return;
+    setIsMarking(true);
+    try {
+      // If it's an inspection appointment, mark the inspection as complete
+      if (appointmentToComplete.inspection_id) {
+        const { error: inspectionError } = await supabase
+          .from('inspections')
+          .update({
+            status: 'COMPLETED',
+            completed_date: new Date().toISOString().split('T')[0],
+          })
+          .eq('id', appointmentToComplete.inspection_id);
+
+        if (inspectionError) throw inspectionError;
+      }
+
+      // Mark the appointment as completed
+      await supabase
+        .from('appointments')
+        .update({ status: 'completed' })
+        .eq('id', appointmentToComplete.id);
+
+      toast({
+        title: 'Marked Complete',
+        description: appointmentToComplete.inspection?.street || appointmentToComplete.title || 'Appointment completed',
+      });
+
+      queryClient.invalidateQueries({ queryKey: ['inspections'] });
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+    } catch (error) {
+      console.error('Error marking complete:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to mark as complete',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsMarking(false);
+      setCompleteDialogOpen(false);
+      setAppointmentToComplete(null);
     }
   };
 
@@ -333,6 +388,17 @@ const Calendar = () => {
                               <Pencil className="h-3 w-3 mr-1" />
                               Reschedule
                             </Button>
+                            {apt.appointment_type === 'inspection' && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 px-2 text-xs text-green-600 hover:text-green-600"
+                                onClick={() => handleCompleteAppointment(apt)}
+                              >
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Complete
+                              </Button>
+                            )}
                             <Button
                               variant="ghost"
                               size="sm"
@@ -578,6 +644,38 @@ const Calendar = () => {
               ) : (
                 'Cancel Appointment'
               )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Mark Complete Confirmation Dialog */}
+      <AlertDialog open={completeDialogOpen} onOpenChange={setCompleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Mark Inspection Complete</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to mark this inspection as complete?
+              {appointmentToComplete && (
+                <div className="mt-2 p-3 bg-muted rounded-lg">
+                  <p className="font-medium text-foreground">
+                    {appointmentToComplete.inspection?.insured_name || appointmentToComplete.title || 'Appointment'}
+                  </p>
+                  <p className="text-sm">
+                    {appointmentToComplete.inspection?.street}
+                  </p>
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isMarking}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmComplete}
+              disabled={isMarking}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {isMarking ? 'Marking...' : 'Mark Complete'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -1,8 +1,15 @@
 import { useState } from 'react';
 import { format, parseISO } from 'date-fns';
-import { Calendar, Clock, MapPin, User, Pencil, X, Loader2 } from 'lucide-react';
+import { Calendar, Clock, MapPin, User, Pencil, X, Loader2, CheckCircle, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,6 +22,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useUpcomingNewAppointments, useCancelAppointment } from '@/hooks/useAppointments';
 import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import type { Appointment } from '@/types/appointment';
 
@@ -24,21 +33,30 @@ interface AppointmentsListProps {
 
 export function AppointmentsList({ onEditAppointment }: AppointmentsListProps) {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const { data: appointments = [], isLoading } = useUpcomingNewAppointments(20);
   const cancelAppointment = useCancelAppointment();
+  
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
-  const [appointmentToCancel, setAppointmentToCancel] = useState<Appointment | null>(null);
+  const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [isMarking, setIsMarking] = useState(false);
 
   const handleCancelClick = (appointment: Appointment) => {
-    setAppointmentToCancel(appointment);
+    setSelectedAppointment(appointment);
     setCancelDialogOpen(true);
   };
 
+  const handleCompleteClick = (appointment: Appointment) => {
+    setSelectedAppointment(appointment);
+    setCompleteDialogOpen(true);
+  };
+
   const handleConfirmCancel = async () => {
-    if (!appointmentToCancel) return;
+    if (!selectedAppointment) return;
 
     try {
-      await cancelAppointment.mutateAsync(appointmentToCancel.id);
+      await cancelAppointment.mutateAsync(selectedAppointment.id);
       toast({
         title: 'Appointment cancelled',
         description: 'The appointment has been cancelled.',
@@ -51,7 +69,51 @@ export function AppointmentsList({ onEditAppointment }: AppointmentsListProps) {
       });
     } finally {
       setCancelDialogOpen(false);
-      setAppointmentToCancel(null);
+      setSelectedAppointment(null);
+    }
+  };
+
+  const handleMarkComplete = async () => {
+    if (!selectedAppointment) return;
+    setIsMarking(true);
+    try {
+      // If it's an inspection appointment, mark the inspection as complete
+      if (selectedAppointment.inspection_id) {
+        const { error: inspectionError } = await supabase
+          .from('inspections')
+          .update({
+            status: 'COMPLETED',
+            completed_date: new Date().toISOString().split('T')[0],
+          })
+          .eq('id', selectedAppointment.inspection_id);
+
+        if (inspectionError) throw inspectionError;
+      }
+
+      // Mark the appointment as completed
+      await supabase
+        .from('appointments')
+        .update({ status: 'completed' })
+        .eq('id', selectedAppointment.id);
+
+      toast({
+        title: 'Marked Complete',
+        description: selectedAppointment.inspection?.street || selectedAppointment.title || 'Appointment completed',
+      });
+
+      queryClient.invalidateQueries({ queryKey: ['inspections'] });
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+    } catch (error) {
+      console.error('Error marking complete:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to mark as complete',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsMarking(false);
+      setCompleteDialogOpen(false);
+      setSelectedAppointment(null);
     }
   };
 
@@ -135,29 +197,74 @@ export function AppointmentsList({ onEditAppointment }: AppointmentsListProps) {
               )}
             </div>
 
-            <div className="flex items-center gap-1 shrink-0">
-              {onEditAppointment && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => onEditAppointment(apt)}
-                >
-                  <Pencil className="h-4 w-4" />
+            {/* Actions Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                  <MoreVertical className="h-4 w-4" />
                 </Button>
-              )}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-destructive hover:text-destructive"
-                onClick={() => handleCancelClick(apt)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-popover z-50">
+                {onEditAppointment && (
+                  <DropdownMenuItem onClick={() => onEditAppointment(apt)}>
+                    <Pencil className="h-4 w-4 mr-2 text-blue-600" />
+                    Reschedule
+                  </DropdownMenuItem>
+                )}
+                {apt.appointment_type === 'inspection' && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => handleCompleteClick(apt)}>
+                      <CheckCircle className="h-4 w-4 mr-2 text-green-600" />
+                      Mark Complete
+                    </DropdownMenuItem>
+                  </>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  onClick={() => handleCancelClick(apt)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Cancel
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         ))}
       </div>
+
+      {/* Mark Complete Confirmation Dialog */}
+      <AlertDialog open={completeDialogOpen} onOpenChange={setCompleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Mark Inspection Complete</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to mark this inspection as complete?
+              {selectedAppointment && (
+                <div className="mt-2 p-3 bg-muted rounded-lg">
+                  <p className="font-medium text-foreground">
+                    {selectedAppointment.inspection?.insured_name || selectedAppointment.title || 'Appointment'}
+                  </p>
+                  <p className="text-sm">
+                    {selectedAppointment.inspection?.street}
+                  </p>
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isMarking}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleMarkComplete}
+              disabled={isMarking}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {isMarking ? 'Marking...' : 'Mark Complete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Cancel Confirmation Dialog */}
       <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
@@ -166,14 +273,14 @@ export function AppointmentsList({ onEditAppointment }: AppointmentsListProps) {
             <AlertDialogTitle>Cancel Appointment</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to cancel this appointment?
-              {appointmentToCancel && (
+              {selectedAppointment && (
                 <div className="mt-2 p-3 bg-muted rounded-lg">
                   <p className="font-medium text-foreground">
-                    {appointmentToCancel.inspection?.insured_name || appointmentToCancel.title || 'Appointment'}
+                    {selectedAppointment.inspection?.insured_name || selectedAppointment.title || 'Appointment'}
                   </p>
                   <p className="text-sm">
-                    {formatAppointmentDate(appointmentToCancel.appointment_date)}
-                    {appointmentToCancel.appointment_time && ` @ ${appointmentToCancel.appointment_time}`}
+                    {formatAppointmentDate(selectedAppointment.appointment_date)}
+                    {selectedAppointment.appointment_time && ` @ ${selectedAppointment.appointment_time}`}
                   </p>
                 </div>
               )}
