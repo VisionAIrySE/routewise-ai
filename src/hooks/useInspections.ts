@@ -166,9 +166,10 @@ export function useInspectionStats() {
     queryFn: async () => {
       if (!user) return [];
 
+      // Fetch due_date to calculate urgency client-side (database urgency_tier may be stale)
       const { data, error } = await supabase
         .from('inspections')
-        .select('urgency_tier')
+        .select('id, due_date')
         .eq('user_id', user.id)
         .eq('status', 'PENDING');
 
@@ -183,15 +184,28 @@ export function useInspectionStats() {
     refetchInterval: 60000,
   });
   
+  // Calculate urgency client-side based on due_date, matching the inspection list logic
+  const today = getTodayLocal();
   const stats = {
-    critical: inspections?.filter(i => i.urgency_tier === 'CRITICAL').length ?? 0,
-    urgent: inspections?.filter(i => i.urgency_tier === 'URGENT').length ?? 0,
-    soon: inspections?.filter(i => i.urgency_tier === 'SOON').length ?? 0,
-    normal: inspections?.filter(i => i.urgency_tier === 'NORMAL').length ?? 0,
+    critical: 0,
+    urgent: 0,
+    soon: 0,
+    normal: 0,
     total: inspections?.length ?? 0,
   };
   
-  return { stats, isLoading, error, allInspections: inspections?.map(mapDbToInspection) };
+  inspections?.forEach(i => {
+    const dueDateParsed = i.due_date ? parseLocalDate(i.due_date) : null;
+    const daysRemaining = dueDateParsed ? differenceInDays(dueDateParsed, today) : 999;
+    const tier = daysRemaining === 999 ? 'NORMAL' : calculateUrgencyTier(daysRemaining);
+    
+    if (tier === 'CRITICAL') stats.critical++;
+    else if (tier === 'URGENT') stats.urgent++;
+    else if (tier === 'SOON') stats.soon++;
+    else stats.normal++;
+  });
+  
+  return { stats, isLoading, error };
 }
 
 export function useWeeklyStats() {
