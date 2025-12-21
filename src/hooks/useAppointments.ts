@@ -5,6 +5,8 @@ import type { Appointment, AppointmentFormData } from '@/types/appointment';
 import { format, startOfDay, endOfDay, addMonths, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 
 // Map database row to frontend Appointment type
+// Note: inspection_id is TEXT in the database, so we use the direct appointment fields
+// and optionally fetch linked inspection data separately if needed
 function mapDbToAppointment(row: any): Appointment {
   return {
     id: row.id,
@@ -23,13 +25,17 @@ function mapDbToAppointment(row: any): Appointment {
     status: row.status || 'scheduled',
     created_at: row.created_at,
     updated_at: row.updated_at,
-    inspection: row.inspection ? {
-      id: row.inspection.id,
-      insured_name: row.inspection.insured_name,
-      street: row.inspection.street,
-      city: row.inspection.city,
-      state: row.inspection.state,
-      company_name: row.inspection.company_name,
+    insured_name: row.insured_name,
+    company_name: row.company_name,
+    urgency: row.urgency,
+    // Virtual inspection object for backward compatibility with UI
+    inspection: row.insured_name || row.company_name ? {
+      id: row.inspection_id || '',
+      insured_name: row.insured_name,
+      street: row.address,
+      city: row.city,
+      state: null,
+      company_name: row.company_name,
     } : undefined,
   };
 }
@@ -43,12 +49,10 @@ export function useAppointments(dateRange?: { start: Date; end: Date }) {
     queryFn: async (): Promise<Appointment[]> => {
       if (!user) return [];
 
+      // Query appointments table directly - it has all the display fields populated by n8n
       let query = supabase
         .from('appointments')
-        .select(`
-          *,
-          inspection:inspections(id, insured_name, street, city, state, company_name)
-        `)
+        .select('*')
         .eq('user_id', user.id)
         .eq('status', 'scheduled')
         .order('appointment_date', { ascending: true });
@@ -92,10 +96,7 @@ export function useDateAppointments(date: Date) {
 
       const { data, error } = await supabase
         .from('appointments')
-        .select(`
-          *,
-          inspection:inspections(id, insured_name, street, city, state, company_name)
-        `)
+        .select('*')
         .eq('user_id', user.id)
         .eq('appointment_date', dateStr)
         .eq('status', 'scheduled')
@@ -124,10 +125,7 @@ export function useUpcomingNewAppointments(limit = 10) {
 
       const { data, error } = await supabase
         .from('appointments')
-        .select(`
-          *,
-          inspection:inspections(id, insured_name, street, city, state, company_name)
-        `)
+        .select('*')
         .eq('user_id', user.id)
         .eq('status', 'scheduled')
         .gte('appointment_date', today)

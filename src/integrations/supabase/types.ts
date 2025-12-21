@@ -253,6 +253,7 @@ export type Database = {
           lng: number | null
           needs_call_ahead: boolean | null
           notes: string | null
+          our_id: string | null
           state: string | null
           status: string | null
           street: string
@@ -287,6 +288,7 @@ export type Database = {
           lng?: number | null
           needs_call_ahead?: boolean | null
           notes?: string | null
+          our_id?: string | null
           state?: string | null
           status?: string | null
           street: string
@@ -321,6 +323,7 @@ export type Database = {
           lng?: number | null
           needs_call_ahead?: boolean | null
           notes?: string | null
+          our_id?: string | null
           state?: string | null
           status?: string | null
           street?: string
