@@ -20,14 +20,18 @@ export interface Appointment {
   status: AppointmentStatus;
   created_at: string;
   updated_at: string;
-  // Joined inspection data (when appointment_type === 'inspection')
+  // Direct fields on appointments table (populated by n8n from inspection data)
+  insured_name: string | null;
+  company_name: string | null;
+  urgency: string | null;
+  // Legacy: virtual inspection object for backward compatibility with UI
   inspection?: {
     id: string;
     insured_name: string | null;
-    street: string;
-    city: string;
+    street: string | null;
+    city: string | null;
     state: string | null;
-    company_name: string;
+    company_name: string | null;
   };
 }
 
